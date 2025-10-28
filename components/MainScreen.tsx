@@ -62,10 +62,15 @@ const MainScreen: React.FC = () => {
       `}</style>
     
       {/* Background Layer */}
-      <img
-        src="https://i.imgur.com/czEbWz9.png"
-        alt="Background scene"
+      <video
+        src="https://i.imgur.com/XV1EEY6.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
         className="absolute inset-0 w-full h-full object-cover"
+        aria-hidden="true"
+        tabIndex={-1}
       />
       
       {/* This div creates the semi-transparent, blurred overlay effect over the background */}
