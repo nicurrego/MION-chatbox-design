@@ -1,24 +1,24 @@
 
 import React, { useState } from 'react';
-import SplashScreen from './components/SplashScreen';
+import WelcomeScreen from './components/WelcomeScreen';
 import MainScreen from './components/MainScreen';
 
 const App: React.FC = () => {
-  const [showSplash, setShowSplash] = useState(true);
-  const [isExitingSplash, setIsExitingSplash] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [isExitingWelcome, setIsExitingWelcome] = useState(false);
 
   const handleContinue = () => {
-    setIsExitingSplash(true);
-    // This timeout should match the transition duration in SplashScreen.tsx
+    setIsExitingWelcome(true);
+    // This timeout should match the transition duration in WelcomeScreen.tsx
     setTimeout(() => {
-      setShowSplash(false);
+      setShowWelcome(false);
     }, 1000); 
   };
 
   return (
     <>
-      {showSplash && <SplashScreen onContinue={handleContinue} isExiting={isExitingSplash} />}
-      {!showSplash && <MainScreen />}
+      {showWelcome && <WelcomeScreen onContinue={handleContinue} isExiting={isExitingWelcome} />}
+      {!showWelcome && <MainScreen />}
     </>
   );
 };
