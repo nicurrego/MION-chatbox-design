@@ -63,7 +63,7 @@ const MainScreen: React.FC = () => {
     
       {/* Background Layer */}
       <video
-        src="https://i.imgur.com/XV1EEY6.mp4"
+        src="videos\looping_ofuro.mp4"
         autoPlay
         loop
         muted
@@ -91,7 +91,7 @@ const MainScreen: React.FC = () => {
         {/* Character Container: Fills background on mobile, becomes left column on desktop */}
         <div className="absolute inset-0 pointer-events-none md:pointer-events-auto md:relative md:row-span-2">
           <CharacterSprite 
-            imageUrl="https://i.imgur.com/wWoqIhN.jpeg"
+            imageUrl="images\cute_duck.png"
             isThinking={isLoading}
           />
         </div>
