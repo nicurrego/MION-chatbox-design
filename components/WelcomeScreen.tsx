@@ -80,7 +80,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) 
         <div className="w-full h-full cursor-pointer" onClick={handleStartIntro}>
             <video
                 ref={loopVideoRef}
-                src="https://i.imgur.com/8Yk9a5A.mp4"
+                src="videos\intro_loop.mp4"
                 autoPlay
                 loop
                 muted
@@ -109,7 +109,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) 
       {screen === 'intro' && (
         <video
             ref={introVideoRef}
-            src="https://i.imgur.com/ZjUSgRK.mp4"
+            src="videos/starting_video.mp4"
             playsInline
             onEnded={onContinue}
             className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
