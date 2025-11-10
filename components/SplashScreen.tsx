@@ -43,7 +43,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onContinue, isExiting }) =>
       `}</style>
       <video
         ref={videoRef}
-        src="https://i.imgur.com/ZjUSgRK.mp4"
+        src="\videos\Video_de_Producto_Flotante_Magnético.mp4"
         autoPlay
         playsInline
         muted
