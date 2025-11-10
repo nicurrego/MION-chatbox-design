@@ -1,25 +1,50 @@
-
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface WelcomeScreenProps {
   onContinue: () => void;
   isExiting: boolean;
 }
 
-const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) => {
-  const [isStarted, setIsStarted] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    {isMuted ? (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+    ) : (
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072M12 6v12m-2-10a2 2 0 01-2-2V8a2 2 0 012-2h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L8.414 15H6a2 2 0 01-2-2v-4a2 2 0 012-2h2.414l.172-.172a5 5 0 017.072 0z" />
+    )}
+  </svg>
+);
 
-  const handleStart = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = false;
-      videoRef.current.play().catch(error => {
-        // Autoplay was prevented.
-        console.error("Video play failed:", error);
-      });
-      setIsStarted(true);
-    }
+
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) => {
+  const [screen, setScreen] = useState<'loop' | 'intro'>('loop');
+  const [isMuted, setIsMuted] = useState(true);
+  const introVideoRef = useRef<HTMLVideoElement>(null);
+  const loopVideoRef = useRef<HTMLVideoElement>(null);
+
+  const handleStartIntro = () => {
+    setScreen('intro');
   };
+
+  const toggleSound = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsMuted(prev => {
+        const newMutedState = !prev;
+        if (loopVideoRef.current) {
+            loopVideoRef.current.muted = newMutedState;
+        }
+        return newMutedState;
+    });
+  };
+
+  useEffect(() => {
+    if (screen === 'intro' && introVideoRef.current) {
+      introVideoRef.current.muted = isMuted;
+      introVideoRef.current.play().catch(error => {
+        console.error("Intro video play failed:", error);
+      });
+    }
+  }, [screen, isMuted]);
 
   return (
     <div 
@@ -29,51 +54,66 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) 
         ${isExiting ? 'opacity-0' : 'opacity-100'}
       `}
     >
-       <style>{`
+      <style>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         .animate-fadeIn {
-          animation: fadeIn 1s ease-in;
+          animation: fadeIn 1.5s ease-in;
         }
-        @keyframes pulse-slow {
-          0%, 100% { box-shadow: 0 0 15px rgba(100, 220, 255, 0.4); }
-          50% { box-shadow: 0 0 30px rgba(100, 220, 255, 0.8); }
+        @keyframes gentleBob {
+          0%, 100% { transform: translate(0, 0); }
+          25% { transform: translate(-4px, -2px); }
+          50% { transform: translate(0px, 3px); }
+          75% { transform: translate(4px, -1px); }
         }
-        .animate-pulse-slow {
-          animation: pulse-slow 2.5s infinite;
+        .animate-title-bob {
+          animation: gentleBob 6s ease-in-out infinite;
+        }
+        .animate-subtitle-bob {
+          animation: gentleBob 7s ease-in-out infinite;
         }
       `}</style>
-      <video
-        ref={videoRef}
-        src="https://i.imgur.com/ZjUSgRK.mp4"
-        playsInline
-        onEnded={onContinue} // Transition when video finishes
-        className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
-      />
       
-      {!isStarted && (
-        <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10 animate-fadeIn">
-          <div className="text-center">
-            <h1 className="text-white text-5xl md:text-7xl mb-8" style={{ textShadow: '0 0 15px rgba(255, 255, 255, 0.7)' }}>Visual Novel AI Chat</h1>
-            <button
-              onClick={handleStart}
-              className="
-                px-8 py-3 bg-cyan-500/80 text-white text-3xl rounded-lg border-2 border-cyan-300
-                hover:bg-cyan-400 hover:shadow-2xl hover:shadow-cyan-400/50
-                focus:outline-none focus:ring-4 focus:ring-cyan-300
-                transition-all duration-300 ease-in-out
-                animate-pulse-slow
-              "
-              style={{
-                textShadow: '0 0 8px rgba(255, 255, 255, 0.7)',
-              }}
-            >
-              Click to Start
-            </button>
-          </div>
+      {screen === 'loop' && (
+        <div className="w-full h-full cursor-pointer" onClick={handleStartIntro}>
+            <video
+                ref={loopVideoRef}
+                src="https://i.imgur.com/8Yk9a5A.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
+            />
+             <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 animate-fadeIn">
+                <div className="text-center">
+                    <div className="mb-8">
+                    <h1 className="text-5xl md:text-7xl animate-title-bob" style={{ color: '#FFF8E1', textShadow: '0 0 20px rgba(255, 165, 0, 0.7)' }}>TALK TO DUCK</h1>
+                    <h2 className="text-xl md:text-2xl tracking-widest uppercase animate-subtitle-bob" style={{ color: '#FFDAB9', textShadow: '0 0 10px rgba(239, 137, 61, 0.5)' }}>a MION experience</h2>
+                    </div>
+                    <p className="mt-24 text-white/70 text-xl tracking-widest animate-pulse">- click to start -</p>
+                </div>
+                <button
+                    onClick={toggleSound}
+                    className="absolute bottom-4 right-4 z-20 bg-black/40 rounded-full p-3 text-white/70 hover:text-white hover:bg-black/60 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
+                >
+                    <SoundIcon isMuted={isMuted} />
+                </button>
+             </div>
         </div>
+      )}
+
+      {screen === 'intro' && (
+        <video
+            ref={introVideoRef}
+            src="https://i.imgur.com/ZjUSgRK.mp4"
+            playsInline
+            onEnded={onContinue}
+            className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
+        />
       )}
     </div>
   );
