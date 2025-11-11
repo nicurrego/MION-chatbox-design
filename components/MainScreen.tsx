@@ -218,24 +218,24 @@ const MainScreen: React.FC = () => {
           }}
       ></div>
       
-      {/* Layout container: Handles both mobile (absolute children) and desktop (grid) layouts */}
-      <div className="relative w-full h-full p-4 md:p-8 md:grid md:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] md:grid-rows-[auto_1fr] md:gap-8">
+      {/* Layout container: Switches from absolute positioning on portrait to a grid on landscape */}
+      <div className="relative w-full h-full landscape:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:grid-rows-[auto_1fr] landscape:gap-8">
         
-        {/* Character Container: Fills background on mobile, becomes left column on desktop */}
-        <div className="absolute inset-0 pointer-events-none md:pointer-events-auto md:relative md:row-span-2">
+        {/* InfoBox Container: Top on portrait, top-right on landscape */}
+        <div className="absolute top-0 left-0 right-0 h-[15vh] p-4 landscape:relative landscape:inset-auto landscape:h-auto landscape:p-0 landscape:col-start-2 landscape:row-start-1">
+          <InfoBox />
+        </div>
+        
+        {/* Character Container: Fills middle on portrait (behind chat), left on landscape */}
+        <div className="absolute inset-0 top-[15vh] p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1 landscape:row-span-2">
           <CharacterSprite 
             imageUrl="https://i.imgur.com/wWoqIhN.jpeg"
             isThinking={isLoading}
           />
         </div>
-
-        {/* InfoBox Container: Top-right corner on mobile, top-right grid cell on desktop */}
-        <div className="absolute top-4 right-4 z-10 md:relative md:top-auto md:right-auto md:col-start-2 md:row-start-1 md:justify-self-end">
-          <InfoBox />
-        </div>
         
-        {/* ChatBox Container: Bottom overlay on mobile, bottom-right grid cell on desktop */}
-        <div className="absolute bottom-4 left-4 right-4 z-10 md:relative md:bottom-auto md:left-auto md:right-auto md:col-start-2 md:row-start-2 flex flex-col justify-end">
+        {/* ChatBox Container: Bottom on portrait, bottom-right on landscape */}
+        <div className="absolute bottom-0 left-0 right-0 h-[35vh] p-4 landscape:relative landscape:inset-auto landscape:h-auto landscape:p-0 landscape:min-h-0 landscape:col-start-2 landscape:row-start-2">
           <ChatBox
             characterName="Mion"
             message={currentBotMessage}

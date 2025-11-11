@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface ChatBoxProps {
   characterName: string;
@@ -50,6 +50,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
     isMuted, onToggleMute, onReadAloud, onStopAudio, isAudioPlaying, canReadAloud 
 }) => {
   const [inputValue, setInputValue] = useState('');
+  const messageAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (messageAreaRef.current) {
+        // When the message or typing state changes, scroll to the bottom.
+        messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight;
+    }
+  }, [message, isTyping]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +68,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
   };
 
   return (
-    <div className="w-full bg-slate-900/80 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden">
+    <div className="w-full h-full flex flex-col bg-slate-900/80 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden">
       <div className="px-6 pt-3 flex justify-between items-end">
         <div className="bg-cyan-600/90 inline-block px-4 py-1 text-2xl text-white rounded-t-md border-t-2 border-l-2 border-r-2 border-cyan-300/60">
           {characterName}
@@ -94,7 +102,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             </button>
         </div>
       </div>
-      <div className="p-6 pt-4 text-white text-3xl min-h-[120px] md:min-h-[140px] tracking-wide leading-relaxed">
+      <div ref={messageAreaRef} className="flex-grow p-6 pt-4 text-white text-3xl tracking-wide leading-relaxed overflow-y-auto">
         <p>
           {message}
           {isTyping && <TypingIndicator />}

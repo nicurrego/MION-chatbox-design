@@ -107,13 +107,22 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) 
       )}
 
       {screen === 'intro' && (
-        <video
-            ref={introVideoRef}
-            src="https://i.imgur.com/ZjUSgRK.mp4"
-            playsInline
-            onEnded={onContinue}
-            className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
-        />
+        <>
+            <video
+                ref={introVideoRef}
+                src="https://i.imgur.com/ZjUSgRK.mp4"
+                playsInline
+                onEnded={onContinue}
+                className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
+            />
+            <button
+              onClick={onContinue}
+              className="absolute bottom-5 right-5 z-20 bg-black/50 text-white/70 px-4 py-2 rounded-md text-lg tracking-wider hover:bg-white hover:text-black transition-colors duration-300 animate-fadeIn"
+              aria-label="Skip intro video"
+            >
+              SKIP
+            </button>
+        </>
       )}
     </div>
   );
