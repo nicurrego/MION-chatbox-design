@@ -43,7 +43,7 @@ const FullScreenImage: React.FC<{ isVisible: boolean; onClose: () => void }> = (
 
 const MainScreen: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { sender: 'bot', text: 'Hey there! What are you curious about today?' }
+    { sender: 'bot', text: "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind." }
   ]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -130,7 +130,7 @@ const MainScreen: React.FC = () => {
       />
       
       {/* This div creates the semi-transparent, blurred overlay effect over the background */}
-      <div className="absolute inset-0 bg-purple-900/40 backdrop-blur-sm backdrop-brightness-75"></div>
+      <div className="absolute inset-0 bg-blue-600/50 backdrop-blur-sm backdrop-brightness-75"></div>
       
       {/* This div adds the scanline effect */}
       <div 

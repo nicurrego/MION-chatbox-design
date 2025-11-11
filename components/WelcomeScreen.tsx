@@ -90,7 +90,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) 
              <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 animate-fadeIn">
                 <div className="text-center">
                     <div className="mb-8">
-                    <h1 className="text-5xl md:text-7xl animate-title-bob" style={{ color: '#FFF8E1', textShadow: '0 0 20px rgba(255, 165, 0, 0.7)' }}>TALK TO DUCK</h1>
+                    <h1 className="text-5xl md:text-7xl animate-title-bob" style={{ color: '#FFF8E1', textShadow: '0 0 20px rgba(255, 165, 0, 0.7)' }}>TALK TO MION</h1>
                     <h2 className="text-xl md:text-2xl tracking-widest uppercase animate-subtitle-bob" style={{ color: '#FFDAB9', textShadow: '0 0 10px rgba(239, 137, 61, 0.5)' }}>a MION experience</h2>
                     </div>
                     <p className="mt-24 text-white/70 text-xl tracking-widest animate-pulse">- click to start -</p>
