@@ -1,7 +1,7 @@
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
-import { sendMessageToBot } from '../services/geminiService';
+import { sendMessageToBot, generateSpeech } from '../services/geminiService';
+import { playAudio, stopAudio } from '../utils/audioUtils';
 import CharacterSprite from './CharacterSprite';
 import ChatBox from './ChatBox';
 import InfoBox from './InfoBox';
@@ -42,31 +42,88 @@ const FullScreenImage: React.FC<{ isVisible: boolean; onClose: () => void }> = (
 
 
 const MainScreen: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { sender: 'bot', text: "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind." }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isImageViewerOpen, setImageViewerOpen] = useState(false);
+  
+  // Audio state
+  const [isAutoplayMuted, setAutoplayMuted] = useState(false);
+  const [lastBotAudio, setLastBotAudio] = useState<string | null>(null);
+  const [isAudioPlaying, setAudioPlaying] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
 
+  const hasStartedConversation = useRef(false);
+  const typingIntervalRef = useRef<number | null>(null);
+
+
+  // This effect starts the conversation when the component mounts
   useEffect(() => {
+    // The ref prevents this from running twice in React's Strict Mode
+    if (!hasStartedConversation.current) {
+        const startConversation = async () => {
+            setIsLoading(true);
+            const botResponseText = await sendMessageToBot("Hello");
+            const audioData = await generateSpeech(botResponseText);
+            setLastBotAudio(audioData);
+            
+            if (audioData && !isAutoplayMuted) {
+              setAudioPlaying(true);
+              playAudio(audioData, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
+            }
+
+            const newBotMessage: ChatMessage = { sender: 'bot', text: botResponseText };
+            setMessages([newBotMessage]);
+            setIsLoading(false);
+        };
+        startConversation();
+        hasStartedConversation.current = true;
+    }
+  }, [isAutoplayMuted]);
+
+
+  // This effect handles the "typing" animation for the bot's message.
+  useEffect(() => {
+    // Always clear any leftover interval from a previous render.
+    // This is the key to fixing the race condition that corrupted the text.
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+    }
+
     const lastMessage = messages[messages.length - 1];
     if (lastMessage?.sender === 'bot') {
       setIsTyping(true);
-      setCurrentBotMessage('');
+      setCurrentBotMessage(''); // Reset before starting
+      
       let charIndex = 0;
-      const intervalId = setInterval(() => {
-        if (charIndex < lastMessage.text.length) {
-          setCurrentBotMessage((prev) => prev + lastMessage.text[charIndex]);
+      const textToType = lastMessage.text;
+
+      // Start a new interval and store its ID in the ref.
+      typingIntervalRef.current = window.setInterval(() => {
+        if (charIndex < textToType.length) {
+          // Use slice for a more robust update than appending characters.
+          setCurrentBotMessage(textToType.slice(0, charIndex + 1));
           charIndex++;
         } else {
-          clearInterval(intervalId);
+          // Once done, clear the interval and the ref.
+          if (typingIntervalRef.current) {
+            clearInterval(typingIntervalRef.current);
+            typingIntervalRef.current = null;
+          }
           setIsTyping(false);
         }
       }, 50); // Typing speed
-      return () => clearInterval(intervalId);
     }
+
+    // The cleanup function is still important for when the component unmounts
+    // or when the effect re-runs.
+    return () => {
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+      }
+    };
   }, [messages]);
 
   // Effect for keyboard controls to open/close the image viewer
@@ -91,19 +148,39 @@ const MainScreen: React.FC = () => {
 
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (isTyping || isLoading) return;
-
-    const newUserMessage: ChatMessage = { sender: 'user', text: userInput };
-    // We don't display user messages in the chatbox, but we need it for context
-    // setMessages(prev => [...prev, newUserMessage]);
     
+    // Stop any speaking from the previous turn
+    stopAudio(audioSourceRef);
+    setAudioPlaying(false);
+    setLastBotAudio(null);
+
     setIsLoading(true);
 
     const botResponseText = await sendMessageToBot(userInput);
+    const audioData = await generateSpeech(botResponseText);
+    setLastBotAudio(audioData);
+
+    if (audioData && !isAutoplayMuted) {
+      setAudioPlaying(true);
+      playAudio(audioData, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
+    }
+
     const newBotMessage: ChatMessage = { sender: 'bot', text: botResponseText };
-    
     setMessages(prev => [...prev, newBotMessage]);
     setIsLoading(false);
-  }, [isTyping, isLoading]);
+  }, [isTyping, isLoading, isAutoplayMuted]);
+
+  const handleReadAloud = useCallback(() => {
+    if (lastBotAudio && !isAudioPlaying) {
+      setAudioPlaying(true);
+      playAudio(lastBotAudio, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
+    }
+  }, [lastBotAudio, isAudioPlaying]);
+
+  const handleStopAudio = useCallback(() => {
+    stopAudio(audioSourceRef);
+    setAudioPlaying(false);
+  }, []);
   
   return (
     <main className="relative w-full h-screen overflow-hidden select-none bg-black animate-fadeInMain">
@@ -130,7 +207,7 @@ const MainScreen: React.FC = () => {
       />
       
       {/* This div creates the semi-transparent, blurred overlay effect over the background */}
-      <div className="absolute inset-0 bg-blue-600/50 backdrop-blur-sm backdrop-brightness-75"></div>
+      <div className="absolute inset-0 bg-blue-600/30 backdrop-blur-sm backdrop-brightness-75"></div>
       
       {/* This div adds the scanline effect */}
       <div 
@@ -165,6 +242,12 @@ const MainScreen: React.FC = () => {
             isTyping={isTyping}
             isLoading={isLoading}
             onSendMessage={handleSendMessage}
+            isMuted={isAutoplayMuted}
+            onToggleMute={() => setAutoplayMuted(prev => !prev)}
+            onReadAloud={handleReadAloud}
+            onStopAudio={handleStopAudio}
+            isAudioPlaying={isAudioPlaying}
+            canReadAloud={!!lastBotAudio && !isTyping}
           />
         </div>
       </div>
