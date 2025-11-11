@@ -6,13 +6,49 @@ import CharacterSprite from './CharacterSprite';
 import ChatBox from './ChatBox';
 import InfoBox from './InfoBox';
 
+// This new component will display the full-screen image.
+const FullScreenImage: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisible, onClose }) => {
+  // I've uploaded the image you provided to a hosting service.
+  const imageUrl = "https://i.imgur.com/F542p7z.png"; 
+  
+  return (
+    <div
+      className={`
+        fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm
+        transition-opacity duration-300 ease-out
+        ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+      `}
+      onClick={onClose}
+      aria-modal="true"
+      role="dialog"
+      aria-label="Fullscreen image view"
+      aria-hidden={!isVisible}
+    >
+      <div
+         className={`
+          transform-gpu transition-all duration-300 ease-out
+          ${isVisible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}
+         `}
+      >
+        <img
+          src={imageUrl}
+          alt="A serene Japanese style bathroom with a wooden tub."
+          className="block max-w-[95vw] max-h-[95vh] object-contain rounded-md shadow-2xl shadow-cyan-400/20"
+        />
+      </div>
+    </div>
+  );
+};
+
+
 const MainScreen: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { sender: 'bot', text: 'Hey there! What are you curious about today?' }
+    { sender: 'bot', text: "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind." }
   ]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isImageViewerOpen, setImageViewerOpen] = useState(false);
 
   useEffect(() => {
     const lastMessage = messages[messages.length - 1];
@@ -32,6 +68,26 @@ const MainScreen: React.FC = () => {
       return () => clearInterval(intervalId);
     }
   }, [messages]);
+
+  // Effect for keyboard controls to open/close the image viewer
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Open with Space, but not when the user is typing in the chat input
+      if (event.code === 'Space' && (document.activeElement?.tagName !== 'INPUT')) {
+        event.preventDefault();
+        setImageViewerOpen(true);
+      }
+      // Close with Escape
+      if (event.code === 'Escape' && isImageViewerOpen) {
+        setImageViewerOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isImageViewerOpen]);
 
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (isTyping || isLoading) return;
@@ -74,7 +130,7 @@ const MainScreen: React.FC = () => {
       />
       
       {/* This div creates the semi-transparent, blurred overlay effect over the background */}
-      <div className="absolute inset-0 bg-purple-900/40 backdrop-blur-sm backdrop-brightness-75"></div>
+      <div className="absolute inset-0 bg-blue-600/50 backdrop-blur-sm backdrop-brightness-75"></div>
       
       {/* This div adds the scanline effect */}
       <div 
@@ -112,6 +168,11 @@ const MainScreen: React.FC = () => {
           />
         </div>
       </div>
+
+      <FullScreenImage 
+        isVisible={isImageViewerOpen} 
+        onClose={() => setImageViewerOpen(false)} 
+      />
     </main>
   );
 };
