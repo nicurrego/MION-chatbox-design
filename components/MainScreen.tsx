@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
 import { sendMessageToBot, generateSpeech } from '../services/geminiService';
@@ -8,9 +7,9 @@ import ChatBox from './ChatBox';
 import InfoBox from './InfoBox';
 
 // This new component will display the full-screen image.
-const FullScreenImage: React.FC<{ isVisible: boolean; onClose: () => void }> = ({ isVisible, onClose }) => {
-  // I've uploaded the image you provided to a hosting service.
-  const imageUrl = "https://i.imgur.com/F542p7z.png"; 
+const FullScreenImage: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
+  // New image URL provided by the user
+  const imageUrl = "https://i.imgur.com/iJZb5Cz.jpeg"; 
   
   return (
     <div
@@ -19,7 +18,6 @@ const FullScreenImage: React.FC<{ isVisible: boolean; onClose: () => void }> = (
         transition-opacity duration-300 ease-out
         ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}
       `}
-      onClick={onClose}
       aria-modal="true"
       role="dialog"
       aria-label="Fullscreen image view"
@@ -33,7 +31,7 @@ const FullScreenImage: React.FC<{ isVisible: boolean; onClose: () => void }> = (
       >
         <img
           src={imageUrl}
-          alt="A serene Japanese style bathroom with a wooden tub."
+          alt="An illustration of a serene outdoor onsen at night, surrounded by nature and illuminated by lanterns."
           className="block max-w-[95vw] max-h-[95vh] object-contain rounded-md shadow-2xl shadow-cyan-400/20"
         />
       </div>
@@ -129,25 +127,32 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
     };
   }, [messages]);
 
-  // Effect for keyboard controls to open/close the image viewer
+  // Effect for keyboard controls to show image while spacebar is held
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Open with Space, but not when the user is typing in the chat input
+      // Show on Space press, but not when the user is typing in the chat input
       if (event.code === 'Space' && (document.activeElement?.tagName !== 'INPUT')) {
         event.preventDefault();
         setImageViewerOpen(true);
       }
-      // Close with Escape
-      if (event.code === 'Escape' && isImageViewerOpen) {
+    };
+
+    const handleKeyUp = (event: KeyboardEvent) => {
+      // Hide on Space release
+      if (event.code === 'Space') {
+        event.preventDefault();
         setImageViewerOpen(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isImageViewerOpen]);
+  }, []); // Empty dependency array is correct.
 
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (isTyping || isLoading) return;
@@ -260,7 +265,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
 
       <FullScreenImage 
         isVisible={isImageViewerOpen} 
-        onClose={() => setImageViewerOpen(false)} 
       />
     </main>
   );
