@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
 import { sendMessageToBot, generateSpeech } from '../services/geminiService';
@@ -40,12 +41,17 @@ const FullScreenImage: React.FC<{ isVisible: boolean; onClose: () => void }> = (
   );
 };
 
+interface MainScreenProps {
+  initialMessage: ChatMessage | null;
+  initialAudio: string | null;
+}
 
-const MainScreen: React.FC = () => {
+const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // Set initial loading state if the message isn't ready when the component mounts.
+  const [isLoading, setIsLoading] = useState(!initialMessage);
   const [isImageViewerOpen, setImageViewerOpen] = useState(false);
   
   // Audio state
@@ -59,29 +65,26 @@ const MainScreen: React.FC = () => {
   const typingIntervalRef = useRef<number | null>(null);
 
 
-  // This effect starts the conversation when the component mounts
+  // This effect starts the conversation when the component mounts using preloaded data
   useEffect(() => {
-    // The ref prevents this from running twice in React's Strict Mode
-    if (!hasStartedConversation.current) {
-        const startConversation = async () => {
-            setIsLoading(true);
-            const botResponseText = await sendMessageToBot("Hello");
-            const audioData = await generateSpeech(botResponseText);
-            setLastBotAudio(audioData);
-            
-            if (audioData && !isAutoplayMuted) {
-              setAudioPlaying(true);
-              playAudio(audioData, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
-            }
+    // This effect should only run once the initial preloaded data arrives.
+    if (hasStartedConversation.current || !initialMessage) return;
 
-            const newBotMessage: ChatMessage = { sender: 'bot', text: botResponseText };
-            setMessages([newBotMessage]);
-            setIsLoading(false);
-        };
-        startConversation();
-        hasStartedConversation.current = true;
+    // The ref prevents this from running twice in React's Strict Mode
+    hasStartedConversation.current = true;
+
+    // Set state from props
+    setLastBotAudio(initialAudio);
+    
+    if (initialAudio && !isAutoplayMuted) {
+      setAudioPlaying(true);
+      playAudio(initialAudio, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
     }
-  }, [isAutoplayMuted]);
+
+    setMessages([initialMessage]);
+    setIsLoading(false); // The initial load is complete.
+
+  }, [initialMessage, initialAudio, isAutoplayMuted]);
 
 
   // This effect handles the "typing" animation for the bot's message.
@@ -182,6 +185,9 @@ const MainScreen: React.FC = () => {
     setAudioPlaying(false);
   }, []);
   
+  // Determine if we're in the special initial loading state.
+  const isInitialLoading = isLoading && messages.length === 0;
+
   return (
     <main className="relative w-full h-screen overflow-hidden select-none bg-black animate-fadeInMain">
       <style>{`
@@ -238,8 +244,8 @@ const MainScreen: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-[35vh] p-4 landscape:relative landscape:inset-auto landscape:h-auto landscape:p-0 landscape:min-h-0 landscape:col-start-2 landscape:row-start-2">
           <ChatBox
             characterName="Mion"
-            message={currentBotMessage}
-            isTyping={isTyping}
+            message={isInitialLoading ? "Mion is waking up..." : currentBotMessage}
+            isTyping={isInitialLoading ? false : isTyping}
             isLoading={isLoading}
             onSendMessage={handleSendMessage}
             isMuted={isAutoplayMuted}

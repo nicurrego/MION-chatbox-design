@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 
 interface WelcomeScreenProps {
@@ -77,7 +78,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) 
       `}</style>
       
       {screen === 'loop' && (
-        <div className="w-full h-full cursor-pointer" onClick={handleStartIntro}>
+        <div 
+          className="w-full h-full cursor-pointer"
+          onClick={handleStartIntro}
+        >
             <video
                 ref={loopVideoRef}
                 src="https://i.imgur.com/8Yk9a5A.mp4"
