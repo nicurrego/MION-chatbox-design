@@ -46,12 +46,29 @@ Always be ready to answer questions about onsen etiquette clearly and helpfully.
   },
 });
 
+export interface WellbeingProfile {
+  skinType: string;
+  muscleSoreness: string;
+  stressLevel: string;
+  waterTemperature: string;
+  healthGoals: string;
+}
+
+export interface AestheticProfile {
+  atmosphere: string;
+  colorPalette: string;
+  timeOfDay: string;
+}
+
+export interface OnsenPreferences {
+  wellbeingProfile: WellbeingProfile;
+  aestheticProfile: AestheticProfile;
+}
+
+
 export const sendMessageToBot = async (message: string): Promise<string> => {
   try {
     const response = await chat.sendMessage({ message });
-    // This is the fix. The `text` property might be undefined if the model
-    // returns no text content. We ensure that we always return a string
-    // by using the nullish coalescing operator `??` to fall back to an empty string.
     return response.text ?? "";
   } catch (error) {
     console.error("Error sending message to Gemini:", error);
@@ -71,7 +88,6 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            // Using the 'Kore' voice for an elegant, professional tone.
             prebuiltVoiceConfig: { voiceName: 'Kore' },
           },
         },
@@ -83,4 +99,34 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
     console.error("Error generating speech:", error);
     return null;
   }
+};
+
+export const generateOnsenImage = async (preferences: OnsenPreferences): Promise<string | null> => {
+    const prompt = `Generate a visually stunning, photorealistic image of a custom onsen experience.
+    The atmosphere is serene and embodies the feeling of a '${preferences.aestheticProfile.atmosphere}'.
+    The time of day is '${preferences.aestheticProfile.timeOfDay}', which casts a light palette best described as '${preferences.aestheticProfile.colorPalette}'.
+    The onsen is designed for ultimate relaxation, reflecting a goal of '${preferences.wellbeingProfile.healthGoals}' and soothing '${preferences.wellbeingProfile.muscleSoreness}'.
+    The overall mood should be tranquil, inviting, and deeply peaceful. Focus on high-detail, realistic textures for the water, surrounding nature, and materials.`;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image',
+            contents: {
+                parts: [{ text: prompt }],
+            },
+            config: {
+                responseModalities: [Modality.IMAGE],
+            },
+        });
+        
+        for (const part of response.candidates[0].content.parts) {
+            if (part.inlineData) {
+              return part.inlineData.data;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error("Error generating onsen image:", error);
+        return null;
+    }
 };

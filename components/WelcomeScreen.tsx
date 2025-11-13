@@ -77,7 +77,10 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) 
       `}</style>
       
       {screen === 'loop' && (
-        <div className="w-full h-full cursor-pointer" onClick={handleStartIntro}>
+        <div 
+          className="w-full h-full cursor-pointer"
+          onClick={handleStartIntro}
+        >
             <video
                 ref={loopVideoRef}
                 src="videos\intro_loop.mp4"
