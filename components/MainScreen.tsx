@@ -8,7 +8,7 @@ import ChatBox from './ChatBox';
 import InfoBox from './InfoBox';
 
 const FullScreenImage: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
-  const imageUrl = "https://i.imgur.com/iJZb5Cz.jpeg"; 
+  const imageUrl = "images/base_ofuro.png"; 
   
   return (
     <div
