@@ -87,9 +87,19 @@ interface MainScreenProps {
   initialAudio: string | null;
 }
 
+const splitIntoSentences = (text: string): string[] => {
+    if (!text) return [];
+    // Use a positive lookbehind to split after sentence-ending punctuation, keeping the punctuation.
+    const sentences = text.split(/(?<=[.?!])\s+/);
+    return sentences.map(s => s.trim()).filter(Boolean);
+};
+
 const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
+  const [persistentSubtitle, setPersistentSubtitle] = useState('');
+  const [currentSubtitle, setCurrentSubtitle] = useState('');
+  const [areSubtitlesVisible, setAreSubtitlesVisible] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(!initialMessage);
   const [isImageViewerOpen, setImageViewerOpen] = useState(false);
@@ -113,10 +123,13 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
 
   const hasStartedConversation = useRef(false);
   const typingIntervalRef = useRef<number | null>(null);
+  const subtitleTimeoutRefs = useRef<number[]>([]);
 
   const typeMessage = useCallback((text: string, audio: string | null) => {
+    // --- Standard typing animation for the chat box ---
     setIsTyping(true);
     setCurrentBotMessage('');
+    setPersistentSubtitle(''); // Clear previous persistent subtitle
 
     if (audio && !isAutoplayMuted) {
         setAudioPlaying(true);
@@ -134,10 +147,39 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
                 typingIntervalRef.current = null;
             }
             setIsTyping(false);
-            // Add final message to history. The currentBotMessage will clear after a delay.
             setMessages(prev => [...prev, { sender: 'bot', text }]);
+            setPersistentSubtitle(text); // Set the persistent subtitle for chatbox history
         }
     }, 50);
+
+    // --- New sentence-by-sentence subtitle logic ---
+    subtitleTimeoutRefs.current.forEach(clearTimeout);
+    subtitleTimeoutRefs.current = [];
+    
+    const sentences = splitIntoSentences(text);
+    let cumulativeDelay = 0;
+    // Estimated reading/speaking speed
+    const WPM = 140; // Words per minute
+    const AVG_WORD_LENGTH = 5; 
+    const CHARS_PER_SECOND = (WPM * AVG_WORD_LENGTH) / 50; // ~15 characters per second
+
+    sentences.forEach(sentence => {
+        const duration = (sentence.length / CHARS_PER_SECOND) * 1000;
+        
+        const timeoutId = window.setTimeout(() => {
+            setCurrentSubtitle(sentence);
+        }, cumulativeDelay);
+
+        subtitleTimeoutRefs.current.push(timeoutId);
+        cumulativeDelay += duration;
+    });
+
+    // Add a final timeout to clear the subtitle after the full message has been displayed.
+    const finalTimeoutId = window.setTimeout(() => {
+        setCurrentSubtitle('');
+    }, cumulativeDelay + 2000); // 2-second buffer
+    subtitleTimeoutRefs.current.push(finalTimeoutId);
+
   }, [isAutoplayMuted]);
 
 
@@ -174,12 +216,21 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      // Cleanup timeouts on unmount
+      subtitleTimeoutRefs.current.forEach(clearTimeout);
+      if(typingIntervalRef.current) clearInterval(typingIntervalRef.current);
     };
   }, []);
 
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (isTyping || isLoading) return;
     
+    // Clear subtitles and stop audio on new message
+    setPersistentSubtitle('');
+    setCurrentSubtitle('');
+    subtitleTimeoutRefs.current.forEach(clearTimeout);
+    subtitleTimeoutRefs.current = [];
+
     stopAudio(audioSourceRef);
     setAudioPlaying(false);
     setLastBotAudio(null);
@@ -230,9 +281,14 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
   const handleStopAudio = useCallback(() => {
     stopAudio(audioSourceRef);
     setAudioPlaying(false);
+    // Also stop the subtitles
+    subtitleTimeoutRefs.current.forEach(clearTimeout);
+    subtitleTimeoutRefs.current = [];
+    setCurrentSubtitle('');
   }, []);
 
   const handleStartVoiceInput = useCallback(() => {
+    setPersistentSubtitle(''); // Clear subtitle on voice input
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Sorry, your browser doesn't support speech recognition.");
@@ -342,14 +398,16 @@ const handleSendVoiceMessage = useCallback((message: string) => {
         
         <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center">
             <Subtitles 
-                message={currentBotMessage}
-                isTyping={isTyping}
+                currentSentence={currentSubtitle}
+                isVisible={areSubtitlesVisible}
             />
              <ActionButtons 
                 onToggleChat={() => setIsChatOpen(prev => !prev)}
                 isMuted={isAutoplayMuted}
                 onToggleMute={() => setAutoplayMuted(prev => !prev)}
                 onStartVoiceInput={handleStartVoiceInput}
+                areSubtitlesVisible={areSubtitlesVisible}
+                onToggleSubtitles={() => setAreSubtitlesVisible(prev => !prev)}
             />
         </div>
       </div>

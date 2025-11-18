@@ -18,17 +18,35 @@ const MicrophoneIcon: React.FC = () => (
     </svg>
 );
 
+const SubtitlesIcon: React.FC<{ isVisible: boolean }> = ({ isVisible }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h8m-8 3h4" />
+        {!isVisible && <path strokeLinecap="round" strokeLinejoin="round" d="M4 4l16 16" />}
+    </svg>
+);
+
 
 interface ActionButtonsProps {
     onToggleChat: () => void;
     isMuted: boolean;
     onToggleMute: () => void;
     onStartVoiceInput: () => void;
+    areSubtitlesVisible: boolean;
+    onToggleSubtitles: () => void;
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, onToggleMute, onStartVoiceInput }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, onToggleMute, onStartVoiceInput, areSubtitlesVisible, onToggleSubtitles }) => {
     return (
         <div className="absolute bottom-4 right-4 flex items-center space-x-3 z-30">
+            {/* Subtitles Button */}
+            <button
+                onClick={onToggleSubtitles}
+                className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
+                aria-label={areSubtitlesVisible ? 'Hide subtitles' : 'Show subtitles'}
+            >
+                <SubtitlesIcon isVisible={areSubtitlesVisible} />
+            </button>
             {/* Mute Button */}
             <button
                 onClick={onToggleMute}

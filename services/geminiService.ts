@@ -47,7 +47,7 @@ Always be ready to answer questions about onsen etiquette clearly and helpfully.
 });
 
 // --- MOCK FOR DEVELOPMENT ---
-const USE_MOCK = true;
+const USE_MOCK = false;
 let turn = 0;
 let wellbeingInfo = "";
 // --------------------------
