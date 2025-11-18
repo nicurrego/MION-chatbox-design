@@ -3,9 +3,12 @@ import React, { useState, useEffect } from 'react';
 interface InfoBoxProps {
   isGeneratingImage: boolean;
   generatedImageUrls: string[] | null;
+  onConceptSelect: (url: string) => void;
+  isConceptSelected: boolean;
+  generatedVideoUrl: string | null;
 }
 
-const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls }) => {
+const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls, onConceptSelect, isConceptSelected, generatedVideoUrl }) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -29,21 +32,22 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
       );
     }
 
-    if (generatedImageUrls && generatedImageUrls.length > 0) {
+    if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
         return (
           <div className="w-full h-full flex flex-col">
             <h2 className="text-xl text-cyan-200 mb-2 text-center flex-shrink-0">Please select a concept:</h2>
             <div className="flex-grow w-full grid grid-cols-2 grid-rows-2 gap-2">
               {generatedImageUrls.map((url, index) => (
                 <button 
-                  key={index} 
+                  key={index}
+                  onClick={() => onConceptSelect(url)}
                   className="relative w-full h-full overflow-hidden rounded-lg group focus:outline-none focus:ring-4 focus:ring-cyan-400/80 focus:ring-offset-2 focus:ring-offset-slate-900"
                   aria-label={`Select onsen concept variation ${index + 1}`}
                 >
                   <img 
                     src={url} 
                     alt={`Onsen concept variation ${index + 1}`}
-                    className="w-full h-full object-contain transition-transform duration-300 ease-in-out group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors duration-300"></div>
                 </button>
@@ -57,7 +61,14 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
       <>
         <div>
           <h2 className="text-3xl text-cyan-200 border-b-2 border-cyan-400/50 pb-2">SESSION INFO</h2>
-          <p className="text-lg text-white/80 mt-2 italic">Your onsen profile will appear here once created.</p>
+          <p className="text-lg text-white/80 mt-2 italic">
+            {generatedVideoUrl
+              ? "Your unique onsen experience is ready. Enjoy the moment."
+              : isConceptSelected
+              ? "Finalizing your onsen experience..."
+              : "Your onsen profile will appear here once created."
+            }
+          </p>
         </div>
         <div className="mt-auto text-right">
             <div className="text-5xl md:text-7xl" style={{ textShadow: '0 0 10px rgba(0, 255, 255, 0.7)' }}>

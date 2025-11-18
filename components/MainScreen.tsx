@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
-import { sendMessageToBot, generateSpeech, generateOnsenImage } from '../services/geminiService';
+import { sendMessageToBot, generateSpeech, generateOnsenImage, generateLoopingVideo } from '../services/geminiService';
 import type { OnsenPreferences } from '../services/geminiService';
 import { playAudio, stopAudio } from '../utils/audioUtils';
+import { urlToBase64 } from '../utils/imageUtils';
+
 import CharacterSprite from './CharacterSprite';
 import ChatBox from './ChatBox';
 import InfoBox from './InfoBox';
@@ -51,36 +53,17 @@ interface SpeechRecognition {
     onend: () => void;
 }
 
-const FullScreenImage: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
-  const imageUrl = "https://i.imgur.com/iJZb5Cz.jpeg"; 
-  
-  return (
-    <div
-      className={`
-        fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm
-        transition-opacity duration-300 ease-out
-        ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-      `}
-      aria-modal="true"
-      role="dialog"
-      aria-label="Fullscreen image view"
-      aria-hidden={!isVisible}
-    >
-      <div
-         className={`
-          transform-gpu transition-all duration-300 ease-out
-          ${isVisible ? 'scale-100 opacity-100' : 'scale-90 opacity-0'}
-         `}
-      >
-        <img
-          src={imageUrl}
-          alt="An illustration of a serene outdoor onsen at night, surrounded by nature and illuminated by lanterns."
-          className="block max-w-[95vw] max-h-[95vh] object-contain rounded-md shadow-2xl shadow-cyan-400/20"
-        />
-      </div>
+const LoadingOverlay: React.FC<{ message: string }> = ({ message }) => (
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm text-white animate-fadeIn">
+        <svg className="animate-spin h-12 w-12 text-cyan-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p className="text-2xl tracking-wider">{message}</p>
+        <p className="text-lg text-cyan-200 mt-2">This may take a few moments...</p>
     </div>
-  );
-};
+);
+
 
 interface MainScreenProps {
   initialMessage: ChatMessage | null;
@@ -91,7 +74,6 @@ interface MainScreenProps {
 
 const splitIntoSentences = (text: string): string[] => {
     if (!text) return [];
-    // Use a positive lookbehind to split after sentence-ending punctuation, keeping the punctuation.
     const sentences = text.split(/(?<=[.?!])\s+/);
     return sentences.map(s => s.trim()).filter(Boolean);
 };
@@ -104,7 +86,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const [areSubtitlesVisible, setAreSubtitlesVisible] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(!initialMessage);
-  const [isImageViewerOpen, setImageViewerOpen] = useState(false);
   
   const [lastBotAudio, setLastBotAudio] = useState<string | null>(null);
   const [isAudioPlaying, setAudioPlaying] = useState(false);
@@ -112,12 +93,19 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
 
+  // --- Onsen Creation Flow State ---
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generatedImageUrls, setGeneratedImageUrls] = useState<string[] | null>(null);
+  const [selectedOnsenConceptUrl, setSelectedOnsenConceptUrl] = useState<string | null>(null);
   
+  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+  const [videoLoadingMessage, setVideoLoadingMessage] = useState('');
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
+  const [apiKeySelected, setApiKeySelected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Voice Input State
   const [isVoiceInputActive, setIsVoiceInputActive] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -127,11 +115,21 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const typingIntervalRef = useRef<number | null>(null);
   const subtitleTimeoutRefs = useRef<number[]>([]);
 
+  // Check for Veo API key on mount
+  useEffect(() => {
+    const checkApiKey = async () => {
+        if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
+            const hasKey = await window.aistudio.hasSelectedApiKey();
+            setApiKeySelected(hasKey);
+        }
+    };
+    checkApiKey();
+  }, []);
+
   const typeMessage = useCallback((text: string, audio: string | null) => {
-    // --- Standard typing animation for the chat box ---
     setIsTyping(true);
     setCurrentBotMessage('');
-    setPersistentSubtitle(''); // Clear previous persistent subtitle
+    setPersistentSubtitle('');
 
     if (audio) {
         setAudioPlaying(true);
@@ -144,113 +142,64 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             setCurrentBotMessage(text.slice(0, charIndex + 1));
             charIndex++;
         } else {
-            if (typingIntervalRef.current) {
-                clearInterval(typingIntervalRef.current);
-                typingIntervalRef.current = null;
-            }
+            if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
+            typingIntervalRef.current = null;
             setIsTyping(false);
             setMessages(prev => [...prev, { sender: 'bot', text }]);
-            setPersistentSubtitle(text); // Set the persistent subtitle for chatbox history
+            setPersistentSubtitle(text);
         }
     }, 50);
 
-    // --- New sentence-by-sentence subtitle logic ---
     subtitleTimeoutRefs.current.forEach(clearTimeout);
     subtitleTimeoutRefs.current = [];
-    
     const sentences = splitIntoSentences(text);
     let cumulativeDelay = 0;
-    // Estimated reading/speaking speed
-    const WPM = 140; // Words per minute
+    const WPM = 140;
     const AVG_WORD_LENGTH = 5; 
-    const CHARS_PER_SECOND = (WPM * AVG_WORD_LENGTH) / 50; // ~15 characters per second
+    const CHARS_PER_SECOND = (WPM * AVG_WORD_LENGTH) / 50;
 
     sentences.forEach(sentence => {
         const duration = (sentence.length / CHARS_PER_SECOND) * 1000;
-        
-        const timeoutId = window.setTimeout(() => {
-            setCurrentSubtitle(sentence);
-        }, cumulativeDelay);
-
+        const timeoutId = window.setTimeout(() => setCurrentSubtitle(sentence), cumulativeDelay);
         subtitleTimeoutRefs.current.push(timeoutId);
         cumulativeDelay += duration;
     });
 
-    // Add a final timeout to clear the subtitle after the full message has been displayed.
-    const finalTimeoutId = window.setTimeout(() => {
-        setCurrentSubtitle('');
-    }, cumulativeDelay + 2000); // 2-second buffer
+    const finalTimeoutId = window.setTimeout(() => setCurrentSubtitle(''), cumulativeDelay + 2000);
     subtitleTimeoutRefs.current.push(finalTimeoutId);
-
   }, [isMuted]);
-
 
   useEffect(() => {
     if (hasStartedConversation.current || !initialMessage) return;
-
     hasStartedConversation.current = true;
     setIsLoading(false);
     setLastBotAudio(initialAudio);
-    
     typeMessage(initialMessage.text, initialAudio);
-
   }, [initialMessage, initialAudio, typeMessage]);
 
   useEffect(() => {
     if (gainNodeRef.current && audioCtxRef.current) {
-      // Use setValueAtTime for a smooth transition to prevent audio clicks/pops.
       gainNodeRef.current.gain.setValueAtTime(isMuted ? 0 : 1, audioCtxRef.current.currentTime);
     }
   }, [isMuted]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code === 'Space' && (document.activeElement?.tagName !== 'INPUT')) {
-        event.preventDefault();
-        setImageViewerOpen(true);
-      }
-    };
-
-    const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.code === 'Space') {
-        event.preventDefault();
-        setImageViewerOpen(false);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      // Cleanup timeouts on unmount
-      subtitleTimeoutRefs.current.forEach(clearTimeout);
-      if(typingIntervalRef.current) clearInterval(typingIntervalRef.current);
-    };
-  }, []);
-
   const handleSendMessage = useCallback(async (userInput: string) => {
     if (isTyping || isLoading) return;
     
-    // Clear subtitles and stop audio on new message
     setPersistentSubtitle('');
     setCurrentSubtitle('');
     subtitleTimeoutRefs.current.forEach(clearTimeout);
     subtitleTimeoutRefs.current = [];
-
     stopAudio(audioSourceRef);
     setAudioPlaying(false);
     setLastBotAudio(null);
 
     const userMessage: ChatMessage = { sender: 'user', text: userInput };
     setMessages(prev => [...prev, userMessage]);
-
     setIsLoading(true);
-    setCurrentBotMessage(''); // Ensure temp message is clear
+    setCurrentBotMessage('');
 
     const botResponseText = await sendMessageToBot(userInput);
-
     const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
     const match = botResponseText.match(jsonRegex);
 
@@ -265,19 +214,60 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             }
         } catch (error) {
             console.error("Failed to parse preferences JSON or generate images:", error);
+            setError("Sorry, there was an issue creating the onsen visuals.");
         } finally {
             setIsGeneratingImage(false);
         }
     }
 
-    setIsLoading(false); // Finished thinking, about to start typing
-
+    setIsLoading(false);
     const audioData = await generateSpeech(botResponseText);
     setLastBotAudio(audioData);
-
     typeMessage(botResponseText, audioData);
-
   }, [isTyping, isLoading, typeMessage]);
+
+  const handleOnsenConceptSelect = useCallback(async (url: string) => {
+    setSelectedOnsenConceptUrl(url); // Show the selected image as background immediately
+    setIsGeneratingVideo(true);
+    setVideoLoadingMessage("Preparing your onsen experience...");
+    setError(null);
+
+    try {
+        const { base64, mimeType } = await urlToBase64(url);
+
+        // API Key Check
+        if (!apiKeySelected) {
+            if (window.aistudio?.openSelectKey) {
+                await window.aistudio.openSelectKey();
+                const hasKey = await window.aistudio.hasSelectedApiKey();
+                setApiKeySelected(hasKey);
+                if (!hasKey) {
+                    throw new Error("An API key is required for video generation.");
+                }
+            } else {
+                throw new Error("Could not find the API key selection utility.");
+            }
+        }
+        
+        // Generate Video
+        const videoUrl = await generateLoopingVideo(base64, mimeType);
+        setGeneratedVideoUrl(videoUrl);
+
+    } catch (error: any) {
+        console.error("Video generation process failed:", error);
+        if (error.message.includes("Requested entity was not found")) {
+            setError("Video generation failed. Your API key might be invalid. Please try selecting a different key.");
+            setApiKeySelected(false);
+        } else if (error.message.includes("API key is required")) {
+            setError(error.message);
+        } else {
+            setError("Sorry, we couldn't create the video experience. Please try selecting a concept again.");
+        }
+    } finally {
+        setIsGeneratingVideo(false);
+    }
+}, [apiKeySelected]);
+
 
   const handleReadAloud = useCallback(() => {
     if (lastBotAudio && !isAudioPlaying) {
@@ -289,7 +279,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const handleStopAudio = useCallback(() => {
     stopAudio(audioSourceRef);
     setAudioPlaying(false);
-    // Also stop the subtitles
     subtitleTimeoutRefs.current.forEach(clearTimeout);
     subtitleTimeoutRefs.current = [];
     setCurrentSubtitle('');
@@ -358,34 +347,45 @@ const handleSendVoiceMessage = useCallback((message: string) => {
   return (
     <main className="relative w-full h-screen overflow-hidden select-none bg-black animate-fadeInMain">
       <style>{`
-          @keyframes fadeInMain {
-              from { opacity: 0; }
-              to { opacity: 1; }
-          }
-          .animate-fadeInMain {
-              animation: fadeInMain 1s ease-in-out;
-          }
+          @keyframes fadeInMain { from { opacity: 0; } to { opacity: 1; } }
+          @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          .animate-fadeInMain { animation: fadeInMain 1s ease-in-out; }
+          .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
       `}</style>
     
-      <video
-        src="https://i.imgur.com/XV1EEY6.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-        aria-hidden="true"
-        tabIndex={-1}
-      />
+      {generatedVideoUrl ? (
+        <video
+            key={generatedVideoUrl}
+            src={generatedVideoUrl}
+            autoPlay loop muted playsInline
+            className="absolute inset-0 w-full h-full object-cover animate-fadeIn"
+        />
+      ) : selectedOnsenConceptUrl ? (
+         <div 
+            className="absolute inset-0 w-full h-full bg-cover bg-center animate-fadeIn"
+            style={{ backgroundImage: `url(${selectedOnsenConceptUrl})` }}
+         ></div>
+      ) : (
+        <video
+            src="https://i.imgur.com/XV1EEY6.mp4"
+            autoPlay loop muted playsInline
+            className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
       
-      <div className="absolute inset-0 bg-blue-600/30 backdrop-blur-sm backdrop-brightness-75"></div>
-      
+      {/*
+        FIX: Add a 'key' prop to the overlay divs. This forces React to re-mount them
+        when the background source changes (from image to video). This resolves a potential
+        rendering glitch where CSS filters like 'backdrop-blur' might not update to reflect
+        the new background content, making it seem like the old background is still present.
+      */}
+      <div
+        key={generatedVideoUrl || 'bg-overlay'}
+        className="absolute inset-0 bg-blue-600/30 backdrop-blur-sm backdrop-brightness-75"
+      ></div>
       <div 
-          className="absolute inset-0 opacity-20"
-          style={{
-              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)',
-              backgroundSize: '100% 4px'
-          }}
+        key={(generatedVideoUrl || 'bg-overlay') + '-scanlines'}
+        className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)', backgroundSize: '100% 4px' }}
       ></div>
       
       <div className="relative w-full h-full landscape:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-8">
@@ -394,13 +394,16 @@ const handleSendVoiceMessage = useCallback((message: string) => {
           <InfoBox 
             isGeneratingImage={isGeneratingImage}
             generatedImageUrls={generatedImageUrls}
+            onConceptSelect={handleOnsenConceptSelect}
+            isConceptSelected={!!selectedOnsenConceptUrl}
+            generatedVideoUrl={generatedVideoUrl}
           />
         </div>
         
         <div className="absolute inset-0 top-[15vh] p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1">
           <CharacterSprite 
             imageUrl="https://i.imgur.com/wWoqIhN.jpeg"
-            isThinking={isLoading || isGeneratingImage}
+            isThinking={isLoading || isGeneratingImage || isGeneratingVideo}
           />
         </div>
         
@@ -426,7 +429,7 @@ const handleSendVoiceMessage = useCallback((message: string) => {
             history={messages}
             currentBotMessage={currentBotMessage}
             isTyping={isTyping}
-            isLoading={isLoading || isGeneratingImage}
+            isLoading={isLoading || isGeneratingImage || isGeneratingVideo}
             onSendMessage={handleSendMessage}
             isMuted={isMuted}
             onToggleMute={onToggleMute}
@@ -446,10 +449,17 @@ const handleSendVoiceMessage = useCallback((message: string) => {
             onCancel={handleCancelVoiceInput}
         />
       )}
+    
+      {isGeneratingVideo && (
+        <LoadingOverlay message={videoLoadingMessage} />
+      )}
+       {error && (
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-red-800/90 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn">
+            <p>{error}</p>
+            <button onClick={() => setError(null)} className="absolute top-1 right-1 text-white/70 hover:text-white">&times;</button>
+        </div>
+      )}
 
-      <FullScreenImage 
-        isVisible={isImageViewerOpen} 
-      />
     </main>
   );
 };
