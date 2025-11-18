@@ -46,6 +46,12 @@ Always be ready to answer questions about onsen etiquette clearly and helpfully.
   },
 });
 
+// --- MOCK FOR DEVELOPMENT ---
+const USE_MOCK = false;
+let turn = 0;
+let wellbeingInfo = "";
+// --------------------------
+
 export interface WellbeingProfile {
   skinType: string;
   muscleSoreness: string;
@@ -67,6 +73,44 @@ export interface OnsenPreferences {
 
 
 export const sendMessageToBot = async (message: string): Promise<string> => {
+  if (USE_MOCK) {
+    // Turn 0: Initial "Hello" from the app preload
+    if (turn === 0) {
+      turn++;
+      return "Hi, whats your medical condition?";
+    }
+    // Turn 1: User's response about their wellbeing
+    if (turn === 1) {
+      wellbeingInfo = message;
+      turn++;
+      return "whats your visual preference?";
+    }
+    // Turn 2: User's response about aesthetics. Now we call the real AI.
+    if (turn === 2) {
+      turn++; // From now on, all calls will go to the real AI
+      const aestheticInfo = message;
+      
+      const combinedPrompt = `The user has provided their preferences through a shortened flow. Your task is to extract the necessary information from the details below and generate the final summary JSON block, followed by your concluding message.
+
+User's well-being information: "${wellbeingInfo}"
+- From this, infer values for skinType, muscleSoreness, stressLevel, waterTemperature, and healthGoals.
+
+User's aesthetic preferences: "${aestheticInfo}"
+- From this, infer values for atmosphere, colorPalette, and timeOfDay.
+
+Please proceed directly to generating the JSON and the final confirmation message.`;
+
+      try {
+        const response = await chat.sendMessage({ message: combinedPrompt });
+        return response.text ?? "";
+      } catch (error) {
+        console.error("Error sending message to Gemini:", error);
+        return "Sorry, I seem to be having trouble connecting. Please try again later.";
+      }
+    }
+  }
+  
+  // Default behavior (or after mock sequence is complete)
   try {
     const response = await chat.sendMessage({ message });
     return response.text ?? "";
