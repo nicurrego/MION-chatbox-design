@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import type { ChatMessage } from '../types';
 
 interface ChatBoxProps {
   characterName: string;
-  message: string;
+  history: ChatMessage[];
+  currentBotMessage: string;
   isTyping: boolean;
   isLoading: boolean;
   onSendMessage: (message: string) => void;
@@ -46,7 +48,7 @@ const StopIcon: React.FC = () => (
 
 
 const ChatBox: React.FC<ChatBoxProps> = ({ 
-    characterName, message, isTyping, isLoading, onSendMessage, 
+    characterName, history, currentBotMessage, isTyping, isLoading, onSendMessage, 
     isMuted, onToggleMute, onReadAloud, onStopAudio, isAudioPlaying, canReadAloud 
 }) => {
   const [inputValue, setInputValue] = useState('');
@@ -54,14 +56,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   useEffect(() => {
     if (messageAreaRef.current) {
-        // When the message or typing state changes, scroll to the bottom.
+        // When the history or current message changes, scroll to the bottom.
         messageAreaRef.current.scrollTop = messageAreaRef.current.scrollHeight;
     }
-  }, [message, isTyping]);
+  }, [history, currentBotMessage]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (inputValue.trim() && !isLoading) {
+    if (inputValue.trim() && !isLoading && !isTyping) {
       onSendMessage(inputValue);
       setInputValue('');
     }
@@ -102,18 +104,42 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             </button>
         </div>
       </div>
-      <div ref={messageAreaRef} className="flex-grow p-6 pt-4 text-white text-3xl tracking-wide leading-relaxed overflow-y-auto">
-        <p>
-          {message}
-          {isTyping && <TypingIndicator />}
-        </p>
+      <div ref={messageAreaRef} className="flex-grow p-6 pt-4 text-white text-3xl tracking-wide leading-relaxed overflow-y-auto flex flex-col space-y-4">
+        {/* Render completed messages */}
+        {history.map((msg, index) => (
+            <div 
+                key={`hist-${index}`} 
+                className={`w-full flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+                <p className={`px-4 py-2 rounded-xl max-w-[85%] whitespace-pre-wrap ${msg.sender === 'user' ? 'bg-slate-700' : 'bg-cyan-900/80'}`}>
+                    {msg.text}
+                </p>
+            </div>
+        ))}
+        {/* Render the bot message that is currently being typed */}
+        {currentBotMessage && (
+             <div className="w-full flex justify-start">
+                <p className="px-4 py-2 rounded-xl max-w-[85%] bg-cyan-900/80 whitespace-pre-wrap">
+                    {currentBotMessage}
+                    {isTyping && <TypingIndicator />}
+                </p>
+            </div>
+        )}
+        {/* Render a placeholder while the bot is "thinking" */}
+        {isLoading && (
+            <div className="w-full flex justify-start">
+                <p className="px-4 py-2 rounded-xl bg-cyan-900/80 animate-pulse">
+                    ...
+                </p>
+            </div>
+        )}
       </div>
       <form onSubmit={handleSubmit} className="bg-black/30 p-2">
         <input
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder={isLoading ? "Mion is thinking..." : "Type your message here..."}
+          placeholder={isLoading ? "Mion is thinking..." : (isTyping ? "..." : "Type your message here...")}
           disabled={isLoading || isTyping}
           className="w-full bg-transparent text-white text-2xl placeholder-cyan-300/70 border-0 focus:ring-0 px-4 py-2"
           autoComplete="off"

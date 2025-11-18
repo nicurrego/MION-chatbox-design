@@ -62,58 +62,45 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
   const hasStartedConversation = useRef(false);
   const typingIntervalRef = useRef<number | null>(null);
 
+  const typeMessage = useCallback((text: string, audio: string | null) => {
+    setIsTyping(true);
+    setCurrentBotMessage('');
+
+    if (audio && !isAutoplayMuted) {
+        setAudioPlaying(true);
+        playAudio(audio, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
+    }
+
+    let charIndex = 0;
+    typingIntervalRef.current = window.setInterval(() => {
+        if (charIndex < text.length) {
+            setCurrentBotMessage(text.slice(0, charIndex + 1));
+            charIndex++;
+        } else {
+            if (typingIntervalRef.current) {
+                clearInterval(typingIntervalRef.current);
+                typingIntervalRef.current = null;
+            }
+            setIsTyping(false);
+            // Add final message to history and clear the temporary one
+            setMessages(prev => [...prev, { sender: 'bot', text }]);
+            setCurrentBotMessage('');
+        }
+    }, 50);
+  }, [isAutoplayMuted]);
+
 
   useEffect(() => {
     if (hasStartedConversation.current || !initialMessage) return;
 
     hasStartedConversation.current = true;
-
+    setIsLoading(false);
     setLastBotAudio(initialAudio);
     
-    if (initialAudio && !isAutoplayMuted) {
-      setAudioPlaying(true);
-      playAudio(initialAudio, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
-    }
+    typeMessage(initialMessage.text, initialAudio);
 
-    setMessages([initialMessage]);
-    setIsLoading(false);
+  }, [initialMessage, initialAudio, typeMessage]);
 
-  }, [initialMessage, initialAudio, isAutoplayMuted]);
-
-
-  useEffect(() => {
-    if (typingIntervalRef.current) {
-      clearInterval(typingIntervalRef.current);
-    }
-
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage?.sender === 'bot') {
-      setIsTyping(true);
-      setCurrentBotMessage('');
-      
-      let charIndex = 0;
-      const textToType = lastMessage.text;
-
-      typingIntervalRef.current = window.setInterval(() => {
-        if (charIndex < textToType.length) {
-          setCurrentBotMessage(textToType.slice(0, charIndex + 1));
-          charIndex++;
-        } else {
-          if (typingIntervalRef.current) {
-            clearInterval(typingIntervalRef.current);
-            typingIntervalRef.current = null;
-          }
-          setIsTyping(false);
-        }
-      }, 50);
-    }
-
-    return () => {
-      if (typingIntervalRef.current) {
-        clearInterval(typingIntervalRef.current);
-      }
-    };
-  }, [messages]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -146,7 +133,11 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
     setAudioPlaying(false);
     setLastBotAudio(null);
 
+    const userMessage: ChatMessage = { sender: 'user', text: userInput };
+    setMessages(prev => [...prev, userMessage]);
+
     setIsLoading(true);
+    setCurrentBotMessage(''); // Ensure temp message is clear
 
     const botResponseText = await sendMessageToBot(userInput);
 
@@ -169,18 +160,14 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
         }
     }
 
+    setIsLoading(false); // Finished thinking, about to start typing
+
     const audioData = await generateSpeech(botResponseText);
     setLastBotAudio(audioData);
 
-    if (audioData && !isAutoplayMuted) {
-      setAudioPlaying(true);
-      playAudio(audioData, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
-    }
+    typeMessage(botResponseText, audioData);
 
-    const newBotMessage: ChatMessage = { sender: 'bot', text: botResponseText };
-    setMessages(prev => [...prev, newBotMessage]);
-    setIsLoading(false);
-  }, [isTyping, isLoading, isAutoplayMuted]);
+  }, [isTyping, isLoading, isAutoplayMuted, typeMessage]);
 
   const handleReadAloud = useCallback(() => {
     if (lastBotAudio && !isAudioPlaying) {
@@ -194,8 +181,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
     setAudioPlaying(false);
   }, []);
   
-  const isInitialLoading = isLoading && messages.length === 0;
-
   return (
     <main className="relative w-full h-screen overflow-hidden select-none bg-black animate-fadeInMain">
       <style>{`
@@ -248,8 +233,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
         <div className="absolute bottom-0 left-0 right-0 h-[35vh] p-4 landscape:relative landscape:inset-auto landscape:h-auto landscape:p-0 landscape:min-h-0 landscape:col-start-2 landscape:row-start-2">
           <ChatBox
             characterName="Mion"
-            message={isInitialLoading ? "Mion is waking up..." : currentBotMessage}
-            isTyping={isInitialLoading ? false : isTyping}
+            history={messages}
+            currentBotMessage={currentBotMessage}
+            isTyping={isTyping}
             isLoading={isLoading || isGeneratingImage}
             onSendMessage={handleSendMessage}
             isMuted={isAutoplayMuted}
@@ -257,7 +243,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
             onReadAloud={handleReadAloud}
             onStopAudio={handleStopAudio}
             isAudioPlaying={isAudioPlaying}
-            canReadAloud={!!lastBotAudio && !isTyping}
+            canReadAloud={!!lastBotAudio && !isTyping && !currentBotMessage}
           />
         </div>
       </div>
