@@ -55,9 +55,9 @@ type DevMode = 'Developing' | 'fast_develop' | 'test';
  * b) 'fast_develop': Short mock chat for 2 turns, then calls the real AI to generate the JSON. Real image generation and speech synthesis are used.
  * c) 'test': Full app functionality. All calls go to the real APIs.
  */
-// Fix: Changed const to let. Using const causes TypeScript to narrow the type to the literal 'Developing',
-// which flags comparisons against other modes (e.g., 'test') as an error because the types don't overlap.
-// Using let ensures the type remains the broader `DevMode`, allowing for valid comparisons.
+// Fix: Use 'let' for DEV_MODE. Using 'const' would cause TypeScript to infer a narrow literal type,
+// leading to a comparison error with other DevMode values. 'let' ensures the type is the broader
+// union type, allowing for correct comparisons.
 let DEV_MODE: DevMode = 'Developing';
 // --------------------------
 
@@ -214,7 +214,7 @@ export const generateOnsenImage = async (preferences: OnsenPreferences): Promise
     }
     
     // Real generation for 'fast_develop' and 'test'
-    const basePrompt = `Generate a visually stunning, photorealistic, landscape-aspect-ratio image of a custom onsen experience.
+    const basePrompt = `Generate a visually stunning, photorealistic, portrait-aspect-ratio (9:16) image of a custom onsen experience.
     The atmosphere is serene and embodies the feeling of a '${preferences.aestheticProfile.atmosphere}'.
     The time of day is '${preferences.aestheticProfile.timeOfDay}', which casts a light palette best described as '${preferences.aestheticProfile.colorPalette}'.
     The onsen is designed for ultimate relaxation, reflecting a goal of '${preferences.wellbeingProfile.healthGoals}' and soothing '${preferences.wellbeingProfile.muscleSoreness}'.

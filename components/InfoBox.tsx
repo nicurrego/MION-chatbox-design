@@ -43,7 +43,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
                   <img 
                     src={url} 
                     alt={`Onsen concept variation ${index + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+                    className="w-full h-full object-contain transition-transform duration-300 ease-in-out group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors duration-300"></div>
                 </button>
