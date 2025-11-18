@@ -6,6 +6,8 @@ import { playAudio, stopAudio } from '../utils/audioUtils';
 import CharacterSprite from './CharacterSprite';
 import ChatBox from './ChatBox';
 import InfoBox from './InfoBox';
+import Subtitles from './Subtitles';
+import ActionButtons from './ActionButtons';
 
 const FullScreenImage: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
   const imageUrl = "https://i.imgur.com/iJZb5Cz.jpeg"; 
@@ -58,6 +60,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
 
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const hasStartedConversation = useRef(false);
   const typingIntervalRef = useRef<number | null>(null);
@@ -82,9 +86,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
                 typingIntervalRef.current = null;
             }
             setIsTyping(false);
-            // Add final message to history and clear the temporary one
+            // Add final message to history. The currentBotMessage will clear after a delay.
             setMessages(prev => [...prev, { sender: 'bot', text }]);
-            setCurrentBotMessage('');
         }
     }, 50);
   }, [isAutoplayMuted]);
@@ -167,7 +170,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
 
     typeMessage(botResponseText, audioData);
 
-  }, [isTyping, isLoading, isAutoplayMuted, typeMessage]);
+  }, [isTyping, isLoading, typeMessage]);
 
   const handleReadAloud = useCallback(() => {
     if (lastBotAudio && !isAudioPlaying) {
@@ -230,8 +233,21 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
           />
         </div>
         
-        <div className="absolute bottom-0 left-0 right-0 h-[35vh] p-4 landscape:relative landscape:inset-auto landscape:h-auto landscape:p-0 landscape:min-h-0 landscape:col-start-2 landscape:row-start-2">
-          <ChatBox
+        <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center">
+            <Subtitles 
+                message={currentBotMessage}
+                isTyping={isTyping}
+            />
+             <ActionButtons 
+                onToggleChat={() => setIsChatOpen(prev => !prev)}
+                isMuted={isAutoplayMuted}
+                onToggleMute={() => setAutoplayMuted(prev => !prev)}
+            />
+        </div>
+      </div>
+        
+      {isChatOpen && (
+         <ChatBox
             characterName="Mion"
             history={messages}
             currentBotMessage={currentBotMessage}
@@ -243,10 +259,10 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
             onReadAloud={handleReadAloud}
             onStopAudio={handleStopAudio}
             isAudioPlaying={isAudioPlaying}
-            canReadAloud={!!lastBotAudio && !isTyping && !currentBotMessage}
+            canReadAloud={!!lastBotAudio && !isTyping}
+            onClose={() => setIsChatOpen(false)}
           />
-        </div>
-      </div>
+      )}
 
       <FullScreenImage 
         isVisible={isImageViewerOpen} 
