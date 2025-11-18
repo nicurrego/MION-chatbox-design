@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 
 interface InfoBoxProps {
   isGeneratingImage: boolean;
-  generatedImageUrl: string | null;
+  generatedImageUrls: string[] | null;
 }
 
-const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrl }) => {
+const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls }) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -29,18 +29,37 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrl 
       );
     }
 
-    if (generatedImageUrl) {
-      return (
-        <img 
-            src={generatedImageUrl} 
-            alt="Your personalized onsen concept"
-            className="w-full h-full object-cover rounded-lg transition-opacity duration-1000 opacity-0 animate-fadeInImage"
-        />
-      );
-    }
+    if (generatedImageUrls && generatedImageUrls.length > 0) {
+        return (
+          <div className="w-full h-full flex flex-col">
+            <h2 className="text-xl text-cyan-200 mb-2 text-center flex-shrink-0">Please select a concept:</h2>
+            <div className="flex-grow w-full grid grid-cols-2 grid-rows-2 gap-2">
+              {generatedImageUrls.map((url, index) => (
+                <button 
+                  key={index} 
+                  className="relative w-full h-full overflow-hidden rounded-lg group focus:outline-none focus:ring-4 focus:ring-cyan-400/80 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  aria-label={`Select onsen concept variation ${index + 1}`}
+                >
+                  <img 
+                    src={url} 
+                    alt={`Onsen concept variation ${index + 1}`}
+                    className="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors duration-300"></div>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      }
     
     return (
-        <div className="text-right">
+      <>
+        <div>
+          <h2 className="text-3xl text-cyan-200 border-b-2 border-cyan-400/50 pb-2">SESSION INFO</h2>
+          <p className="text-lg text-white/80 mt-2 italic">Your onsen profile will appear here once created.</p>
+        </div>
+        <div className="mt-auto text-right">
             <div className="text-5xl md:text-7xl" style={{ textShadow: '0 0 10px rgba(0, 255, 255, 0.7)' }}>
                 {formattedTime}
             </div>
@@ -48,12 +67,13 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrl 
                 ☀️ 27°
             </div>
         </div>
+      </>
     );
   };
 
 
   return (
-    <div className="bg-slate-900/80 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-4 flex items-center justify-end text-white h-full transition-all duration-500">
+    <div className="bg-slate-900/80 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-6 flex flex-col text-white h-full transition-all duration-500">
       <style>{`
         @keyframes fadeInImage {
           from { opacity: 0; }

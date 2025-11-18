@@ -85,6 +85,8 @@ const FullScreenImage: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
 interface MainScreenProps {
   initialMessage: ChatMessage | null;
   initialAudio: string | null;
+  isMuted: boolean;
+  onToggleMute: () => void;
 }
 
 const splitIntoSentences = (text: string): string[] => {
@@ -94,7 +96,7 @@ const splitIntoSentences = (text: string): string[] => {
     return sentences.map(s => s.trim()).filter(Boolean);
 };
 
-const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio }) => {
+const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
   const [persistentSubtitle, setPersistentSubtitle] = useState('');
@@ -104,14 +106,14 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
   const [isLoading, setIsLoading] = useState(!initialMessage);
   const [isImageViewerOpen, setImageViewerOpen] = useState(false);
   
-  const [isAutoplayMuted, setAutoplayMuted] = useState(false);
   const [lastBotAudio, setLastBotAudio] = useState<string | null>(null);
   const [isAudioPlaying, setAudioPlaying] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
 
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
+  const [generatedImageUrls, setGeneratedImageUrls] = useState<string[] | null>(null);
   
   const [isChatOpen, setIsChatOpen] = useState(false);
 
@@ -131,9 +133,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
     setCurrentBotMessage('');
     setPersistentSubtitle(''); // Clear previous persistent subtitle
 
-    if (audio && !isAutoplayMuted) {
+    if (audio) {
         setAudioPlaying(true);
-        playAudio(audio, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
+        playAudio(audio, audioCtxRef, audioSourceRef, gainNodeRef, isMuted, () => setAudioPlaying(false));
     }
 
     let charIndex = 0;
@@ -180,7 +182,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
     }, cumulativeDelay + 2000); // 2-second buffer
     subtitleTimeoutRefs.current.push(finalTimeoutId);
 
-  }, [isAutoplayMuted]);
+  }, [isMuted]);
 
 
   useEffect(() => {
@@ -194,6 +196,12 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
 
   }, [initialMessage, initialAudio, typeMessage]);
 
+  useEffect(() => {
+    if (gainNodeRef.current && audioCtxRef.current) {
+      // Use setValueAtTime for a smooth transition to prevent audio clicks/pops.
+      gainNodeRef.current.gain.setValueAtTime(isMuted ? 0 : 1, audioCtxRef.current.currentTime);
+    }
+  }, [isMuted]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -250,13 +258,13 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
         try {
             const preferences: OnsenPreferences = JSON.parse(match[1]);
             setIsGeneratingImage(true);
-            const imageBase64 = await generateOnsenImage(preferences);
-            if (imageBase64) {
-                const imageUrl = `data:image/png;base64,${imageBase64}`;
-                setGeneratedImageUrl(imageUrl);
+            const imageBase64Array = await generateOnsenImage(preferences);
+            if (imageBase64Array && imageBase64Array.length > 0) {
+                const imageUrls = imageBase64Array.map(base64 => `data:image/png;base64,${base64}`);
+                setGeneratedImageUrls(imageUrls);
             }
         } catch (error) {
-            console.error("Failed to parse preferences JSON or generate image:", error);
+            console.error("Failed to parse preferences JSON or generate images:", error);
         } finally {
             setIsGeneratingImage(false);
         }
@@ -274,9 +282,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
   const handleReadAloud = useCallback(() => {
     if (lastBotAudio && !isAudioPlaying) {
       setAudioPlaying(true);
-      playAudio(lastBotAudio, audioCtxRef, audioSourceRef, () => setAudioPlaying(false));
+      playAudio(lastBotAudio, audioCtxRef, audioSourceRef, gainNodeRef, isMuted, () => setAudioPlaying(false));
     }
-  }, [lastBotAudio, isAudioPlaying]);
+  }, [lastBotAudio, isAudioPlaying, isMuted]);
 
   const handleStopAudio = useCallback(() => {
     stopAudio(audioSourceRef);
@@ -380,16 +388,16 @@ const handleSendVoiceMessage = useCallback((message: string) => {
           }}
       ></div>
       
-      <div className="relative w-full h-full landscape:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:grid-rows-[auto_1fr] landscape:gap-8">
+      <div className="relative w-full h-full landscape:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-8">
         
         <div className="absolute top-0 left-0 right-0 h-[15vh] p-4 landscape:relative landscape:inset-auto landscape:h-auto landscape:p-0 landscape:col-start-2 landscape:row-start-1">
           <InfoBox 
             isGeneratingImage={isGeneratingImage}
-            generatedImageUrl={generatedImageUrl}
+            generatedImageUrls={generatedImageUrls}
           />
         </div>
         
-        <div className="absolute inset-0 top-[15vh] p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1 landscape:row-span-2">
+        <div className="absolute inset-0 top-[15vh] p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1">
           <CharacterSprite 
             imageUrl="https://i.imgur.com/wWoqIhN.jpeg"
             isThinking={isLoading || isGeneratingImage}
@@ -403,8 +411,8 @@ const handleSendVoiceMessage = useCallback((message: string) => {
             />
              <ActionButtons 
                 onToggleChat={() => setIsChatOpen(prev => !prev)}
-                isMuted={isAutoplayMuted}
-                onToggleMute={() => setAutoplayMuted(prev => !prev)}
+                isMuted={isMuted}
+                onToggleMute={onToggleMute}
                 onStartVoiceInput={handleStartVoiceInput}
                 areSubtitlesVisible={areSubtitlesVisible}
                 onToggleSubtitles={() => setAreSubtitlesVisible(prev => !prev)}
@@ -420,8 +428,8 @@ const handleSendVoiceMessage = useCallback((message: string) => {
             isTyping={isTyping}
             isLoading={isLoading || isGeneratingImage}
             onSendMessage={handleSendMessage}
-            isMuted={isAutoplayMuted}
-            onToggleMute={() => setAutoplayMuted(prev => !prev)}
+            isMuted={isMuted}
+            onToggleMute={onToggleMute}
             onReadAloud={handleReadAloud}
             onStopAudio={handleStopAudio}
             isAudioPlaying={isAudioPlaying}

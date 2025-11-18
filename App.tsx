@@ -10,6 +10,7 @@ const App: React.FC = () => {
   const [isExitingWelcome, setIsExitingWelcome] = useState(false);
   const [initialBotMessage, setInitialBotMessage] = useState<ChatMessage | null>(null);
   const [initialAudioData, setInitialAudioData] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(true); // Mute state for the whole app
 
   // Preload initial content when the app mounts, without blocking the UI
   useEffect(() => {
@@ -36,11 +37,29 @@ const App: React.FC = () => {
       setShowWelcome(false);
     }, 1000); 
   };
+  
+  const handleToggleMute = () => {
+    setIsMuted(prev => !prev);
+  }
 
   return (
     <>
-      {showWelcome && <WelcomeScreen onContinue={handleContinue} isExiting={isExitingWelcome} />}
-      {!showWelcome && <MainScreen initialMessage={initialBotMessage} initialAudio={initialAudioData} />}
+      {showWelcome && (
+        <WelcomeScreen 
+          onContinue={handleContinue} 
+          isExiting={isExitingWelcome} 
+          isMuted={isMuted}
+          onToggleMute={handleToggleMute}
+        />
+      )}
+      {!showWelcome && (
+        <MainScreen 
+          initialMessage={initialBotMessage} 
+          initialAudio={initialAudioData}
+          isMuted={isMuted}
+          onToggleMute={handleToggleMute}
+        />
+      )}
     </>
   );
 };
