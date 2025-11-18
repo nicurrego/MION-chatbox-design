@@ -8,6 +8,48 @@ import ChatBox from './ChatBox';
 import InfoBox from './InfoBox';
 import Subtitles from './Subtitles';
 import ActionButtons from './ActionButtons';
+import VoiceInputUI from './VoiceInputUI';
+
+// Fix: Add interfaces for the Web Speech API to fix TypeScript errors.
+// These are not included in standard DOM typings.
+interface SpeechRecognitionAlternative {
+    readonly transcript: string;
+    readonly confidence: number;
+}
+  
+interface SpeechRecognitionResult {
+    readonly isFinal: boolean;
+    readonly length: number;
+    item(index: number): SpeechRecognitionAlternative;
+    [index: number]: SpeechRecognitionAlternative;
+}
+  
+interface SpeechRecognitionResultList {
+    readonly length: number;
+    item(index: number): SpeechRecognitionResult;
+    [index: number]: SpeechRecognitionResult;
+}
+  
+interface SpeechRecognitionEvent extends Event {
+    readonly results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+    readonly error: string;
+    readonly message: string;
+}
+  
+interface SpeechRecognition {
+    continuous: boolean;
+    interimResults: boolean;
+    lang: string;
+    start(): void;
+    stop(): void;
+    onstart: () => void;
+    onresult: (event: SpeechRecognitionEvent) => void;
+    onerror: (event: SpeechRecognitionErrorEvent) => void;
+    onend: () => void;
+}
 
 const FullScreenImage: React.FC<{ isVisible: boolean }> = ({ isVisible }) => {
   const imageUrl = "https://i.imgur.com/iJZb5Cz.jpeg"; 
@@ -62,6 +104,12 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   
   const [isChatOpen, setIsChatOpen] = useState(false);
+
+  // Voice Input State
+  const [isVoiceInputActive, setIsVoiceInputActive] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [transcript, setTranscript] = useState('');
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const hasStartedConversation = useRef(false);
   const typingIntervalRef = useRef<number | null>(null);
@@ -183,6 +231,65 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
     stopAudio(audioSourceRef);
     setAudioPlaying(false);
   }, []);
+
+  const handleStartVoiceInput = useCallback(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Sorry, your browser doesn't support speech recognition.");
+        return;
+    }
+    
+    if (recognitionRef.current) {
+        recognitionRef.current.stop();
+    }
+    
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    
+    recognition.onstart = () => setIsRecording(true);
+    
+    recognition.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        for (let i = 0; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+        setTranscript(finalTranscript + interimTranscript);
+    };
+    
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsRecording(false);
+    };
+    
+    recognition.onend = () => setIsRecording(false);
+    
+    recognition.start();
+    recognitionRef.current = recognition;
+    setIsVoiceInputActive(true);
+    setTranscript('');
+}, []);
+
+const handleCancelVoiceInput = useCallback(() => {
+    if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+    }
+    setIsVoiceInputActive(false);
+    setIsRecording(false);
+    setTranscript('');
+}, []);
+
+const handleSendVoiceMessage = useCallback((message: string) => {
+    handleCancelVoiceInput();
+    handleSendMessage(message);
+}, [handleCancelVoiceInput, handleSendMessage]);
   
   return (
     <main className="relative w-full h-screen overflow-hidden select-none bg-black animate-fadeInMain">
@@ -242,6 +349,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
                 onToggleChat={() => setIsChatOpen(prev => !prev)}
                 isMuted={isAutoplayMuted}
                 onToggleMute={() => setAutoplayMuted(prev => !prev)}
+                onStartVoiceInput={handleStartVoiceInput}
             />
         </div>
       </div>
@@ -262,6 +370,15 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio })
             canReadAloud={!!lastBotAudio && !isTyping}
             onClose={() => setIsChatOpen(false)}
           />
+      )}
+
+      {isVoiceInputActive && (
+        <VoiceInputUI 
+            transcript={transcript}
+            isRecording={isRecording}
+            onSend={handleSendVoiceMessage}
+            onCancel={handleCancelVoiceInput}
+        />
       )}
 
       <FullScreenImage 
