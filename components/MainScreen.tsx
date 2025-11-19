@@ -367,7 +367,7 @@ const handleSendVoiceMessage = useCallback((message: string) => {
          ></div>
       ) : (
         <video
-            src="https://i.imgur.com/XV1EEY6.mp4"
+            src="videos/looping_ofuro.mp4"
             autoPlay loop muted playsInline
             className="absolute inset-0 w-full h-full object-cover"
         />
@@ -402,7 +402,7 @@ const handleSendVoiceMessage = useCallback((message: string) => {
         
         <div className="absolute inset-0 top-[15vh] p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1">
           <CharacterSprite 
-            imageUrl="https://i.imgur.com/wWoqIhN.jpeg"
+            imageUrl="/images/cute_duck.png"
             isThinking={isLoading || isGeneratingImage || isGeneratingVideo}
           />
         </div>
