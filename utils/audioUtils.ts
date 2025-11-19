@@ -1,3 +1,4 @@
+
 import type { MutableRefObject } from 'react';
 
 /**
@@ -61,16 +62,20 @@ export const stopAudio = (
 
 
 /**
- * Plays a base64 encoded audio string.
+ * Plays a base64 encoded audio string using a GainNode for volume control.
  * @param base64Audio The base64 encoded audio data.
  * @param audioCtxRef A React ref to store the AudioContext instance.
  * @param audioSourceRef A React ref to store the current AudioBufferSourceNode.
+ * @param gainNodeRef A React ref to store the GainNode for volume control.
+ * @param isMuted The current mute state to set initial volume.
  * @param onEnded A callback function to execute when audio playback finishes.
  */
 export const playAudio = async (
   base64Audio: string,
   audioCtxRef: MutableRefObject<AudioContext | null>,
   audioSourceRef: MutableRefObject<AudioBufferSourceNode | null>,
+  gainNodeRef: MutableRefObject<GainNode | null>,
+  isMuted: boolean,
   onEnded: () => void,
 ) => {
   // Ensure any previously playing audio is stopped before starting new audio.
@@ -84,6 +89,23 @@ export const playAudio = async (
     });
   }
   const ctx = audioCtxRef.current;
+
+  // Create and configure the GainNode if it doesn't exist.
+  if (!gainNodeRef.current) {
+    gainNodeRef.current = ctx.createGain();
+    gainNodeRef.current.connect(ctx.destination);
+  }
+  const gainNode = gainNodeRef.current;
+
+  // Set the initial volume based on the mute state.
+  gainNode.gain.setValueAtTime(isMuted ? 0 : 1, ctx.currentTime);
+  
+
+  // Check if the AudioContext is suspended. If so, resume it.
+  // This is crucial for browsers that auto-suspend audio contexts.
+  if (ctx.state === 'suspended') {
+    await ctx.resume();
+  }
   
   try {
     const decodedData = decode(base64Audio);
@@ -91,7 +113,8 @@ export const playAudio = async (
     
     const source = ctx.createBufferSource();
     source.buffer = audioBuffer;
-    source.connect(ctx.destination);
+    // Connect the source to the GainNode, which is then connected to the destination.
+    source.connect(gainNode);
     source.start();
 
     // Store the source so we can stop it later

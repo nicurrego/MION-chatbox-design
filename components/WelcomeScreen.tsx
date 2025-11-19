@@ -1,8 +1,11 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 
 interface WelcomeScreenProps {
   onContinue: () => void;
   isExiting: boolean;
+  isMuted: boolean;
+  onToggleMute: () => void;
 }
 
 const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
@@ -16,9 +19,8 @@ const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
 );
 
 
-const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) => {
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, isMuted, onToggleMute }) => {
   const [screen, setScreen] = useState<'loop' | 'intro'>('loop');
-  const [isMuted, setIsMuted] = useState(true);
   const introVideoRef = useRef<HTMLVideoElement>(null);
   const loopVideoRef = useRef<HTMLVideoElement>(null);
 
@@ -28,15 +30,17 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) 
 
   const toggleSound = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsMuted(prev => {
-        const newMutedState = !prev;
-        if (loopVideoRef.current) {
-            loopVideoRef.current.muted = newMutedState;
-        }
-        return newMutedState;
-    });
+    onToggleMute();
   };
+  
+  // Sync loop video mute state with global prop
+  useEffect(() => {
+    if (loopVideoRef.current) {
+        loopVideoRef.current.muted = isMuted;
+    }
+  }, [isMuted]);
 
+  // Sync intro video mute state when it becomes active
   useEffect(() => {
     if (screen === 'intro' && introVideoRef.current) {
       introVideoRef.current.muted = isMuted;
@@ -86,7 +90,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting }) 
                 src="/intro_loop.mp4"
                 autoPlay
                 loop
-                muted
+                muted // Start muted, will be synced by useEffect
                 playsInline
                 className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
             />
