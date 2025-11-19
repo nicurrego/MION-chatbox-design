@@ -184,9 +184,14 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
             });
             const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
             return base64Audio ?? null;
-        } catch (error) {
-            console.error("Error generating speech:", error);
-            return null;
+        } catch (error: any) {
+            // Check if it's a quota error (429)
+            if (error?.message?.includes('429') || error?.message?.includes('quota')) {
+                console.warn("⚠️ TTS quota exceeded. Continuing without audio.");
+            } else {
+                console.error("Error generating speech:", error);
+            }
+            return null; // Gracefully continue without audio
         }
     } else {
         return null; // No speech synthesis in full developing mode
@@ -242,8 +247,13 @@ export const generateOnsenImage = async (preferences: OnsenPreferences): Promise
           
           return imageDatas;
 
-      } catch (error) {
-          console.error("Error generating onsen images:", error);
+      } catch (error: any) {
+          // Check if it's a quota error (429)
+          if (error?.message?.includes('429') || error?.message?.includes('quota')) {
+              console.error("⚠️ Image generation quota exceeded. Please try again later or upgrade your API plan.");
+          } else {
+              console.error("Error generating onsen images:", error);
+          }
           return null;
       }
     } else {

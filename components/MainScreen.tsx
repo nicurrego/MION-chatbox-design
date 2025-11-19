@@ -235,7 +235,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     try {
         const { base64, mimeType } = await urlToBase64(url);
 
-        // API Key Check
+        // API Key Check (only available in AI Studio environment)
         if (!apiKeySelected) {
             if (window.aistudio?.openSelectKey) {
                 await window.aistudio.openSelectKey();
@@ -245,7 +245,11 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
                     throw new Error("An API key is required for video generation.");
                 }
             } else {
-                throw new Error("Could not find the API key selection utility.");
+                // Running outside AI Studio - skip video generation
+                console.warn("⚠️ Video generation is only available in AI Studio environment.");
+                setError("Video generation is only available in AI Studio. Showing static image instead.");
+                setIsGeneratingVideo(false);
+                return; // Exit gracefully
             }
         }
         

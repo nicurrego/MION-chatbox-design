@@ -174,6 +174,17 @@ prebuiltVoiceConfig: { voiceName: 'Kore' }, // Try: Aoede, Charon, Fenrir, etc.
 - Make sure you created `.env.local` with `GEMINI_API_KEY=your_key`
 - Restart the dev server after creating the file
 
+### **"429 - Quota Exceeded" Error**
+- **Cause**: You've hit the daily request limit for Gemini API (free tier)
+- **Solution**:
+  - Wait 24 hours for quota to reset
+  - Upgrade to a paid plan at [Google AI Studio](https://ai.google.dev/)
+  - The app will continue working without TTS/image generation
+- **Free Tier Limits**:
+  - 1,500 requests per day for text generation
+  - 50 requests per day for image generation
+  - 100 requests per day for TTS
+
 ### **Text appears corrupted or shows "undefined"**
 - This was a font rendering issue, now fixed with improved letter spacing
 - Clear browser cache and refresh
@@ -182,10 +193,41 @@ prebuiltVoiceConfig: { voiceName: 'Kore' }, // Try: Aoede, Charon, Fenrir, etc.
 - Check browser console for errors
 - Some browsers require user interaction before playing audio
 - Try clicking the speaker icon to manually trigger playback
+- If you see quota errors, TTS is disabled but chat still works
+
+### **"Video generation is only available in AI Studio"**
+- Video generation requires the AI Studio environment
+- When running locally, you'll see static images instead
+- This is expected behavior and doesn't affect core functionality
 
 ### **Build fails**
 - Run `npm install` to ensure all dependencies are installed
 - Check that Node.js version is 18 or higher
+
+---
+
+## 📊 API Usage & Quotas
+
+### **Free Tier Limits (Gemini API)**
+The free tier has daily quotas that reset every 24 hours:
+
+| Feature | Free Tier Limit | Model Used |
+|---------|----------------|------------|
+| **Chat Messages** | 1,500 requests/day | `gemini-2.5-flash` |
+| **Text-to-Speech** | 100 requests/day | `gemini-2.5-flash-preview-tts` |
+| **Image Generation** | 50 requests/day | `gemini-2.5-flash-image` |
+
+### **What Happens When You Hit Quota?**
+- ✅ **Chat continues working** - Core conversation functionality is preserved
+- ❌ **TTS is disabled** - No voice synthesis, but text still appears
+- ❌ **Image generation fails** - Fallback to placeholder images
+- 🔄 **Quota resets** - Wait 24 hours or upgrade your plan
+
+### **Best Practices**
+1. **Monitor your usage** at [Google AI Studio Usage Dashboard](https://ai.dev/usage?tab=rate-limit)
+2. **Disable TTS during testing** - Set `DEV_MODE = 'Developing'` in `geminiService.ts`
+3. **Use mock data** - Enable development mode to avoid API calls
+4. **Upgrade if needed** - Consider paid plans for production use
 
 ---
 
@@ -196,6 +238,7 @@ prebuiltVoiceConfig: { voiceName: 'Kore' }, // Try: Aoede, Charon, Fenrir, etc.
 - ✅ No sensitive data is hardcoded in the source
 - ⚠️ Always use `.env.local` for local development
 - ⚠️ For production deployment, use your hosting platform's environment variable system
+- ⚠️ Never share your API key publicly or commit it to version control
 
 ---
 
