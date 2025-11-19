@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 // --- Icon Components ---
@@ -40,21 +41,31 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, on
     return (
         <div className="absolute bottom-4 right-4 flex items-center space-x-3 z-30">
             {/* Subtitles Button */}
-            <button
-                onClick={onToggleSubtitles}
-                className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
-                aria-label={areSubtitlesVisible ? 'Hide subtitles' : 'Show subtitles'}
-            >
-                <SubtitlesIcon isVisible={areSubtitlesVisible} />
-            </button>
+            <div className="relative group">
+                <button
+                    onClick={onToggleSubtitles}
+                    className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
+                    aria-label={areSubtitlesVisible ? 'Hide subtitles' : 'Show subtitles'}
+                >
+                    <SubtitlesIcon isVisible={areSubtitlesVisible} />
+                </button>
+                <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
+                    {areSubtitlesVisible ? 'Hide subtitles' : 'Show subtitles'}
+                </div>
+            </div>
             {/* Mute Button */}
-            <button
-                onClick={onToggleMute}
-                className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
-                aria-label={isMuted ? 'Unmute' : 'Mute'}
-            >
-                <SoundIcon isMuted={isMuted} />
-            </button>
+            <div className="relative group">
+                <button
+                    onClick={onToggleMute}
+                    className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
+                    aria-label={isMuted ? 'Unmute' : 'Mute'}
+                >
+                    <SoundIcon isMuted={isMuted} />
+                </button>
+                <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
+                    {isMuted ? 'Unmute' : 'Mute'}
+                </div>
+            </div>
             {/* Microphone Button */}
              <div className="relative group">
                 <button

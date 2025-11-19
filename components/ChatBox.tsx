@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { ChatMessage } from '../types';
 
@@ -87,50 +88,69 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             .animate-slideUp { animation: slideUp 0.3s ease-out; }
         `}</style>
       <div 
-        className="relative w-11/12 max-w-4xl h-4/5 flex flex-col bg-slate-900/80 rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
+        className="w-11/12 max-w-4xl h-4/5 flex flex-col bg-slate-900/80 rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
-        <button 
-            onClick={onClose}
-            className="absolute top-2 right-2 text-white/70 hover:text-white transition-colors duration-300 p-2 z-10"
-            aria-label="Close chat"
-        >
-            <CloseIcon />
-        </button>
-        <div className="px-6 pt-3 flex justify-between items-end">
+        <div className="px-6 pt-3 pb-3 flex justify-between items-center border-b-2 border-cyan-400/50">
           <div className="bg-cyan-600/90 inline-block px-4 py-1 text-2xl text-white rounded-t-md border-t-2 border-l-2 border-r-2 border-cyan-300/60">
             {characterName}
           </div>
-          <div className="flex items-center space-x-2 mb-1">
-              {isAudioPlaying ? (
-                  <button
-                      onClick={onStopAudio}
-                      className="text-white/70 hover:text-white transition-colors duration-300 p-1"
-                      aria-label="Stop audio"
-                  >
-                      <StopIcon />
-                  </button>
-              ) : (
-                  <button
-                      onClick={onReadAloud}
-                      disabled={!canReadAloud}
-                      className="text-white/70 hover:text-white transition-colors duration-300 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                      aria-label="Read message aloud"
-                  >
-                      <PlayIcon />
-                  </button>
-              )}
+          <div className="flex items-center space-x-3">
+              {/* Play/Stop Button */}
+              <div className="relative group">
+                  {isAudioPlaying ? (
+                      <button
+                          onClick={onStopAudio}
+                          className="text-white/70 hover:text-white transition-colors duration-300 p-1"
+                          aria-label="Stop audio"
+                      >
+                          <StopIcon />
+                      </button>
+                  ) : (
+                      <button
+                          onClick={onReadAloud}
+                          disabled={!canReadAloud}
+                          className="text-white/70 hover:text-white transition-colors duration-300 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                          aria-label="Read message aloud"
+                      >
+                          <PlayIcon />
+                      </button>
+                  )}
+                  <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
+                    {isAudioPlaying ? 'Stop audio' : 'Read aloud'}
+                  </div>
+              </div>
 
-              <button
-                  onClick={onToggleMute}
+              {/* Mute Button */}
+              <div className="relative group">
+                  <button
+                      onClick={onToggleMute}
+                      className="text-white/70 hover:text-white transition-colors duration-300 p-1"
+                      aria-label={isMuted ? 'Unmute' : 'Mute'}
+                  >
+                      <SoundIcon isMuted={isMuted} />
+                  </button>
+                  <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
+                    {isMuted ? 'Unmute' : 'Mute'}
+                  </div>
+              </div>
+              
+              {/* Close Button */}
+              <div className="relative group">
+                <button 
+                  onClick={onClose}
                   className="text-white/70 hover:text-white transition-colors duration-300 p-1"
-                  aria-label={isMuted ? 'Enable autoplay' : 'Disable autoplay'}
-              >
-                  <SoundIcon isMuted={isMuted} />
-              </button>
+                  aria-label="Close chat"
+                >
+                  <CloseIcon />
+                </button>
+                <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
+                  Close chat
+                </div>
+              </div>
           </div>
         </div>
-        <div ref={messageAreaRef} className="flex-grow p-6 pt-4 text-white text-3xl tracking-wide leading-relaxed overflow-y-auto flex flex-col space-y-4">
+        <div ref={messageAreaRef} className="flex-grow p-6 text-white text-3xl tracking-wide leading-relaxed overflow-y-auto flex flex-col space-y-4">
           {/* Render completed messages */}
           {history.map((msg, index) => (
               <div 
