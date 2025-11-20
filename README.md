@@ -108,15 +108,25 @@ npm run preview
 ```
 MION-chatbox-design/
 ├── components/
-│   ├── ChatBox.tsx          # Main chat interface with input
+│   ├── ActionButtons.tsx    # Action buttons (chat, mute, voice, subtitles)
 │   ├── CharacterSprite.tsx  # Animated character display
-│   ├── InfoBox.tsx          # Clock and weather widget
+│   ├── ChatBox.tsx          # Main chat interface with input
+│   ├── InfoBox.tsx          # Session info, clock, and image selection
 │   ├── MainScreen.tsx       # Main app screen with state management
+│   ├── Subtitles.tsx        # Subtitle display component
+│   ├── VoiceInputUI.tsx     # Voice input interface
 │   └── WelcomeScreen.tsx    # Animated splash screen
 ├── services/
-│   └── geminiService.ts     # Gemini API integration (chat + TTS)
+│   └── geminiService.ts     # Gemini API integration (chat, TTS, images, video)
 ├── utils/
-│   └── audioUtils.ts        # Audio playback utilities
+│   ├── audioUtils.ts        # Audio playback utilities
+│   └── imageUtils.ts        # Image conversion utilities
+├── public/
+│   ├── images/
+│   │   ├── base_ofuro.png   # Base onsen image for generation
+│   │   └── cute_duck.png    # Character sprite
+│   └── videos/
+│       └── looping_ofuro.mp4 # Default background video
 ├── types.ts                 # TypeScript type definitions
 ├── App.tsx                  # Root component
 ├── index.tsx                # App entry point
@@ -139,10 +149,15 @@ MION-chatbox-design/
 
 ### **Technical Architecture**
 - **React 19** with TypeScript for type-safe component development
-- **Vite** for fast development and optimized builds
-- **Google Gemini API** for AI chat and text-to-speech
+- **Vite** for fast development and optimized builds with environment variable injection
+- **Google Gemini API** (`@google/genai` v1.27.0) for:
+  - AI chat conversation with MION concierge
+  - Text-to-speech generation (Kore voice)
+  - Image-to-image generation (2 variations based on base_ofuro.png)
+  - Video generation with Veo 3.1 (looping onsen experience)
 - **Tailwind CSS** for utility-first styling
 - **Web Audio API** for audio playback control
+- **Web Speech API** for voice input recognition
 
 ---
 

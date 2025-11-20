@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
-import { sendMessageToBot, generateSpeech, generateOnsenImage, generateLoopingVideo } from '../services';
-import type { OnsenPreferences } from '../services';
+import { sendMessageToBot, generateSpeech, generateOnsenImage, generateLoopingVideo } from '../services/geminiService';
+import type { OnsenPreferences } from '../services/geminiService';
 import { playAudio, stopAudio } from '../utils/audioUtils';
 import { urlToBase64 } from '../utils/imageUtils';
 
