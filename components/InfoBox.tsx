@@ -35,21 +35,25 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
     if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
         return (
           <div className="w-full h-full flex flex-col">
-            <h2 className="text-xl text-cyan-200 mb-2 text-center flex-shrink-0">Please select a concept:</h2>
-            <div className="flex-grow w-full grid grid-cols-2 grid-rows-2 gap-2">
+            <h2 className="text-xl text-cyan-200 mb-3 text-center flex-shrink-0">Please select a concept:</h2>
+            <div className="flex-grow w-full flex flex-col gap-3 overflow-y-auto">
               {generatedImageUrls.map((url, index) => (
-                <button 
+                <button
                   key={index}
                   onClick={() => onConceptSelect(url)}
-                  className="relative w-full h-full overflow-hidden rounded-lg group focus:outline-none focus:ring-4 focus:ring-cyan-400/80 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg group focus:outline-none focus:ring-4 focus:ring-cyan-400/80 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-300 hover:ring-2 hover:ring-cyan-400/50"
                   aria-label={`Select onsen concept variation ${index + 1}`}
                 >
-                  <img 
-                    src={url} 
+                  <img
+                    src={url}
                     alt={`Onsen concept variation ${index + 1}`}
                     className="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors duration-300"></div>
+                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                    <span className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 px-4 py-2 rounded-full">
+                      Concept {index + 1}
+                    </span>
+                  </div>
                 </button>
               ))}
             </div>

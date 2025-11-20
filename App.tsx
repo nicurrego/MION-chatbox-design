@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import WelcomeScreen from './components/WelcomeScreen';
 import MainScreen from './components/MainScreen';
-import { sendMessageToBot, generateSpeech } from './services/geminiService';
+import { sendMessageToBot, generateSpeech } from './services';
 import type { ChatMessage } from './types';
 
 const App: React.FC = () => {

@@ -86,12 +86,24 @@ export interface OnsenPreferences {
 
 
 export const sendMessageToBot = async (message: string): Promise<string> => {
+    console.log("📤 [API] sendMessageToBot called - Mode:", DEV_MODE);
+    console.log("📝 [API] Message preview:", message.substring(0, 50) + "...");
+
     if (DEV_MODE === 'test') {
+      console.log("🌐 [API] Test mode - making real API call to Gemini...");
       try {
         const response = await chat.sendMessage({ message });
-        return response.text ?? "";
-      } catch (error) {
-        console.error("Error sending message to Gemini:", error);
+        const responseText = response.text ?? "";
+        console.log("✅ [API] Response received - Length:", responseText.length, "characters");
+        return responseText;
+      } catch (error: any) {
+        console.error("❌ [API] Error sending message to Gemini:", error);
+
+        // Check for quota errors
+        if (error?.message?.includes('429') || error?.message?.includes('quota')) {
+            console.error("⚠️ [API] QUOTA EXCEEDED - Daily limit reached");
+        }
+
         return "Sorry, I seem to be having trouble connecting. Please try again later.";
       }
     } else {
@@ -105,19 +117,25 @@ export const sendMessageToBot = async (message: string): Promise<string> => {
       }
     
       // Mock sequence for 'Developing' and 'fast_develop'
+      console.log("🧪 [API] Mock conversation - Turn:", turn);
+
       if (turn === 0) {
         turn++;
+        console.log("🧪 [API] Mock turn 1 - Asking for medical condition");
         return "Hi, whats your medical condition?";
       }
       if (turn === 1) {
         wellbeingInfo = message;
         turn++;
+        console.log("🧪 [API] Mock turn 2 - Saved wellbeing info, asking for visual preference");
         return "whats your visual preference?";
       }
       if (turn === 2) {
         turn++; // Subsequent calls will now fall through to the real AI for fast_develop
-        
+        console.log("🧪 [API] Mock turn 3 - Generating JSON response");
+
         if (DEV_MODE === 'Developing') {
+          console.log("🧪 [API] Full development mode - returning mock JSON");
           const mockPreferences: OnsenPreferences = {
             wellbeingProfile: {
               skinType: "dry", muscleSoreness: "shoulders", stressLevel: "high",
@@ -164,11 +182,18 @@ Please proceed directly to generating the JSON and the final confirmation messag
   };
 
 export const generateSpeech = async (text: string): Promise<string | null> => {
+    console.log("🔊 [TTS] generateSpeech called - Mode:", DEV_MODE);
+
     // FIX: Re-ordered if/else to avoid a TypeScript error about an always-false condition when DEV_MODE is set to 'test'. The logic is functionally identical.
     if (DEV_MODE !== 'Developing') {
         if (!text.trim()) {
+            console.log("ℹ️ [TTS] Empty text provided, skipping TTS");
             return null;
         }
+
+        console.log("🌐 [TTS] Generating speech with Gemini TTS...");
+        console.log("📝 [TTS] Text preview:", text.substring(0, 50) + "...");
+
         try {
             const response = await ai.models.generateContent({
             model: "gemini-2.5-flash-preview-tts",
@@ -183,39 +208,97 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
             },
             });
             const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+
+            if (base64Audio) {
+                console.log("✅ [TTS] Speech generated successfully");
+            } else {
+                console.warn("⚠️ [TTS] No audio data in response");
+            }
+
             return base64Audio ?? null;
-        } catch (error) {
-            console.error("Error generating speech:", error);
+        } catch (error: any) {
+            console.error("❌ [TTS] Error generating speech:", error);
+
+            // Check for quota errors
+            if (error?.message?.includes('429') || error?.message?.includes('quota')) {
+                console.error("⚠️ [TTS] QUOTA EXCEEDED - TTS daily limit reached");
+            }
+
             return null;
         }
     } else {
+        console.log("🧪 [TTS] Development mode - skipping TTS generation");
         return null; // No speech synthesis in full developing mode
     }
 };
 
 export const generateOnsenImage = async (preferences: OnsenPreferences): Promise<string[] | null> => {
+    console.log("🖼️ [IMAGE] generateOnsenImage called - Mode:", DEV_MODE);
+    console.log("📋 [IMAGE] Preferences:", JSON.stringify(preferences, null, 2));
+
     // FIX: Re-ordered if/else to avoid a TypeScript error about an always-false condition when DEV_MODE is set to 'test'. The logic is functionally identical.
     if (DEV_MODE !== 'Developing') {
       // Real generation for 'fast_develop' and 'test'
-      const basePrompt = `Generate a visually stunning, photorealistic, portrait-aspect-ratio (9:16) image of a custom onsen experience.
-    The atmosphere is serene and embodies the feeling of a '${preferences.aestheticProfile.atmosphere}'.
-    The time of day is '${preferences.aestheticProfile.timeOfDay}', which casts a light palette best described as '${preferences.aestheticProfile.colorPalette}'.
-    The onsen is designed for ultimate relaxation, reflecting a goal of '${preferences.wellbeingProfile.healthGoals}' and soothing '${preferences.wellbeingProfile.muscleSoreness}'.
-    The overall mood should be tranquil, inviting, and deeply peaceful. Focus on high-detail, realistic textures for the water, surrounding nature, and materials.`;
+      console.log("🌐 [IMAGE] Generating real images with Gemini...");
+
+      // Load the base image
+      console.log("📥 [IMAGE] Loading base_ofuro.png as reference image...");
+      let baseImageBase64: string;
+      let baseImageMimeType: string;
+
+      try {
+          const response = await fetch('/images/base_ofuro.png');
+          if (!response.ok) {
+              throw new Error(`Failed to fetch base image: ${response.statusText}`);
+          }
+          const blob = await response.blob();
+          baseImageMimeType = blob.type || 'image/png';
+
+          baseImageBase64 = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                  const base64Result = (reader.result as string).split(',')[1];
+                  resolve(base64Result);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(blob);
+          });
+
+          console.log("✅ [IMAGE] Base image loaded successfully");
+      } catch (error) {
+          console.error("❌ [IMAGE] Failed to load base image:", error);
+          return null;
+      }
+
+      const basePrompt = `Modify this onsen image to create a custom experience based on these preferences:
+    - Atmosphere: '${preferences.aestheticProfile.atmosphere}'
+    - Time of day: '${preferences.aestheticProfile.timeOfDay}' with '${preferences.aestheticProfile.colorPalette}' lighting
+    - Designed for: '${preferences.wellbeingProfile.healthGoals}' and soothing '${preferences.wellbeingProfile.muscleSoreness}'
+
+    Keep the overall onsen structure but modify the atmosphere, lighting, colors, and surrounding elements to match these preferences. The mood should be tranquil, inviting, and deeply peaceful.`;
 
       const variations = [
-          " (wide angle, showing the surrounding nature)",
-          " (close-up on the water texture and steam)",
-          " (view focusing on the traditional architecture and materials)",
-          " (a view from the perspective of someone relaxing in the water)",
+          " Show a wide angle view with modified surrounding nature and atmosphere.",
+          " Focus on the water texture and steam with the new lighting and color palette.",
       ];
 
-      const imagePromises = variations.map(variation => {
+      console.log(`🎨 [IMAGE] Generating ${variations.length} image variations based on base_ofuro.png...`);
+
+      const imagePromises = variations.map((variation, index) => {
           const promptWithVariation = basePrompt + variation;
+          console.log(`📤 [IMAGE] Variation ${index + 1}:`, variation);
           return ai.models.generateContent({
               model: 'gemini-2.5-flash-image',
               contents: {
-                  parts: [{ text: promptWithVariation }],
+                  parts: [
+                      { text: promptWithVariation },
+                      {
+                          inlineData: {
+                              mimeType: baseImageMimeType,
+                              data: baseImageBase64
+                          }
+                      }
+                  ],
               },
               config: {
                   responseModalities: [Modality.IMAGE],
@@ -224,30 +307,43 @@ export const generateOnsenImage = async (preferences: OnsenPreferences): Promise
       });
 
       try {
+          console.log("⏳ [IMAGE] Waiting for all image generations to complete...");
           const responses = await Promise.all(imagePromises);
-          
-          const imageDatas = responses.map(response => {
+          console.log("✅ [IMAGE] All API calls completed");
+
+          const imageDatas = responses.map((response, index) => {
+              console.log(`🔍 [IMAGE] Processing response ${index + 1}...`);
               for (const part of response?.candidates?.[0]?.content?.parts ?? []) {
                   if (part.inlineData) {
+                      console.log(`✅ [IMAGE] Found image data in response ${index + 1}`);
                       return part.inlineData.data;
                   }
               }
+              console.warn(`⚠️ [IMAGE] No image data in response ${index + 1}`);
               return null;
           }).filter((data): data is string => data !== null); // Filter out any nulls
 
           if (imageDatas.length === 0) {
-              console.warn("No image data found in any Gemini response.", responses);
+              console.error("❌ [IMAGE] No image data found in any Gemini response");
+              console.error("📋 [IMAGE] Response details:", responses);
               return null;
           }
-          
+
+          console.log(`✅ [IMAGE] Successfully generated ${imageDatas.length} images`);
           return imageDatas;
 
-      } catch (error) {
-          console.error("Error generating onsen images:", error);
+      } catch (error: any) {
+          console.error("❌ [IMAGE] Error generating onsen images:", error);
+
+          // Check for quota errors
+          if (error?.message?.includes('429') || error?.message?.includes('quota')) {
+              console.error("⚠️ [IMAGE] QUOTA EXCEEDED - Image generation daily limit reached");
+          }
+
           return null;
       }
     } else {
-        console.log("Using mock images for development.");
+        console.log("🧪 [IMAGE] Development mode - using mock images");
         try {
             const response = await fetch('/images/base_ofuro.png');
             if (!response.ok) {

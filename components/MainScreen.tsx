@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
-import { sendMessageToBot, generateSpeech, generateOnsenImage, generateLoopingVideo } from '../services/geminiService';
-import type { OnsenPreferences } from '../services/geminiService';
+import { sendMessageToBot, generateSpeech, generateOnsenImage, generateLoopingVideo } from '../services';
+import type { OnsenPreferences } from '../services';
 import { playAudio, stopAudio } from '../utils/audioUtils';
 import { urlToBase64 } from '../utils/imageUtils';
 
@@ -101,7 +101,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [videoLoadingMessage, setVideoLoadingMessage] = useState('');
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
-  const [apiKeySelected, setApiKeySelected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -115,16 +114,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const typingIntervalRef = useRef<number | null>(null);
   const subtitleTimeoutRefs = useRef<number[]>([]);
 
-  // Check for Veo API key on mount
-  useEffect(() => {
-    const checkApiKey = async () => {
-        if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            setApiKeySelected(hasKey);
-        }
-    };
-    checkApiKey();
-  }, []);
+  // Removed API key check - using environment variable instead
 
   const typeMessage = useCallback((text: string, audio: string | null) => {
     setIsTyping(true);
@@ -194,40 +184,61 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     setAudioPlaying(false);
     setLastBotAudio(null);
 
+    console.log("💬 [CHAT] User sent message:", userInput);
     const userMessage: ChatMessage = { sender: 'user', text: userInput };
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setCurrentBotMessage('');
 
+    console.log("🤖 [CHAT] Sending message to bot...");
     const botResponseText = await sendMessageToBot(userInput);
+    console.log("✅ [CHAT] Bot response received:", botResponseText.substring(0, 100) + "...");
+
     const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
     const match = botResponseText.match(jsonRegex);
 
     if (match && match[1]) {
+        console.log("📋 [JSON] Found JSON in bot response, parsing preferences...");
         try {
             const preferences: OnsenPreferences = JSON.parse(match[1]);
+            console.log("✅ [JSON] Preferences parsed successfully:", preferences);
+
+            console.log("🖼️ [IMAGE] Starting image generation...");
             setIsGeneratingImage(true);
             const imageBase64Array = await generateOnsenImage(preferences);
+
             if (imageBase64Array && imageBase64Array.length > 0) {
+                console.log(`✅ [IMAGE] Generated ${imageBase64Array.length} images successfully`);
                 const imageUrls = imageBase64Array.map(base64 => `data:image/png;base64,${base64}`);
                 setGeneratedImageUrls(imageUrls);
+            } else {
+                console.warn("⚠️ [IMAGE] No images were generated");
             }
         } catch (error) {
-            console.error("Failed to parse preferences JSON or generate images:", error);
+            console.error("❌ [IMAGE] Failed to parse preferences JSON or generate images:", error);
             setError("Sorry, there was an issue creating the onsen visuals.");
         } finally {
             setIsGeneratingImage(false);
+            console.log("🏁 [IMAGE] Image generation process ended");
         }
+    } else {
+        console.log("ℹ️ [JSON] No JSON found in bot response - continuing normal conversation");
     }
 
     setIsLoading(false);
+    console.log("🔊 [TTS] Generating speech for bot response...");
     const audioData = await generateSpeech(botResponseText);
+    if (audioData) {
+        console.log("✅ [TTS] Speech generated successfully");
+    } else {
+        console.log("ℹ️ [TTS] No speech generated (might be disabled or quota exceeded)");
+    }
     setLastBotAudio(audioData);
     typeMessage(botResponseText, audioData);
   }, [isTyping, isLoading, typeMessage]);
 
   const handleOnsenConceptSelect = useCallback(async (url: string) => {
-    setSelectedOnsenConceptUrl(url); // Show the selected image as background immediately
+    setSelectedOnsenConceptUrl(url);
     setIsGeneratingVideo(true);
     setVideoLoadingMessage("Preparing your onsen experience...");
     setError(null);
@@ -235,38 +246,21 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     try {
         const { base64, mimeType } = await urlToBase64(url);
 
-        // API Key Check
-        if (!apiKeySelected) {
-            if (window.aistudio?.openSelectKey) {
-                await window.aistudio.openSelectKey();
-                const hasKey = await window.aistudio.hasSelectedApiKey();
-                setApiKeySelected(hasKey);
-                if (!hasKey) {
-                    throw new Error("An API key is required for video generation.");
-                }
-            } else {
-                throw new Error("Could not find the API key selection utility.");
-            }
-        }
-        
-        // Generate Video
+        // Generate Video using API key from environment variable
         const videoUrl = await generateLoopingVideo(base64, mimeType);
         setGeneratedVideoUrl(videoUrl);
 
     } catch (error: any) {
         console.error("Video generation process failed:", error);
-        if (error.message.includes("Requested entity was not found")) {
-            setError("Video generation failed. Your API key might be invalid. Please try selecting a different key.");
-            setApiKeySelected(false);
-        } else if (error.message.includes("API key is required")) {
-            setError(error.message);
+        if (error.message && error.message.includes("API_KEY")) {
+             setError("API configuration error: API_KEY is missing from environment variables.");
         } else {
             setError("Sorry, we couldn't create the video experience. Please try selecting a concept again.");
         }
     } finally {
         setIsGeneratingVideo(false);
     }
-}, [apiKeySelected]);
+}, []);
 
 
   const handleReadAloud = useCallback(() => {
@@ -380,11 +374,11 @@ const handleSendVoiceMessage = useCallback((message: string) => {
         the new background content, making it seem like the old background is still present.
       */}
       <div
-        key={generatedVideoUrl || 'bg-overlay'}
+        key={`overlay-${generatedVideoUrl || selectedOnsenConceptUrl || 'default'}`}
         className="absolute inset-0 bg-blue-600/30 backdrop-blur-sm backdrop-brightness-75"
       ></div>
-      <div 
-        key={(generatedVideoUrl || 'bg-overlay') + '-scanlines'}
+      <div
+        key={`scanlines-${generatedVideoUrl || selectedOnsenConceptUrl || 'default'}`}
         className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)', backgroundSize: '100% 4px' }}
       ></div>
       
