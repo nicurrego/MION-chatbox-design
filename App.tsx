@@ -11,6 +11,7 @@ const App: React.FC = () => {
   const [initialBotMessage, setInitialBotMessage] = useState<ChatMessage | null>(null);
   const [initialAudioData, setInitialAudioData] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(true); // Mute state for the whole app
+  const [isTtsEnabled, setIsTtsEnabled] = useState(true); // Toggle for TTS API usage
 
   // Preload initial content when the app mounts, without blocking the UI
   useEffect(() => {
@@ -42,6 +43,10 @@ const App: React.FC = () => {
     setIsMuted(prev => !prev);
   }
 
+  const handleToggleTts = () => {
+    setIsTtsEnabled(prev => !prev);
+  }
+
   return (
     <>
       {showWelcome && (
@@ -50,14 +55,17 @@ const App: React.FC = () => {
           isExiting={isExitingWelcome} 
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
+          isTtsEnabled={isTtsEnabled}
+          onToggleTts={handleToggleTts}
         />
       )}
       {!showWelcome && (
         <MainScreen 
           initialMessage={initialBotMessage} 
-          initialAudio={initialAudioData}
+          initialAudio={isTtsEnabled ? initialAudioData : null} // Only pass audio if enabled
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
+          isTtsEnabled={isTtsEnabled}
         />
       )}
     </>

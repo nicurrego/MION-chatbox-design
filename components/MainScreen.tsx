@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
 import { sendMessageToBot, generateSpeech, generateOnsenImage, generateLoopingVideo } from '../services/geminiService';
@@ -70,6 +71,7 @@ interface MainScreenProps {
   initialAudio: string | null;
   isMuted: boolean;
   onToggleMute: () => void;
+  isTtsEnabled: boolean;
 }
 
 const splitIntoSentences = (text: string): string[] => {
@@ -78,7 +80,7 @@ const splitIntoSentences = (text: string): string[] => {
     return sentences.map(s => s.trim()).filter(Boolean);
 };
 
-const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute }) => {
+const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute, isTtsEnabled }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
   const [persistentSubtitle, setPersistentSubtitle] = useState('');
@@ -221,10 +223,16 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     }
 
     setIsLoading(false);
-    const audioData = await generateSpeech(botResponseText);
+    
+    // Only generate speech if TTS is enabled
+    let audioData: string | null = null;
+    if (isTtsEnabled) {
+        audioData = await generateSpeech(botResponseText);
+    }
+    
     setLastBotAudio(audioData);
     typeMessage(botResponseText, audioData);
-  }, [isTyping, isLoading, typeMessage]);
+  }, [isTyping, isLoading, typeMessage, isTtsEnabled]);
 
   const handleOnsenConceptSelect = useCallback(async (url: string) => {
     setSelectedOnsenConceptUrl(url); // Show the selected image as background immediately

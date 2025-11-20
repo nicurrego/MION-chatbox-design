@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Chat, Modality } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
@@ -164,8 +163,8 @@ Please proceed directly to generating the JSON and the final confirmation messag
   };
 
 export const generateSpeech = async (text: string): Promise<string | null> => {
-    // FIX: Re-ordered if/else to avoid a TypeScript error about an always-false condition when DEV_MODE is set to 'test'. The logic is functionally identical.
-    if (DEV_MODE !== 'Developing') {
+    // FIX: Cast DEV_MODE to string to avoid TypeScript "no overlap" error when DEV_MODE is inferred as a literal 'test'.
+    if ((DEV_MODE as string) !== 'Developing') {
         if (!text.trim()) {
             return null;
         }
@@ -194,8 +193,8 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
 };
 
 export const generateOnsenImage = async (preferences: OnsenPreferences): Promise<string[] | null> => {
-    // FIX: Re-ordered if/else to avoid a TypeScript error about an always-false condition when DEV_MODE is set to 'test'. The logic is functionally identical.
-    if (DEV_MODE !== 'Developing') {
+    // FIX: Cast DEV_MODE to string to avoid TypeScript "no overlap" error when DEV_MODE is inferred as a literal 'test'.
+    if ((DEV_MODE as string) !== 'Developing') {
       // Real generation for 'fast_develop' and 'test'
       const basePrompt = `Generate a visually stunning, photorealistic, portrait-aspect-ratio (9:16) image of a custom onsen experience.
     The atmosphere is serene and embodies the feeling of a '${preferences.aestheticProfile.atmosphere}'.

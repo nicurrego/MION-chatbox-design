@@ -6,6 +6,8 @@ interface WelcomeScreenProps {
   isExiting: boolean;
   isMuted: boolean;
   onToggleMute: () => void;
+  isTtsEnabled: boolean;
+  onToggleTts: () => void;
 }
 
 const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
@@ -19,7 +21,7 @@ const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
 );
 
 
-const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, isMuted, onToggleMute }) => {
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, isMuted, onToggleMute, isTtsEnabled, onToggleTts }) => {
   const [screen, setScreen] = useState<'loop' | 'intro'>('loop');
   const introVideoRef = useRef<HTMLVideoElement>(null);
   const loopVideoRef = useRef<HTMLVideoElement>(null);
@@ -122,13 +124,28 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
                 onEnded={onContinue}
                 className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
             />
-            <button
-              onClick={onContinue}
-              className="absolute bottom-5 right-5 z-20 bg-black/50 text-white/70 px-4 py-2 rounded-md text-lg tracking-wider hover:bg-white hover:text-black transition-colors duration-300 animate-fadeIn"
-              aria-label="Skip intro video"
-            >
-              SKIP
-            </button>
+            <div className="absolute bottom-5 right-5 z-20 flex items-center gap-4 animate-fadeIn">
+                <button
+                    onClick={onToggleTts}
+                    className={`
+                        px-4 py-2 rounded-md text-lg tracking-wider transition-colors duration-300 border border-white/20
+                        ${isTtsEnabled 
+                            ? 'bg-black/50 text-white/70 hover:bg-white hover:text-black' 
+                            : 'bg-red-900/60 text-white hover:bg-red-800/80'
+                        }
+                    `}
+                    aria-label={isTtsEnabled ? "Disable Text-to-Speech" : "Enable Text-to-Speech"}
+                >
+                    VOICE: {isTtsEnabled ? 'ON' : 'OFF'}
+                </button>
+                <button
+                    onClick={onContinue}
+                    className="bg-black/50 text-white/70 px-4 py-2 rounded-md text-lg tracking-wider hover:bg-white hover:text-black transition-colors duration-300 border border-transparent"
+                    aria-label="Skip intro video"
+                >
+                    SKIP
+                </button>
+            </div>
         </>
       )}
     </div>
