@@ -1,0 +1,50 @@
+{
+  "welcome": {
+    "title": "a MION experience",
+    "subtitle": "click to start",
+    "muteLabel": "Mute sound",
+    "unmuteLabel": "Unmute sound"
+  },
+  "infoBox": {
+    "title": "SESSION INFO",
+    "ready": "Your unique onsen experience is ready. Enjoy the moment.",
+    "finalizing": "Finalizing your onsen experience...",
+    "waiting": "Your onsen profile will appear here once created."
+  },
+  "chat": {
+    "characterName": "Mion",
+    "thinking": "Mion is thinking...",
+    "placeholder": "Type your message here...",
+    "placeholderTyping": "...",
+    "loading": "...",
+    "stopAudio": "Stop audio",
+    "readAloud": "Read message aloud"
+  },
+  "actions": {
+    "mute": "Mute",
+    "unmute": "Unmute",
+    "chat": "Chat",
+    "voice": "Voice",
+    "hideSubtitles": "Hide subtitles",
+    "showSubtitles": "Show subtitles",
+    "startVoice": "Start voice input"
+  },
+  "voice": {
+    "listening": "Listening...",
+    "clickToType": "Click here to type, or press the mic again.",
+    "sendMessage": "Send message",
+    "cancelVoice": "Cancel voice input"
+  },
+  "loading": {
+    "generatingVideo": "Generating your personalized onsen video...",
+    "preparingExperience": "Preparing your onsen experience...",
+    "analyzingPreferences": "Analyzing your preferences...",
+    "creatingVisuals": "Creating your unique visuals..."
+  },
+  "errors": {
+    "imageGeneration": "Sorry, there was an issue creating the onsen visuals.",
+    "videoGeneration": "Sorry, there was an issue generating the video.",
+    "apiError": "Sorry, I seem to be having trouble connecting. Please try again later."
+  }
+}
+

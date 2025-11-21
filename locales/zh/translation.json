@@ -1,0 +1,50 @@
+{
+  "welcome": {
+    "title": "MION 体验",
+    "subtitle": "点击开始",
+    "muteLabel": "静音",
+    "unmuteLabel": "取消静音"
+  },
+  "infoBox": {
+    "title": "会话信息",
+    "ready": "您独特的温泉体验已准备就绪。享受这一刻。",
+    "finalizing": "正在完成您的温泉体验...",
+    "waiting": "创建后，您的温泉档案将显示在此处。"
+  },
+  "chat": {
+    "characterName": "米昂",
+    "thinking": "米昂正在思考...",
+    "placeholder": "在此输入您的消息...",
+    "placeholderTyping": "...",
+    "loading": "...",
+    "stopAudio": "停止音频",
+    "readAloud": "朗读消息"
+  },
+  "actions": {
+    "mute": "静音",
+    "unmute": "取消静音",
+    "chat": "聊天",
+    "voice": "语音",
+    "hideSubtitles": "隐藏字幕",
+    "showSubtitles": "显示字幕",
+    "startVoice": "开始语音输入"
+  },
+  "voice": {
+    "listening": "正在聆听...",
+    "clickToType": "点击此处输入，或再次按下麦克风。",
+    "sendMessage": "发送消息",
+    "cancelVoice": "取消语音输入"
+  },
+  "loading": {
+    "generatingVideo": "正在生成您的个性化温泉视频...",
+    "preparingExperience": "正在准备您的温泉体验...",
+    "analyzingPreferences": "正在分析您的偏好...",
+    "creatingVisuals": "正在创建您的独特视觉效果..."
+  },
+  "errors": {
+    "imageGeneration": "抱歉，创建温泉视觉效果时出现问题。",
+    "videoGeneration": "抱歉，生成视频时出现问题。",
+    "apiError": "抱歉，我似乎遇到了连接问题。请稍后再试。"
+  }
+}
+

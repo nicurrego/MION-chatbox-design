@@ -1,0 +1,50 @@
+{
+  "welcome": {
+    "title": "MION体験",
+    "subtitle": "クリックして開始",
+    "muteLabel": "音声をミュート",
+    "unmuteLabel": "音声のミュートを解除"
+  },
+  "infoBox": {
+    "title": "セッション情報",
+    "ready": "あなただけの温泉体験の準備が整いました。この瞬間をお楽しみください。",
+    "finalizing": "温泉体験を仕上げています...",
+    "waiting": "温泉プロフィールが作成されると、ここに表示されます。"
+  },
+  "chat": {
+    "characterName": "ミオン",
+    "thinking": "ミオンが考えています...",
+    "placeholder": "ここにメッセージを入力してください...",
+    "placeholderTyping": "...",
+    "loading": "...",
+    "stopAudio": "音声を停止",
+    "readAloud": "メッセージを読み上げる"
+  },
+  "actions": {
+    "mute": "ミュート",
+    "unmute": "ミュート解除",
+    "chat": "チャット",
+    "voice": "音声",
+    "hideSubtitles": "字幕を非表示",
+    "showSubtitles": "字幕を表示",
+    "startVoice": "音声入力を開始"
+  },
+  "voice": {
+    "listening": "聞いています...",
+    "clickToType": "ここをクリックして入力するか、もう一度マイクを押してください。",
+    "sendMessage": "メッセージを送信",
+    "cancelVoice": "音声入力をキャンセル"
+  },
+  "loading": {
+    "generatingVideo": "パーソナライズされた温泉動画を生成しています...",
+    "preparingExperience": "温泉体験を準備しています...",
+    "analyzingPreferences": "あなたの好みを分析しています...",
+    "creatingVisuals": "あなただけのビジュアルを作成しています..."
+  },
+  "errors": {
+    "imageGeneration": "申し訳ございません。温泉のビジュアル作成に問題が発生しました。",
+    "videoGeneration": "申し訳ございません。動画の生成に問題が発生しました。",
+    "apiError": "申し訳ございません。接続に問題があるようです。後でもう一度お試しください。"
+  }
+}
+

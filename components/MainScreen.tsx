@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ChatMessage } from '../types';
 import { sendMessageToBot, generateSpeech, generateOnsenImage, generateLoopingVideo } from '../services/geminiService';
 import type { OnsenPreferences } from '../services/geminiService';
@@ -79,6 +80,7 @@ const splitIntoSentences = (text: string): string[] => {
 };
 
 const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute }) => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
   const [persistentSubtitle, setPersistentSubtitle] = useState('');
@@ -217,7 +219,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             }
         } catch (error) {
             console.error("❌ [IMAGE] Failed to parse preferences JSON or generate images:", error);
-            setError("Sorry, there was an issue creating the onsen visuals.");
+            setError(t('errors.imageGeneration'));
         } finally {
             setIsGeneratingImage(false);
             console.log("🏁 [IMAGE] Image generation process ended");
@@ -241,7 +243,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const handleOnsenConceptSelect = useCallback(async (url: string) => {
     setSelectedOnsenConceptUrl(url);
     setIsGeneratingVideo(true);
-    setVideoLoadingMessage("Preparing your onsen experience...");
+    setVideoLoadingMessage(t('loading.preparingExperience'));
     setError(null);
 
     try {
@@ -254,14 +256,14 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     } catch (error: any) {
         console.error("Video generation process failed:", error);
         if (error.message && error.message.includes("API_KEY")) {
-             setError("API configuration error: API_KEY is missing from environment variables.");
+             setError(t('errors.apiError'));
         } else {
-            setError("Sorry, we couldn't create the video experience. Please try selecting a concept again.");
+            setError(t('errors.videoGeneration'));
         }
     } finally {
         setIsGeneratingVideo(false);
     }
-}, []);
+}, [t]);
 
 
   const handleReadAloud = useCallback(() => {
@@ -404,11 +406,11 @@ const handleSendVoiceMessage = useCallback((message: string) => {
         </div>
         
         <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center">
-            <Subtitles 
+            <Subtitles
                 currentSentence={currentSubtitle}
                 isVisible={areSubtitlesVisible}
             />
-             <ActionButtons 
+             <ActionButtons
                 onToggleChat={() => setIsChatOpen(prev => !prev)}
                 isMuted={isMuted}
                 onToggleMute={onToggleMute}

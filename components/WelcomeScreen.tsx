@@ -1,5 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface WelcomeScreenProps {
   onContinue: () => void;
@@ -20,6 +22,7 @@ const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
 
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, isMuted, onToggleMute }) => {
+  const { t } = useTranslation();
   const [screen, setScreen] = useState<'loop' | 'intro'>('loop');
   const introVideoRef = useRef<HTMLVideoElement>(null);
   const loopVideoRef = useRef<HTMLVideoElement>(null);
@@ -98,17 +101,23 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
                 <div className="text-center">
                     <div className="mb-8">
                     <h1 className="text-5xl md:text-7xl animate-title-bob" style={{ color: '#FFF8E1', textShadow: '0 0 20px rgba(255, 165, 0, 0.7)' }}>TALK TO MION</h1>
-                    <h2 className="text-xl md:text-2xl tracking-widest uppercase animate-subtitle-bob" style={{ color: '#FFDAB9', textShadow: '0 0 10px rgba(239, 137, 61, 0.5)' }}>a MION experience</h2>
+                    <h2 className="text-xl md:text-2xl tracking-widest uppercase animate-subtitle-bob" style={{ color: '#FFDAB9', textShadow: '0 0 10px rgba(239, 137, 61, 0.5)' }}>{t('welcome.title')}</h2>
                     </div>
-                    <p className="mt-24 text-white/70 text-xl tracking-widest animate-pulse">- click to start -</p>
+                    <p className="mt-24 text-white/70 text-xl tracking-widest animate-pulse">- {t('welcome.subtitle')} -</p>
                 </div>
+                {/* Mute/Unmute Button - Bottom Right */}
                 <button
                     onClick={toggleSound}
                     className="absolute bottom-4 right-4 z-20 bg-black/40 rounded-full p-3 text-white/70 hover:text-white hover:bg-black/60 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
+                    aria-label={isMuted ? t('welcome.unmuteLabel') : t('welcome.muteLabel')}
                 >
                     <SoundIcon isMuted={isMuted} />
                 </button>
+
+                {/* Language Switcher - Bottom Left */}
+                <div className="absolute bottom-4 left-4 z-20">
+                    <LanguageSwitcher />
+                </div>
              </div>
         </div>
       )}

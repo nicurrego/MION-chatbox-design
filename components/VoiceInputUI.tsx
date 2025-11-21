@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // Icons
 const SendIcon: React.FC = () => (
@@ -22,6 +23,7 @@ interface VoiceInputUIProps {
 }
 
 const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, onSend, onCancel }) => {
+  const { t } = useTranslation();
   const [editedTranscript, setEditedTranscript] = useState(transcript);
   const [isEditing, setIsEditing] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -96,7 +98,7 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
                 />
             ) : (
                 <p className="min-h-[4rem] p-2 cursor-text rounded-md hover:bg-white/10 transition-colors">
-                    {editedTranscript || <span className="text-white/50">{isRecording ? "Listening..." : "Click here to type, or press the mic again."}</span>}
+                    {editedTranscript || <span className="text-white/50">{isRecording ? t('voice.listening') : t('voice.clickToType')}</span>}
                 </p>
             )}
         </div>
@@ -104,14 +106,14 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
             onClick={handleSend}
             disabled={!editedTranscript.trim()}
             className="bg-cyan-600 text-white p-3 rounded-full hover:bg-cyan-500 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed self-end"
-            aria-label="Send message"
+            aria-label={t('voice.sendMessage')}
         >
             <SendIcon />
         </button>
         <button
             onClick={onCancel}
             className="absolute -top-3 -right-3 bg-slate-800 text-white p-1.5 rounded-full hover:bg-red-500 transition-colors duration-300"
-            aria-label="Cancel voice input"
+            aria-label={t('voice.cancelVoice')}
         >
             <CloseIcon />
         </button>

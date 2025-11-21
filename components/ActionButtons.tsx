@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 // --- Icon Components ---
 
@@ -38,6 +39,8 @@ interface ActionButtonsProps {
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, onToggleMute, onStartVoiceInput, areSubtitlesVisible, onToggleSubtitles }) => {
+    const { t } = useTranslation();
+
     return (
         <div className="absolute bottom-4 right-4 flex items-center space-x-3 z-30">
             {/* Subtitles Button */}
@@ -45,12 +48,12 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, on
                 <button
                     onClick={onToggleSubtitles}
                     className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
-                    aria-label={areSubtitlesVisible ? 'Hide subtitles' : 'Show subtitles'}
+                    aria-label={areSubtitlesVisible ? t('actions.hideSubtitles') : t('actions.showSubtitles')}
                 >
                     <SubtitlesIcon isVisible={areSubtitlesVisible} />
                 </button>
                 <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                    {areSubtitlesVisible ? 'Hide subtitles' : 'Show subtitles'}
+                    {areSubtitlesVisible ? t('actions.hideSubtitles') : t('actions.showSubtitles')}
                 </div>
             </div>
             {/* Mute Button */}
@@ -58,12 +61,12 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, on
                 <button
                     onClick={onToggleMute}
                     className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
-                    aria-label={isMuted ? 'Unmute' : 'Mute'}
+                    aria-label={isMuted ? t('actions.unmute') : t('actions.mute')}
                 >
                     <SoundIcon isMuted={isMuted} />
                 </button>
                 <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                    {isMuted ? 'Unmute' : 'Mute'}
+                    {isMuted ? t('actions.unmute') : t('actions.mute')}
                 </div>
             </div>
             {/* Microphone Button */}
@@ -71,21 +74,21 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, on
                 <button
                     onClick={onStartVoiceInput}
                     className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
-                    aria-label="Start voice input"
+                    aria-label={t('actions.startVoice')}
                 >
                     <MicrophoneIcon />
                 </button>
                 <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                    Send a voice message
+                    {t('actions.voice')}
                 </div>
             </div>
              {/* Chat Button */}
             <button
                 onClick={onToggleChat}
                 className="bg-black/50 text-white/70 px-6 py-3 rounded-md text-xl tracking-wider hover:bg-white hover:text-black transition-colors duration-300"
-                aria-label="Open chat"
+                aria-label={t('actions.chat')}
             >
-                CHAT
+                {t('actions.chat').toUpperCase()}
             </button>
         </div>
     );

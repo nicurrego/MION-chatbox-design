@@ -1,0 +1,50 @@
+{
+  "welcome": {
+    "title": "una experiencia MION",
+    "subtitle": "haz clic para comenzar",
+    "muteLabel": "Silenciar sonido",
+    "unmuteLabel": "Activar sonido"
+  },
+  "infoBox": {
+    "title": "INFORMACIÓN DE SESIÓN",
+    "ready": "Tu experiencia única de onsen está lista. Disfruta el momento.",
+    "finalizing": "Finalizando tu experiencia de onsen...",
+    "waiting": "Tu perfil de onsen aparecerá aquí una vez creado."
+  },
+  "chat": {
+    "characterName": "Mion",
+    "thinking": "Mion está pensando...",
+    "placeholder": "Escribe tu mensaje aquí...",
+    "placeholderTyping": "...",
+    "loading": "...",
+    "stopAudio": "Detener audio",
+    "readAloud": "Leer mensaje en voz alta"
+  },
+  "actions": {
+    "mute": "Silenciar",
+    "unmute": "Activar",
+    "chat": "Chat",
+    "voice": "Voz",
+    "hideSubtitles": "Ocultar subtítulos",
+    "showSubtitles": "Mostrar subtítulos",
+    "startVoice": "Iniciar entrada de voz"
+  },
+  "voice": {
+    "listening": "Escuchando...",
+    "clickToType": "Haz clic aquí para escribir, o presiona el micrófono nuevamente.",
+    "sendMessage": "Enviar mensaje",
+    "cancelVoice": "Cancelar entrada de voz"
+  },
+  "loading": {
+    "generatingVideo": "Generando tu video personalizado de onsen...",
+    "preparingExperience": "Preparando tu experiencia de onsen...",
+    "analyzingPreferences": "Analizando tus preferencias...",
+    "creatingVisuals": "Creando tus visuales únicos..."
+  },
+  "errors": {
+    "imageGeneration": "Lo siento, hubo un problema al crear las visuales del onsen.",
+    "videoGeneration": "Lo siento, hubo un problema al generar el video.",
+    "apiError": "Lo siento, parece que tengo problemas de conexión. Por favor, inténtalo más tarde."
+  }
+}
+

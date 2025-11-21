@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ChatMessage } from '../types';
 
 interface ChatBoxProps {
@@ -55,10 +56,11 @@ const CloseIcon: React.FC = () => (
 );
 
 
-const ChatBox: React.FC<ChatBoxProps> = ({ 
-    characterName, history, currentBotMessage, isTyping, isLoading, onSendMessage, 
+const ChatBox: React.FC<ChatBoxProps> = ({
+    characterName, history, currentBotMessage, isTyping, isLoading, onSendMessage,
     isMuted, onToggleMute, onReadAloud, onStopAudio, isAudioPlaying, canReadAloud, onClose
 }) => {
+  const { t } = useTranslation();
   const [inputValue, setInputValue] = useState('');
   const messageAreaRef = useRef<HTMLDivElement>(null);
 
@@ -102,7 +104,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                       <button
                           onClick={onStopAudio}
                           className="text-white/70 hover:text-white transition-colors duration-300 p-1"
-                          aria-label="Stop audio"
+                          aria-label={t('chat.stopAudio')}
                       >
                           <StopIcon />
                       </button>
@@ -111,7 +113,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                           onClick={onReadAloud}
                           disabled={!canReadAloud}
                           className="text-white/70 hover:text-white transition-colors duration-300 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                          aria-label="Read message aloud"
+                          aria-label={t('chat.readAloud')}
                       >
                           <PlayIcon />
                       </button>
@@ -175,7 +177,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           {isLoading && !isTyping && (
               <div className="w-full flex justify-start">
                   <p className="px-4 py-2 rounded-xl bg-cyan-900/80 animate-pulse">
-                      ...
+                      {t('chat.loading')}
                   </p>
               </div>
           )}
@@ -185,7 +187,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={isLoading ? "Mion is thinking..." : (isTyping ? "..." : "Type your message here...")}
+            placeholder={isLoading ? t('chat.thinking') : (isTyping ? t('chat.placeholderTyping') : t('chat.placeholder'))}
             disabled={isLoading || isTyping}
             className="w-full bg-transparent text-white text-2xl placeholder-cyan-300/70 border-0 focus:ring-0 px-4 py-2"
             autoComplete="off"
