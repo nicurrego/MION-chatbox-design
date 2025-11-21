@@ -5,7 +5,7 @@ import type { OnsenPreferences } from '../services/geminiService';
 import { playAudio, stopAudio } from '../utils/audioUtils';
 import { urlToBase64 } from '../utils/imageUtils';
 
-import CharacterSprite from './CharacterSprite';
+import { MionCharacter } from './MionCharacter';
 import ChatBox from './ChatBox';
 import InfoBox from './InfoBox';
 import Subtitles from './Subtitles';
@@ -92,6 +92,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const audioCtxRef = useRef<AudioContext | null>(null);
   const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const gainNodeRef = useRef<GainNode | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
 
   // --- Onsen Creation Flow State ---
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
@@ -123,7 +124,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
     if (audio) {
         setAudioPlaying(true);
-        playAudio(audio, audioCtxRef, audioSourceRef, gainNodeRef, isMuted, () => setAudioPlaying(false));
+        playAudio(audio, audioCtxRef, audioSourceRef, gainNodeRef, analyserRef, isMuted, () => setAudioPlaying(false));
     }
 
     let charIndex = 0;
@@ -266,7 +267,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const handleReadAloud = useCallback(() => {
     if (lastBotAudio && !isAudioPlaying) {
       setAudioPlaying(true);
-      playAudio(lastBotAudio, audioCtxRef, audioSourceRef, gainNodeRef, isMuted, () => setAudioPlaying(false));
+      playAudio(lastBotAudio, audioCtxRef, audioSourceRef, gainNodeRef, analyserRef, isMuted, () => setAudioPlaying(false));
     }
   }, [lastBotAudio, isAudioPlaying, isMuted]);
 
@@ -394,10 +395,11 @@ const handleSendVoiceMessage = useCallback((message: string) => {
           />
         </div>
         
-        <div className="absolute inset-0 top-[15vh] p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1">
-          <CharacterSprite 
-            imageUrl="/images/cute_duck.png"
-            isThinking={isLoading || isGeneratingImage || isGeneratingVideo}
+        <div className="absolute inset-0 top-[15vh] p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1 flex items-center justify-center">
+          <MionCharacter
+            imageUrl="/images/TheMION.png"
+            analyser={analyserRef.current}
+            isPlaying={isAudioPlaying}
           />
         </div>
         

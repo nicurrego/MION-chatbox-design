@@ -67,6 +67,7 @@ export const stopAudio = (
  * @param audioCtxRef A React ref to store the AudioContext instance.
  * @param audioSourceRef A React ref to store the current AudioBufferSourceNode.
  * @param gainNodeRef A React ref to store the GainNode for volume control.
+ * @param analyserRef A React ref to store the AnalyserNode for visualization.
  * @param isMuted The current mute state to set initial volume.
  * @param onEnded A callback function to execute when audio playback finishes.
  */
@@ -75,6 +76,7 @@ export const playAudio = async (
   audioCtxRef: MutableRefObject<AudioContext | null>,
   audioSourceRef: MutableRefObject<AudioBufferSourceNode | null>,
   gainNodeRef: MutableRefObject<GainNode | null>,
+  analyserRef: MutableRefObject<AnalyserNode | null>,
   isMuted: boolean,
   onEnded: () => void,
 ) => {
@@ -97,29 +99,39 @@ export const playAudio = async (
   }
   const gainNode = gainNodeRef.current;
 
+  // Create and configure the AnalyserNode if it doesn't exist.
+  if (!analyserRef.current) {
+    analyserRef.current = ctx.createAnalyser();
+    analyserRef.current.fftSize = 256;
+    // Connect analyser between gain node and destination
+    gainNode.disconnect();
+    gainNode.connect(analyserRef.current);
+    analyserRef.current.connect(ctx.destination);
+  }
+
   // Set the initial volume based on the mute state.
   gainNode.gain.setValueAtTime(isMuted ? 0 : 1, ctx.currentTime);
-  
+
 
   // Check if the AudioContext is suspended. If so, resume it.
   // This is crucial for browsers that auto-suspend audio contexts.
   if (ctx.state === 'suspended') {
     await ctx.resume();
   }
-  
+
   try {
     const decodedData = decode(base64Audio);
     const audioBuffer = await decodeAudioData(decodedData, ctx, 24000, 1);
-    
+
     const source = ctx.createBufferSource();
     source.buffer = audioBuffer;
-    // Connect the source to the GainNode, which is then connected to the destination.
+    // Connect the source to the GainNode, which is then connected to the analyser and destination.
     source.connect(gainNode);
     source.start();
 
     // Store the source so we can stop it later
     audioSourceRef.current = source;
-    
+
     source.onended = () => {
       // Check if this source is still the active one before clearing
       if (audioSourceRef.current === source) {
