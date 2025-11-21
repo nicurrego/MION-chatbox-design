@@ -88,7 +88,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
 
 
   return (
-    <div className="bg-slate-900/80 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-6 flex flex-col text-white h-full transition-all duration-500">
+    <div className="bg-slate-900/10 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-6 flex flex-col text-white h-full transition-all duration-500">
       <style>{`
         @keyframes fadeInImage {
           from { opacity: 0; }

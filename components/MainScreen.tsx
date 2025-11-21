@@ -1,69 +1,22 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
-import { sendMessageToBot, generateSpeech, generateOnsenImage, generateLoopingVideo } from '../services/geminiService';
+import { generateOnsenImage, generateLoopingVideo } from '../services/geminiService';
 import type { OnsenPreferences } from '../services/geminiService';
-import { playAudio, stopAudio } from '../utils/audioUtils';
 import { urlToBase64 } from '../utils/imageUtils';
 
+// Components
 import { MionCharacter } from './MionCharacter';
 import ChatBox from './ChatBox';
 import InfoBox from './InfoBox';
 import Subtitles from './Subtitles';
 import ActionButtons from './ActionButtons';
 import VoiceInputUI from './VoiceInputUI';
+import LoadingOverlay from './LoadingOverlay';
 
-// Fix: Add interfaces for the Web Speech API to fix TypeScript errors.
-// These are not included in standard DOM typings.
-interface SpeechRecognitionAlternative {
-    readonly transcript: string;
-    readonly confidence: number;
-}
-  
-interface SpeechRecognitionResult {
-    readonly isFinal: boolean;
-    readonly length: number;
-    item(index: number): SpeechRecognitionAlternative;
-    [index: number]: SpeechRecognitionAlternative;
-}
-  
-interface SpeechRecognitionResultList {
-    readonly length: number;
-    item(index: number): SpeechRecognitionResult;
-    [index: number]: SpeechRecognitionResult;
-}
-  
-interface SpeechRecognitionEvent extends Event {
-    readonly results: SpeechRecognitionResultList;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-    readonly error: string;
-    readonly message: string;
-}
-  
-interface SpeechRecognition {
-    continuous: boolean;
-    interimResults: boolean;
-    lang: string;
-    start(): void;
-    stop(): void;
-    onstart: () => void;
-    onresult: (event: SpeechRecognitionEvent) => void;
-    onerror: (event: SpeechRecognitionErrorEvent) => void;
-    onend: () => void;
-}
-
-const LoadingOverlay: React.FC<{ message: string }> = ({ message }) => (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm text-white animate-fadeIn">
-        <svg className="animate-spin h-12 w-12 text-cyan-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <p className="text-2xl tracking-wider">{message}</p>
-        <p className="text-lg text-cyan-200 mt-2">This may take a few moments...</p>
-    </div>
-);
-
+// Custom Hooks
+import { useAudioController } from '../hooks/useAudioController';
+import { useVoiceInput } from '../hooks/useVoiceInput';
+import { useChatSession } from '../hooks/useChatSession';
 
 interface MainScreenProps {
   initialMessage: ChatMessage | null;
@@ -72,273 +25,116 @@ interface MainScreenProps {
   onToggleMute: () => void;
 }
 
-const splitIntoSentences = (text: string): string[] => {
-    if (!text) return [];
-    const sentences = text.split(/(?<=[.?!])\s+/);
-    return sentences.map(s => s.trim()).filter(Boolean);
-};
-
 const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [currentBotMessage, setCurrentBotMessage] = useState('');
-  const [persistentSubtitle, setPersistentSubtitle] = useState('');
-  const [currentSubtitle, setCurrentSubtitle] = useState('');
+  // --- Custom Hooks ---
+  const audioCtrl = useAudioController(isMuted);
+  const voiceInput = useVoiceInput();
+  const chat = useChatSession();
+
+  // --- Local State for Visuals (Onsen/Video) ---
   const [areSubtitlesVisible, setAreSubtitlesVisible] = useState(true);
-  const [isTyping, setIsTyping] = useState(false);
-  const [isLoading, setIsLoading] = useState(!initialMessage);
-  
-  const [lastBotAudio, setLastBotAudio] = useState<string | null>(null);
-  const [isAudioPlaying, setAudioPlaying] = useState(false);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const audioSourceRef = useRef<AudioBufferSourceNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-
-  // --- Onsen Creation Flow State ---
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
-  const [generatedImageUrls, setGeneratedImageUrls] = useState<string[] | null>(null);
-  const [selectedOnsenConceptUrl, setSelectedOnsenConceptUrl] = useState<string | null>(null);
-  
-  const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
-  const [videoLoadingMessage, setVideoLoadingMessage] = useState('');
-  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  const [isVoiceInputActive, setIsVoiceInputActive] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const [onsenState, setOnsenState] = useState({
+    isGeneratingImage: false,
+    imageUrls: null as string[] | null,
+    selectedConceptUrl: null as string | null,
+    isGeneratingVideo: false,
+    videoUrl: null as string | null,
+    videoLoadingMsg: '',
+    error: null as string | null
+  });
 
   const hasStartedConversation = useRef(false);
-  const typingIntervalRef = useRef<number | null>(null);
-  const subtitleTimeoutRefs = useRef<number[]>([]);
 
-  // Removed API key check - using environment variable instead
+  // --- Effects ---
 
-  const typeMessage = useCallback((text: string, audio: string | null) => {
-    setIsTyping(true);
-    setCurrentBotMessage('');
-    setPersistentSubtitle('');
-
-    if (audio) {
-        setAudioPlaying(true);
-        playAudio(audio, audioCtxRef, audioSourceRef, gainNodeRef, analyserRef, isMuted, () => setAudioPlaying(false));
-    }
-
-    let charIndex = 0;
-    typingIntervalRef.current = window.setInterval(() => {
-        if (charIndex < text.length) {
-            setCurrentBotMessage(text.slice(0, charIndex + 1));
-            charIndex++;
-        } else {
-            if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
-            typingIntervalRef.current = null;
-            setIsTyping(false);
-            setMessages(prev => [...prev, { sender: 'bot', text }]);
-            setPersistentSubtitle(text);
-        }
-    }, 50);
-
-    subtitleTimeoutRefs.current.forEach(clearTimeout);
-    subtitleTimeoutRefs.current = [];
-    const sentences = splitIntoSentences(text);
-    let cumulativeDelay = 0;
-    const WPM = 140;
-    const AVG_WORD_LENGTH = 5; 
-    const CHARS_PER_SECOND = (WPM * AVG_WORD_LENGTH) / 50;
-
-    sentences.forEach(sentence => {
-        const duration = (sentence.length / CHARS_PER_SECOND) * 1000;
-        const timeoutId = window.setTimeout(() => setCurrentSubtitle(sentence), cumulativeDelay);
-        subtitleTimeoutRefs.current.push(timeoutId);
-        cumulativeDelay += duration;
-    });
-
-    const finalTimeoutId = window.setTimeout(() => setCurrentSubtitle(''), cumulativeDelay + 2000);
-    subtitleTimeoutRefs.current.push(finalTimeoutId);
-  }, [isMuted]);
-
+  // Initial Message Handling
   useEffect(() => {
     if (hasStartedConversation.current || !initialMessage) return;
     hasStartedConversation.current = true;
-    setIsLoading(false);
-    setLastBotAudio(initialAudio);
-    typeMessage(initialMessage.text, initialAudio);
-  }, [initialMessage, initialAudio, typeMessage]);
 
-  useEffect(() => {
-    if (gainNodeRef.current && audioCtxRef.current) {
-      gainNodeRef.current.gain.setValueAtTime(isMuted ? 0 : 1, audioCtxRef.current.currentTime);
+    if (initialAudio) {
+      audioCtrl.play(initialAudio);
     }
-  }, [isMuted]);
+    chat.runTypingEffect(initialMessage.text);
+  }, [initialMessage, initialAudio, chat, audioCtrl]);
+
+  // --- Handlers ---
 
   const handleSendMessage = useCallback(async (userInput: string) => {
-    if (isTyping || isLoading) return;
-    
-    setPersistentSubtitle('');
-    setCurrentSubtitle('');
-    subtitleTimeoutRefs.current.forEach(clearTimeout);
-    subtitleTimeoutRefs.current = [];
-    stopAudio(audioSourceRef);
-    setAudioPlaying(false);
-    setLastBotAudio(null);
+    audioCtrl.stop();
 
-    console.log("💬 [CHAT] User sent message:", userInput);
-    const userMessage: ChatMessage = { sender: 'user', text: userInput };
-    setMessages(prev => [...prev, userMessage]);
-    setIsLoading(true);
-    setCurrentBotMessage('');
+    const result = await chat.processUserMessage(userInput);
+    if (!result) return;
 
-    console.log("🤖 [CHAT] Sending message to bot...");
-    const botResponseText = await sendMessageToBot(userInput);
-    console.log("✅ [CHAT] Bot response received:", botResponseText.substring(0, 100) + "...");
-
-    const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-    const match = botResponseText.match(jsonRegex);
-
-    if (match && match[1]) {
-        console.log("📋 [JSON] Found JSON in bot response, parsing preferences...");
-        try {
-            const preferences: OnsenPreferences = JSON.parse(match[1]);
-            console.log("✅ [JSON] Preferences parsed successfully:", preferences);
-
-            console.log("🖼️ [IMAGE] Starting image generation...");
-            setIsGeneratingImage(true);
-            const imageBase64Array = await generateOnsenImage(preferences);
-
-            if (imageBase64Array && imageBase64Array.length > 0) {
-                console.log(`✅ [IMAGE] Generated ${imageBase64Array.length} images successfully`);
-                const imageUrls = imageBase64Array.map(base64 => `data:image/png;base64,${base64}`);
-                setGeneratedImageUrls(imageUrls);
-            } else {
-                console.warn("⚠️ [IMAGE] No images were generated");
-            }
-        } catch (error) {
-            console.error("❌ [IMAGE] Failed to parse preferences JSON or generate images:", error);
-            setError("Sorry, there was an issue creating the onsen visuals.");
-        } finally {
-            setIsGeneratingImage(false);
-            console.log("🏁 [IMAGE] Image generation process ended");
-        }
-    } else {
-        console.log("ℹ️ [JSON] No JSON found in bot response - continuing normal conversation");
+    // 1. Play Audio
+    if (result.audio) {
+      audioCtrl.play(result.audio);
     }
 
-    setIsLoading(false);
-    console.log("🔊 [TTS] Generating speech for bot response...");
-    const audioData = await generateSpeech(botResponseText);
-    if (audioData) {
-        console.log("✅ [TTS] Speech generated successfully");
-    } else {
-        console.log("ℹ️ [TTS] No speech generated (might be disabled or quota exceeded)");
-    }
-    setLastBotAudio(audioData);
-    typeMessage(botResponseText, audioData);
-  }, [isTyping, isLoading, typeMessage]);
+    // 2. Trigger Visual Typing
+    chat.runTypingEffect(result.text);
 
-  const handleOnsenConceptSelect = useCallback(async (url: string) => {
-    setSelectedOnsenConceptUrl(url);
-    setIsGeneratingVideo(true);
-    setVideoLoadingMessage("Preparing your onsen experience...");
-    setError(null);
+    // 3. Handle Onsen Generation (if preferences found)
+    if (result.preferences) {
+      handleGenerateImages(result.preferences);
+    }
+  }, [chat, audioCtrl]);
+
+  const handleGenerateImages = async (prefs: OnsenPreferences) => {
+    setOnsenState(prev => ({ ...prev, isGeneratingImage: true, error: null }));
+    try {
+      console.log("🖼️ [IMAGE] Starting image generation...");
+      const base64Array = await generateOnsenImage(prefs);
+      if (base64Array?.length) {
+        console.log(`✅ [IMAGE] Generated ${base64Array.length} images successfully`);
+        const urls = base64Array.map(b64 => `data:image/png;base64,${b64}`);
+        setOnsenState(prev => ({ ...prev, imageUrls: urls }));
+      } else {
+        console.warn("⚠️ [IMAGE] No images were generated");
+      }
+    } catch (e) {
+      console.error("❌ [IMAGE] Failed to generate images:", e);
+      setOnsenState(prev => ({ ...prev, error: "Failed to generate images." }));
+    } finally {
+      setOnsenState(prev => ({ ...prev, isGeneratingImage: false }));
+      console.log("🏁 [IMAGE] Image generation process ended");
+    }
+  };
+
+  const handleConceptSelect = useCallback(async (url: string) => {
+    setOnsenState(prev => ({
+      ...prev,
+      selectedConceptUrl: url,
+      isGeneratingVideo: true,
+      videoLoadingMsg: "Preparing your onsen experience...",
+      error: null
+    }));
 
     try {
-        const { base64, mimeType } = await urlToBase64(url);
-
-        // Generate Video using API key from environment variable
-        const videoUrl = await generateLoopingVideo(base64, mimeType);
-        setGeneratedVideoUrl(videoUrl);
-
+      const { base64, mimeType } = await urlToBase64(url);
+      const videoUrl = await generateLoopingVideo(base64, mimeType);
+      setOnsenState(prev => ({ ...prev, videoUrl }));
     } catch (error: any) {
-        console.error("Video generation process failed:", error);
-        if (error.message && error.message.includes("API_KEY")) {
-             setError("API configuration error: API_KEY is missing from environment variables.");
-        } else {
-            setError("Sorry, we couldn't create the video experience. Please try selecting a concept again.");
-        }
+      console.error("Video generation process failed:", error);
+      const msg = error.message?.includes("API_KEY")
+        ? "API configuration error."
+        : "Could not create video.";
+      setOnsenState(prev => ({ ...prev, error: msg }));
     } finally {
-        setIsGeneratingVideo(false);
+      setOnsenState(prev => ({ ...prev, isGeneratingVideo: false }));
     }
-}, []);
-
-
-  const handleReadAloud = useCallback(() => {
-    if (lastBotAudio && !isAudioPlaying) {
-      setAudioPlaying(true);
-      playAudio(lastBotAudio, audioCtxRef, audioSourceRef, gainNodeRef, analyserRef, isMuted, () => setAudioPlaying(false));
-    }
-  }, [lastBotAudio, isAudioPlaying, isMuted]);
-
-  const handleStopAudio = useCallback(() => {
-    stopAudio(audioSourceRef);
-    setAudioPlaying(false);
-    subtitleTimeoutRefs.current.forEach(clearTimeout);
-    subtitleTimeoutRefs.current = [];
-    setCurrentSubtitle('');
   }, []);
 
-  const handleStartVoiceInput = useCallback(() => {
-    setPersistentSubtitle(''); // Clear subtitle on voice input
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-        alert("Sorry, your browser doesn't support speech recognition.");
-        return;
-    }
-    
-    if (recognitionRef.current) {
-        recognitionRef.current.stop();
-    }
-    
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-    
-    recognition.onstart = () => setIsRecording(true);
-    
-    recognition.onresult = (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
-        for (let i = 0; i < event.results.length; ++i) {
-            if (event.results[i].isFinal) {
-                finalTranscript += event.results[i][0].transcript;
-            } else {
-                interimTranscript += event.results[i][0].transcript;
-            }
-        }
-        setTranscript(finalTranscript + interimTranscript);
-    };
-    
-    recognition.onerror = (event) => {
-        console.error('Speech recognition error', event.error);
-        setIsRecording(false);
-    };
-    
-    recognition.onend = () => setIsRecording(false);
-    
-    recognition.start();
-    recognitionRef.current = recognition;
-    setIsVoiceInputActive(true);
-    setTranscript('');
-}, []);
+  const handleVoiceSend = (msg: string) => {
+    voiceInput.stopListening();
+    handleSendMessage(msg);
+  };
 
-const handleCancelVoiceInput = useCallback(() => {
-    if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-    }
-    setIsVoiceInputActive(false);
-    setIsRecording(false);
-    setTranscript('');
-}, []);
+  // --- Render Helpers ---
+  const backgroundKey = onsenState.videoUrl || onsenState.selectedConceptUrl || 'default';
 
-const handleSendVoiceMessage = useCallback((message: string) => {
-    handleCancelVoiceInput();
-    handleSendMessage(message);
-}, [handleCancelVoiceInput, handleSendMessage]);
-  
   return (
     <main className="relative w-full h-screen overflow-hidden select-none bg-black animate-fadeInMain">
       <style>{`
@@ -347,18 +143,19 @@ const handleSendVoiceMessage = useCallback((message: string) => {
           .animate-fadeInMain { animation: fadeInMain 1s ease-in-out; }
           .animate-fadeIn { animation: fadeIn 0.5s ease-out; }
       `}</style>
-    
-      {generatedVideoUrl ? (
+
+      {/* Background Layer */}
+      {onsenState.videoUrl ? (
         <video
-            key={generatedVideoUrl}
-            src={generatedVideoUrl}
-            autoPlay loop muted playsInline
-            className="absolute inset-0 w-full h-full object-cover animate-fadeIn"
+          key={onsenState.videoUrl}
+          src={onsenState.videoUrl}
+          autoPlay loop muted playsInline
+          className="absolute inset-0 w-full h-full object-cover animate-fadeIn"
         />
-      ) : selectedOnsenConceptUrl ? (
-         <div 
+      ) : onsenState.selectedConceptUrl ? (
+         <div
             className="absolute inset-0 w-full h-full bg-cover bg-center animate-fadeIn"
-            style={{ backgroundImage: `url(${selectedOnsenConceptUrl})` }}
+            style={{ backgroundImage: `url(${onsenState.selectedConceptUrl})` }}
          ></div>
       ) : (
         <video
@@ -367,92 +164,84 @@ const handleSendVoiceMessage = useCallback((message: string) => {
             className="absolute inset-0 w-full h-full object-cover"
         />
       )}
-      
-      {/*
-        FIX: Add a 'key' prop to the overlay divs. This forces React to re-mount them
-        when the background source changes (from image to video). This resolves a potential
-        rendering glitch where CSS filters like 'backdrop-blur' might not update to reflect
-        the new background content, making it seem like the old background is still present.
-      */}
-      <div
-        key={`overlay-${generatedVideoUrl || selectedOnsenConceptUrl || 'default'}`}
-        className="absolute inset-0 bg-blue-600/30 backdrop-blur-sm backdrop-brightness-75"
-      ></div>
-      <div
-        key={`scanlines-${generatedVideoUrl || selectedOnsenConceptUrl || 'default'}`}
-        className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)', backgroundSize: '100% 4px' }}
-      ></div>
-      
+
+      <div key={`overlay-${backgroundKey}`} className="absolute inset-0 bg-blue-600/30 backdrop-blur-sm backdrop-brightness-75"></div>
+      <div key={`scanlines-${backgroundKey}`} className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)', backgroundSize: '100% 4px' }}></div>
+
+      {/* Main Grid Layout */}
       <div className="relative w-full h-full landscape:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-8">
-        
+
+        {/* Top Left: Info Box */}
         <div className="absolute top-0 left-0 right-0 h-[15vh] p-4 landscape:relative landscape:inset-auto landscape:h-auto landscape:p-0 landscape:col-start-2 landscape:row-start-1">
-          <InfoBox 
-            isGeneratingImage={isGeneratingImage}
-            generatedImageUrls={generatedImageUrls}
-            onConceptSelect={handleOnsenConceptSelect}
-            isConceptSelected={!!selectedOnsenConceptUrl}
-            generatedVideoUrl={generatedVideoUrl}
+          <InfoBox
+            isGeneratingImage={onsenState.isGeneratingImage}
+            generatedImageUrls={onsenState.imageUrls}
+            onConceptSelect={handleConceptSelect}
+            isConceptSelected={!!onsenState.selectedConceptUrl}
+            generatedVideoUrl={onsenState.videoUrl}
           />
         </div>
-        
+
+        {/* Center: Character */}
         <div className="absolute inset-0 top-[15vh] p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1 flex items-center justify-center">
           <MionCharacter
             imageUrl="/images/TheMION.png"
-            analyser={analyserRef.current}
-            isPlaying={isAudioPlaying}
+            analyser={audioCtrl.analyser}
+            isPlaying={audioCtrl.isPlaying}
           />
         </div>
-        
+
+        {/* Bottom: Controls & Subtitles */}
         <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center">
-            <Subtitles 
-                currentSentence={currentSubtitle}
+            <Subtitles
+                currentSentence={chat.currentSubtitle}
                 isVisible={areSubtitlesVisible}
             />
-             <ActionButtons 
+             <ActionButtons
                 onToggleChat={() => setIsChatOpen(prev => !prev)}
                 isMuted={isMuted}
                 onToggleMute={onToggleMute}
-                onStartVoiceInput={handleStartVoiceInput}
+                onStartVoiceInput={voiceInput.startListening}
                 areSubtitlesVisible={areSubtitlesVisible}
                 onToggleSubtitles={() => setAreSubtitlesVisible(prev => !prev)}
             />
         </div>
       </div>
-        
+
+      {/* Overlays */}
       {isChatOpen && (
          <ChatBox
             characterName="Mion"
-            history={messages}
-            currentBotMessage={currentBotMessage}
-            isTyping={isTyping}
-            isLoading={isLoading || isGeneratingImage || isGeneratingVideo}
+            history={chat.messages}
+            currentBotMessage={chat.currentBotMessage}
+            isTyping={chat.isTyping}
+            isLoading={chat.isLoading || onsenState.isGeneratingImage || onsenState.isGeneratingVideo}
             onSendMessage={handleSendMessage}
             isMuted={isMuted}
             onToggleMute={onToggleMute}
-            onReadAloud={handleReadAloud}
-            onStopAudio={handleStopAudio}
-            isAudioPlaying={isAudioPlaying}
-            canReadAloud={!!lastBotAudio && !isTyping}
+            onReadAloud={() => audioCtrl.play(chat.lastBotAudio!)}
+            onStopAudio={audioCtrl.stop}
+            isAudioPlaying={audioCtrl.isPlaying}
+            canReadAloud={!!chat.lastBotAudio && !chat.isTyping}
             onClose={() => setIsChatOpen(false)}
           />
       )}
 
-      {isVoiceInputActive && (
-        <VoiceInputUI 
-            transcript={transcript}
-            isRecording={isRecording}
-            onSend={handleSendVoiceMessage}
-            onCancel={handleCancelVoiceInput}
+      {voiceInput.isActive && (
+        <VoiceInputUI
+            transcript={voiceInput.transcript}
+            isRecording={voiceInput.isRecording}
+            onSend={handleVoiceSend}
+            onCancel={voiceInput.stopListening}
         />
       )}
-    
-      {isGeneratingVideo && (
-        <LoadingOverlay message={videoLoadingMessage} />
-      )}
-       {error && (
+
+      {onsenState.isGeneratingVideo && <LoadingOverlay message={onsenState.videoLoadingMsg} />}
+
+      {onsenState.error && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-red-800/90 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn">
-            <p>{error}</p>
-            <button onClick={() => setError(null)} className="absolute top-1 right-1 text-white/70 hover:text-white">&times;</button>
+            <p>{onsenState.error}</p>
+            <button onClick={() => setOnsenState(prev => ({...prev, error: null}))} className="absolute top-1 right-1 text-white/70 hover:text-white">&times;</button>
         </div>
       )}
 
