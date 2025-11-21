@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+import { Translation } from '../utils/localization';
 
 interface InfoBoxProps {
   isGeneratingImage: boolean;
@@ -6,9 +8,10 @@ interface InfoBoxProps {
   onConceptSelect: (url: string) => void;
   isConceptSelected: boolean;
   generatedVideoUrl: string | null;
+  t: Translation;
 }
 
-const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls, onConceptSelect, isConceptSelected, generatedVideoUrl }) => {
+const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls, onConceptSelect, isConceptSelected, generatedVideoUrl, t }) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -26,8 +29,8 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
     if (isGeneratingImage) {
       return (
         <div className="w-full h-full flex flex-col items-center justify-center text-white animate-pulse">
-            <div className="text-2xl">Crafting your onsen...</div>
-            <div className="text-lg text-cyan-200 mt-2">Please wait a moment.</div>
+            <div className="text-2xl">{t.crafting_onsen}</div>
+            <div className="text-lg text-cyan-200 mt-2">{t.please_wait}</div>
         </div>
       );
     }
@@ -35,7 +38,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
     if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
         return (
           <div className="w-full h-full flex flex-col">
-            <h2 className="text-xl text-cyan-200 mb-2 text-center flex-shrink-0">Please select a concept:</h2>
+            <h2 className="text-xl text-cyan-200 mb-2 text-center flex-shrink-0">{t.select_concept}</h2>
             <div className="flex-grow w-full grid grid-cols-2 grid-rows-2 gap-2">
               {generatedImageUrls.map((url, index) => (
                 <button 
@@ -60,13 +63,13 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
     return (
       <>
         <div>
-          <h2 className="text-3xl text-cyan-200 border-b-2 border-cyan-400/50 pb-2">SESSION INFO</h2>
+          <h2 className="text-3xl text-cyan-200 border-b-2 border-cyan-400/50 pb-2">{t.session_info}</h2>
           <p className="text-lg text-white/80 mt-2 italic">
             {generatedVideoUrl
-              ? "Your unique onsen experience is ready. Enjoy the moment."
+              ? t.onsen_ready
               : isConceptSelected
-              ? "Finalizing your onsen experience..."
-              : "Your onsen profile will appear here once created."
+              ? t.finalizing
+              : t.profile_pending
             }
           </p>
         </div>

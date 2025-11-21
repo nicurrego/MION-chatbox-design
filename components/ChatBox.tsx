@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { ChatMessage } from '../types';
+import { Translation } from '../utils/localization';
 
 interface ChatBoxProps {
   characterName: string;
@@ -16,6 +17,7 @@ interface ChatBoxProps {
   isAudioPlaying: boolean;
   canReadAloud: boolean;
   onClose: () => void;
+  t: Translation;
 }
 
 const TypingIndicator: React.FC = () => (
@@ -57,7 +59,7 @@ const CloseIcon: React.FC = () => (
 
 const ChatBox: React.FC<ChatBoxProps> = ({ 
     characterName, history, currentBotMessage, isTyping, isLoading, onSendMessage, 
-    isMuted, onToggleMute, onReadAloud, onStopAudio, isAudioPlaying, canReadAloud, onClose
+    isMuted, onToggleMute, onReadAloud, onStopAudio, isAudioPlaying, canReadAloud, onClose, t
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messageAreaRef = useRef<HTMLDivElement>(null);
@@ -102,7 +104,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                       <button
                           onClick={onStopAudio}
                           className="text-white/70 hover:text-white transition-colors duration-300 p-1"
-                          aria-label="Stop audio"
+                          aria-label={t.btn_stop_audio}
                       >
                           <StopIcon />
                       </button>
@@ -111,13 +113,13 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                           onClick={onReadAloud}
                           disabled={!canReadAloud}
                           className="text-white/70 hover:text-white transition-colors duration-300 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                          aria-label="Read message aloud"
+                          aria-label={t.btn_read_aloud}
                       >
                           <PlayIcon />
                       </button>
                   )}
                   <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                    {isAudioPlaying ? 'Stop audio' : 'Read aloud'}
+                    {isAudioPlaying ? t.btn_stop_audio : t.btn_read_aloud}
                   </div>
               </div>
 
@@ -126,12 +128,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   <button
                       onClick={onToggleMute}
                       className="text-white/70 hover:text-white transition-colors duration-300 p-1"
-                      aria-label={isMuted ? 'Unmute' : 'Mute'}
+                      aria-label={isMuted ? t.btn_unmute : t.btn_mute}
                   >
                       <SoundIcon isMuted={isMuted} />
                   </button>
                   <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                    {isMuted ? 'Unmute' : 'Mute'}
+                    {isMuted ? t.btn_unmute : t.btn_mute}
                   </div>
               </div>
               
@@ -140,12 +142,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 <button 
                   onClick={onClose}
                   className="text-white/70 hover:text-white transition-colors duration-300 p-1"
-                  aria-label="Close chat"
+                  aria-label={t.btn_close}
                 >
                   <CloseIcon />
                 </button>
                 <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                  Close chat
+                  {t.btn_close}
                 </div>
               </div>
           </div>
@@ -175,7 +177,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
           {isLoading && !isTyping && (
               <div className="w-full flex justify-start">
                   <p className="px-4 py-2 rounded-xl bg-cyan-900/80 animate-pulse">
-                      ...
+                      {t.type_message}
                   </p>
               </div>
           )}
@@ -185,7 +187,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={isLoading ? "Mion is thinking..." : (isTyping ? "..." : "Type your message here...")}
+            placeholder={isLoading ? t.thinking : (isTyping ? t.type_message : t.chat_placeholder)}
             disabled={isLoading || isTyping}
             className="w-full bg-transparent text-white text-2xl placeholder-cyan-300/70 border-0 focus:ring-0 px-4 py-2"
             autoComplete="off"

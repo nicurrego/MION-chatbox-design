@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { LanguageCode, Translation } from '../utils/localization';
 
 interface WelcomeScreenProps {
   onContinue: () => void;
@@ -8,6 +9,9 @@ interface WelcomeScreenProps {
   onToggleMute: () => void;
   isTtsEnabled: boolean;
   onToggleTts: () => void;
+  currentLanguage: LanguageCode;
+  onLanguageChange: (lang: LanguageCode) => void;
+  t: Translation;
 }
 
 const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
@@ -21,7 +25,10 @@ const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
 );
 
 
-const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, isMuted, onToggleMute, isTtsEnabled, onToggleTts }) => {
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ 
+    onContinue, isExiting, isMuted, onToggleMute, 
+    isTtsEnabled, onToggleTts, currentLanguage, onLanguageChange, t 
+}) => {
   const [screen, setScreen] = useState<'loop' | 'intro'>('loop');
   const introVideoRef = useRef<HTMLVideoElement>(null);
   const loopVideoRef = useRef<HTMLVideoElement>(null);
@@ -35,14 +42,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
     onToggleMute();
   };
   
-  // Sync loop video mute state with global prop
   useEffect(() => {
     if (loopVideoRef.current) {
         loopVideoRef.current.muted = isMuted;
     }
   }, [isMuted]);
 
-  // Sync intro video mute state when it becomes active
   useEffect(() => {
     if (screen === 'intro' && introVideoRef.current) {
       introVideoRef.current.muted = isMuted;
@@ -92,22 +97,39 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
                 src="/intro_loop.mp4"
                 autoPlay
                 loop
-                muted // Start muted, will be synced by useEffect
+                muted 
                 playsInline
                 className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
             />
              <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 animate-fadeIn">
                 <div className="text-center">
                     <div className="mb-8">
-                    <h1 className="text-5xl md:text-7xl animate-title-bob" style={{ color: '#FFF8E1', textShadow: '0 0 20px rgba(255, 165, 0, 0.7)' }}>TALK TO MION</h1>
-                    <h2 className="text-xl md:text-2xl tracking-widest uppercase animate-subtitle-bob" style={{ color: '#FFDAB9', textShadow: '0 0 10px rgba(239, 137, 61, 0.5)' }}>a MION experience</h2>
+                    <h1 className="text-5xl md:text-7xl animate-title-bob" style={{ color: '#FFF8E1', textShadow: '0 0 20px rgba(255, 165, 0, 0.7)' }}>{t.welcome_title}</h1>
+                    <h2 className="text-xl md:text-2xl tracking-widest uppercase animate-subtitle-bob" style={{ color: '#FFDAB9', textShadow: '0 0 10px rgba(239, 137, 61, 0.5)' }}>{t.welcome_subtitle}</h2>
                     </div>
-                    <p className="mt-24 text-white/70 text-xl tracking-widest animate-pulse">- click to start -</p>
+                    <p className="mt-24 text-white/70 text-xl tracking-widest animate-pulse">{t.click_start}</p>
                 </div>
+
+                {/* Language Selector */}
+                <div className="absolute top-4 right-4 flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <button 
+                        onClick={() => onLanguageChange('en')} 
+                        className={`px-2 py-1 rounded ${currentLanguage === 'en' ? 'bg-cyan-600 text-white' : 'bg-black/50 text-white/60'}`}>EN</button>
+                    <button 
+                        onClick={() => onLanguageChange('ja')} 
+                        className={`px-2 py-1 rounded ${currentLanguage === 'ja' ? 'bg-cyan-600 text-white' : 'bg-black/50 text-white/60'}`}>JP</button>
+                    <button 
+                        onClick={() => onLanguageChange('es')} 
+                        className={`px-2 py-1 rounded ${currentLanguage === 'es' ? 'bg-cyan-600 text-white' : 'bg-black/50 text-white/60'}`}>ES</button>
+                    <button 
+                        onClick={() => onLanguageChange('fr')} 
+                        className={`px-2 py-1 rounded ${currentLanguage === 'fr' ? 'bg-cyan-600 text-white' : 'bg-black/50 text-white/60'}`}>FR</button>
+                </div>
+
                 <button
                     onClick={toggleSound}
                     className="absolute bottom-4 right-4 z-20 bg-black/40 rounded-full p-3 text-white/70 hover:text-white hover:bg-black/60 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
+                    aria-label={isMuted ? t.btn_unmute : t.btn_mute}
                 >
                     <SoundIcon isMuted={isMuted} />
                 </button>
@@ -136,14 +158,14 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
                     `}
                     aria-label={isTtsEnabled ? "Disable Text-to-Speech" : "Enable Text-to-Speech"}
                 >
-                    VOICE: {isTtsEnabled ? 'ON' : 'OFF'}
+                    {isTtsEnabled ? t.voice_on : t.voice_off}
                 </button>
                 <button
                     onClick={onContinue}
                     className="bg-black/50 text-white/70 px-4 py-2 rounded-md text-lg tracking-wider hover:bg-white hover:text-black transition-colors duration-300 border border-transparent"
-                    aria-label="Skip intro video"
+                    aria-label={t.skip}
                 >
-                    SKIP
+                    {t.skip}
                 </button>
             </div>
         </>

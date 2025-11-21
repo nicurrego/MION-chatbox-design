@@ -5,6 +5,7 @@ import { sendMessageToBot, generateSpeech, generateOnsenImage, generateLoopingVi
 import type { OnsenPreferences } from '../services/geminiService';
 import { playAudio, stopAudio } from '../utils/audioUtils';
 import { urlToBase64 } from '../utils/imageUtils';
+import { Translation } from '../utils/localization';
 
 import CharacterSprite from './CharacterSprite';
 import ChatBox from './ChatBox';
@@ -13,8 +14,6 @@ import Subtitles from './Subtitles';
 import ActionButtons from './ActionButtons';
 import VoiceInputUI from './VoiceInputUI';
 
-// Fix: Add interfaces for the Web Speech API to fix TypeScript errors.
-// These are not included in standard DOM typings.
 interface SpeechRecognitionAlternative {
     readonly transcript: string;
     readonly confidence: number;
@@ -54,14 +53,14 @@ interface SpeechRecognition {
     onend: () => void;
 }
 
-const LoadingOverlay: React.FC<{ message: string }> = ({ message }) => (
+const LoadingOverlay: React.FC<{ message: string; t: Translation }> = ({ message, t }) => (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm text-white animate-fadeIn">
         <svg className="animate-spin h-12 w-12 text-cyan-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
         <p className="text-2xl tracking-wider">{message}</p>
-        <p className="text-lg text-cyan-200 mt-2">This may take a few moments...</p>
+        <p className="text-lg text-cyan-200 mt-2">{t.please_wait}</p>
     </div>
 );
 
@@ -72,15 +71,18 @@ interface MainScreenProps {
   isMuted: boolean;
   onToggleMute: () => void;
   isTtsEnabled: boolean;
+  t: Translation;
 }
 
 const splitIntoSentences = (text: string): string[] => {
     if (!text) return [];
-    const sentences = text.split(/(?<=[.?!])\s+/);
+    // Rough split for multiple languages. 
+    // CJK usually uses fullwidth punctuation (。！？), distinct from Latin (.?!).
+    const sentences = text.split(/(?<=[.?!。！？])\s+/);
     return sentences.map(s => s.trim()).filter(Boolean);
 };
 
-const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute, isTtsEnabled }) => {
+const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute, isTtsEnabled, t }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
   const [persistentSubtitle, setPersistentSubtitle] = useState('');
@@ -103,7 +105,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
   const [videoLoadingMessage, setVideoLoadingMessage] = useState('');
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string | null>(null);
-  const [apiKeySelected, setApiKeySelected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -116,17 +117,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const hasStartedConversation = useRef(false);
   const typingIntervalRef = useRef<number | null>(null);
   const subtitleTimeoutRefs = useRef<number[]>([]);
-
-  // Check for Veo API key on mount
-  useEffect(() => {
-    const checkApiKey = async () => {
-        if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
-            const hasKey = await window.aistudio.hasSelectedApiKey();
-            setApiKeySelected(hasKey);
-        }
-    };
-    checkApiKey();
-  }, []);
 
   const typeMessage = useCallback((text: string, audio: string | null) => {
     setIsTyping(true);
@@ -216,7 +206,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             }
         } catch (error) {
             console.error("Failed to parse preferences JSON or generate images:", error);
-            setError("Sorry, there was an issue creating the onsen visuals.");
+            setError(t.error_video); // Generic error message
         } finally {
             setIsGeneratingImage(false);
         }
@@ -232,49 +222,30 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     
     setLastBotAudio(audioData);
     typeMessage(botResponseText, audioData);
-  }, [isTyping, isLoading, typeMessage, isTtsEnabled]);
+  }, [isTyping, isLoading, typeMessage, isTtsEnabled, t]);
 
   const handleOnsenConceptSelect = useCallback(async (url: string) => {
     setSelectedOnsenConceptUrl(url); // Show the selected image as background immediately
     setIsGeneratingVideo(true);
-    setVideoLoadingMessage("Preparing your onsen experience...");
+    setVideoLoadingMessage(t.finalizing);
     setError(null);
 
     try {
         const { base64, mimeType } = await urlToBase64(url);
-
-        // API Key Check
-        if (!apiKeySelected) {
-            if (window.aistudio?.openSelectKey) {
-                await window.aistudio.openSelectKey();
-                const hasKey = await window.aistudio.hasSelectedApiKey();
-                setApiKeySelected(hasKey);
-                if (!hasKey) {
-                    throw new Error("An API key is required for video generation.");
-                }
-            } else {
-                throw new Error("Could not find the API key selection utility.");
-            }
-        }
-        
-        // Generate Video
         const videoUrl = await generateLoopingVideo(base64, mimeType);
         setGeneratedVideoUrl(videoUrl);
 
     } catch (error: any) {
         console.error("Video generation process failed:", error);
-        if (error.message.includes("Requested entity was not found")) {
-            setError("Video generation failed. Your API key might be invalid. Please try selecting a different key.");
-            setApiKeySelected(false);
-        } else if (error.message.includes("API key is required")) {
-            setError(error.message);
+        if (error.message.includes("API_KEY")) {
+             setError(t.error_api);
         } else {
-            setError("Sorry, we couldn't create the video experience. Please try selecting a concept again.");
+            setError(t.error_video);
         }
     } finally {
         setIsGeneratingVideo(false);
     }
-}, [apiKeySelected]);
+}, [t]);
 
 
   const handleReadAloud = useCallback(() => {
@@ -293,7 +264,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   }, []);
 
   const handleStartVoiceInput = useCallback(() => {
-    setPersistentSubtitle(''); // Clear subtitle on voice input
+    setPersistentSubtitle(''); 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Sorry, your browser doesn't support speech recognition.");
@@ -307,7 +278,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = 'en-US';
+    recognition.lang = t.stt_locale; // Use localized language code
     
     recognition.onstart = () => setIsRecording(true);
     
@@ -335,7 +306,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     recognitionRef.current = recognition;
     setIsVoiceInputActive(true);
     setTranscript('');
-}, []);
+}, [t.stt_locale]);
 
 const handleCancelVoiceInput = useCallback(() => {
     if (recognitionRef.current) {
@@ -381,12 +352,6 @@ const handleSendVoiceMessage = useCallback((message: string) => {
         />
       )}
       
-      {/*
-        FIX: Add a 'key' prop to the overlay divs. This forces React to re-mount them
-        when the background source changes (from image to video). This resolves a potential
-        rendering glitch where CSS filters like 'backdrop-blur' might not update to reflect
-        the new background content, making it seem like the old background is still present.
-      */}
       <div
         key={generatedVideoUrl || 'bg-overlay'}
         className="absolute inset-0 bg-blue-600/30 backdrop-blur-sm backdrop-brightness-75"
@@ -405,6 +370,7 @@ const handleSendVoiceMessage = useCallback((message: string) => {
             onConceptSelect={handleOnsenConceptSelect}
             isConceptSelected={!!selectedOnsenConceptUrl}
             generatedVideoUrl={generatedVideoUrl}
+            t={t}
           />
         </div>
         
@@ -427,6 +393,7 @@ const handleSendVoiceMessage = useCallback((message: string) => {
                 onStartVoiceInput={handleStartVoiceInput}
                 areSubtitlesVisible={areSubtitlesVisible}
                 onToggleSubtitles={() => setAreSubtitlesVisible(prev => !prev)}
+                t={t}
             />
         </div>
       </div>
@@ -446,6 +413,7 @@ const handleSendVoiceMessage = useCallback((message: string) => {
             isAudioPlaying={isAudioPlaying}
             canReadAloud={!!lastBotAudio && !isTyping}
             onClose={() => setIsChatOpen(false)}
+            t={t}
           />
       )}
 
@@ -455,11 +423,12 @@ const handleSendVoiceMessage = useCallback((message: string) => {
             isRecording={isRecording}
             onSend={handleSendVoiceMessage}
             onCancel={handleCancelVoiceInput}
+            t={t}
         />
       )}
     
       {isGeneratingVideo && (
-        <LoadingOverlay message={videoLoadingMessage} />
+        <LoadingOverlay message={videoLoadingMessage} t={t} />
       )}
        {error && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-red-800/90 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn">

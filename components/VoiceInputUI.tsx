@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect, useRef } from 'react';
+import { Translation } from '../utils/localization';
 
 // Icons
 const SendIcon: React.FC = () => (
@@ -19,9 +21,10 @@ interface VoiceInputUIProps {
   isRecording: boolean;
   onSend: (message: string) => void;
   onCancel: () => void;
+  t: Translation;
 }
 
-const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, onSend, onCancel }) => {
+const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, onSend, onCancel, t }) => {
   const [editedTranscript, setEditedTranscript] = useState(transcript);
   const [isEditing, setIsEditing] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
@@ -96,7 +99,7 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
                 />
             ) : (
                 <p className="min-h-[4rem] p-2 cursor-text rounded-md hover:bg-white/10 transition-colors">
-                    {editedTranscript || <span className="text-white/50">{isRecording ? "Listening..." : "Click here to type, or press the mic again."}</span>}
+                    {editedTranscript || <span className="text-white/50">{isRecording ? t.voice_listening : t.voice_hint}</span>}
                 </p>
             )}
         </div>

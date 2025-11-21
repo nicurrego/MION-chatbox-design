@@ -2,38 +2,45 @@
 import React, { useState, useEffect } from 'react';
 import WelcomeScreen from './components/WelcomeScreen';
 import MainScreen from './components/MainScreen';
-import { sendMessageToBot, generateSpeech } from './services/geminiService';
+import { sendMessageToBot, generateSpeech, startNewChat } from './services/geminiService';
 import type { ChatMessage } from './types';
+import { translations, LanguageCode } from './utils/localization';
 
 const App: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isExitingWelcome, setIsExitingWelcome] = useState(false);
   const [initialBotMessage, setInitialBotMessage] = useState<ChatMessage | null>(null);
   const [initialAudioData, setInitialAudioData] = useState<string | null>(null);
-  const [isMuted, setIsMuted] = useState(true); // Mute state for the whole app
-  const [isTtsEnabled, setIsTtsEnabled] = useState(true); // Toggle for TTS API usage
+  const [isMuted, setIsMuted] = useState(true); 
+  const [isTtsEnabled, setIsTtsEnabled] = useState(true);
+  
+  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>('en');
 
-  // Preload initial content when the app mounts, without blocking the UI
+  // Effect to start the chat whenever language changes or app loads
+  // Note: We only generate the initial message AFTER the user clicks "Continue" on the welcome screen
+  // to avoid generating an English greeting then switching to Japanese.
   useEffect(() => {
-    const preloadContent = async () => {
-      // "Hello" is a dummy message to trigger the bot's predefined first response.
+    // Pre-init chat structure with selected language, but don't send message yet.
+    startNewChat(translations[currentLanguage].ai_lang_name);
+  }, [currentLanguage]);
+
+  const handleContinue = async () => {
+    if (isExitingWelcome) return;
+    setIsExitingWelcome(true);
+
+    // Initialize conversation now that we know the final language selection
+    try {
       const botResponseText = await sendMessageToBot("Hello");
-      const audioData = await generateSpeech(botResponseText);
-      
+      let audioData = null;
+      if (isTtsEnabled) {
+        audioData = await generateSpeech(botResponseText);
+      }
       setInitialBotMessage({ sender: 'bot', text: botResponseText });
       setInitialAudioData(audioData);
-    };
-
-    preloadContent();
-  }, []); // Empty dependency array ensures this runs only once
-
-  const handleContinue = () => {
-    // Prevent multiple calls
-    if (isExitingWelcome) return;
-
-    setIsExitingWelcome(true);
+    } catch (e) {
+      console.error("Failed to get initial greeting", e);
+    }
     
-    // This timeout should match the transition duration in WelcomeScreen.tsx
     setTimeout(() => {
       setShowWelcome(false);
     }, 1000); 
@@ -47,6 +54,10 @@ const App: React.FC = () => {
     setIsTtsEnabled(prev => !prev);
   }
 
+  const handleLanguageChange = (lang: LanguageCode) => {
+      setCurrentLanguage(lang);
+  }
+
   return (
     <>
       {showWelcome && (
@@ -57,15 +68,19 @@ const App: React.FC = () => {
           onToggleMute={handleToggleMute}
           isTtsEnabled={isTtsEnabled}
           onToggleTts={handleToggleTts}
+          currentLanguage={currentLanguage}
+          onLanguageChange={handleLanguageChange}
+          t={translations[currentLanguage]}
         />
       )}
       {!showWelcome && (
         <MainScreen 
           initialMessage={initialBotMessage} 
-          initialAudio={isTtsEnabled ? initialAudioData : null} // Only pass audio if enabled
+          initialAudio={isTtsEnabled ? initialAudioData : null} 
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
           isTtsEnabled={isTtsEnabled}
+          t={translations[currentLanguage]}
         />
       )}
     </>
