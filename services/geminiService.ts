@@ -238,7 +238,7 @@ export async function generateLoopingVideo(
 
   const veoAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-  const videoPrompt = 'The camera moves gently left and right like is admiring the scene trying to catch all the details from it. The sound has to be armonious and resembling nature. Almost like a spa massage.';
+  const videoPrompt = 'The camera moves gently left and right like is admiring the scene trying to catch all the details from it. The sound has to represent the ambient sounds of the reference and have present the water of the onsen.';
 
   const imagePayload = {
     imageBytes: base64Image,
