@@ -80,7 +80,7 @@ const splitIntoSentences = (text: string): string[] => {
 };
 
 const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentBotMessage, setCurrentBotMessage] = useState('');
   const [persistentSubtitle, setPersistentSubtitle] = useState('');
@@ -193,8 +193,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     setIsLoading(true);
     setCurrentBotMessage('');
 
-    console.log("🤖 [CHAT] Sending message to bot...");
-    const botResponseText = await sendMessageToBot(userInput);
+    console.log("🤖 [CHAT] Sending message to bot in language:", i18n.language);
+    const botResponseText = await sendMessageToBot(userInput, i18n.language);
     console.log("✅ [CHAT] Bot response received:", botResponseText.substring(0, 100) + "...");
 
     const jsonRegex = /```json\s*([\s\S]*?)\s*```/;

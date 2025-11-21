@@ -51,9 +51,36 @@ export interface OnsenPreferences {
 // MION AI SYSTEM INSTRUCTIONS
 // ============================================================================
 
-const MION_SYSTEM_INSTRUCTION = `You are MION, a specialized, warm, and highly knowledgeable AI assistant acting as a personal onsen (Japanese hot spring) concierge. Your core duty is to help the user design their perfect, personalized onsen experience. Your tone is always warm, welcoming, calm, relaxing, knowledgeable, respectful, inquisitive, and personal, embodying the spirit of Japanese hospitality ('omotenashi').
+const getSystemInstruction = (language: string): string => {
+  const languageInstructions: Record<string, string> = {
+    en: `You are MION, a specialized, warm, and highly knowledgeable AI assistant acting as a personal onsen (Japanese hot spring) concierge. Your core duty is to help the user design their perfect, personalized onsen experience. Your tone is always warm, welcoming, calm, relaxing, knowledgeable, respectful, inquisitive, and personal, embodying the spirit of Japanese hospitality ('omotenashi').
 
-Your first message MUST be the greeting: "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind."
+IMPORTANT: Respond in ENGLISH.
+
+Your first message MUST be the greeting: "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind."`,
+
+    ja: `あなたはMIONです。温泉コンシェルジュとして、ユーザーの完璧な温泉体験をデザインするお手伝いをする、専門的で温かく、非常に知識豊富なAIアシスタントです。あなたの口調は常に温かく、歓迎的で、穏やかで、リラックスしていて、知識豊富で、敬意を持ち、探究的で、個人的であり、日本のおもてなしの精神を体現しています。
+
+重要: 日本語で応答してください。
+
+最初のメッセージは必ず次の挨拶にしてください：「こんにちは、ようこそ。私はMION、あなた専属の温泉コンシェルジュです。心と体を癒す完璧な温泉体験を創り出すお手伝いをさせていただきます。」`,
+
+    es: `Eres MION, un asistente de IA especializado, cálido y muy conocedor que actúa como conserje personal de onsen (aguas termales japonesas). Tu deber principal es ayudar al usuario a diseñar su experiencia onsen perfecta y personalizada. Tu tono es siempre cálido, acogedor, tranquilo, relajante, conocedor, respetuoso, inquisitivo y personal, encarnando el espíritu de la hospitalidad japonesa ('omotenashi').
+
+IMPORTANTE: Responde en ESPAÑOL.
+
+Tu primer mensaje DEBE ser el saludo: "Konnichiwa, bienvenido. Soy MION, tu conserje personal de onsen. Mi propósito es ayudarte a crear la experiencia perfecta de aguas termales para calmar tu cuerpo y mente."`,
+
+    zh: `你是MION，一位专业、温暖且知识渊博的AI助手，担任个人温泉（日本温泉）礼宾员。你的核心职责是帮助用户设计完美的个性化温泉体验。你的语气始终温暖、热情、平静、放松、知识渊博、尊重、好奇且个人化，体现日本待客之道（'omotenashi'）的精神。
+
+重要：用中文回复。
+
+你的第一条消息必须是问候语："Konnichiwa，欢迎。我是MION，您的私人温泉礼宾员。我的目的是帮助您创造完美的温泉体验，舒缓您的身心。"`
+  };
+
+  const baseInstruction = languageInstructions[language] || languageInstructions.en;
+
+  return `${baseInstruction}
 
 After your greeting, you must begin the "Onsen Interview" to gather data for their experience. Explain that you need to understand their needs to create a personalized onsen. The interview has two parts:
 
@@ -79,36 +106,72 @@ Once you have all the information, summarize it for the user to confirm. After c
 }
 \`\`\`
 
-After presenting the JSON, tell the user you will now use this information to generate a visual concept of their onsen for their approval, saying something like, "Thank you. I have everything I need. Now, allow me to prepare a visual representation of your unique onsen. Please give me a moment."
+After presenting the JSON, tell the user you will now use this information to generate a visual concept of their onsen for their approval.
 
-Always be ready to answer questions about onsen etiquette clearly and helpfully. End conversations with a warm closing like, "Enjoy your virtual bath."`;
+Always be ready to answer questions about onsen etiquette clearly and helpfully. End conversations with a warm closing.`;
+};
 
-const chat: Chat = ai.chats.create({
-  model: 'gemini-2.5-flash',
-  config: {
-    temperature: 0.3,
-    systemInstruction: MION_SYSTEM_INSTRUCTION,
-  },
-});
+// Store chat instances per language
+const chatInstances: Record<string, Chat> = {};
 
 // ============================================================================
 // 1. CHAT CONVERSATION (REAL API)
 // ============================================================================
 
-export const sendMessageToBot = async (message: string): Promise<string> => {
+const getOrCreateChat = (language: string): Chat => {
+  if (!chatInstances[language]) {
+    chatInstances[language] = ai.chats.create({
+      model: 'gemini-2.5-flash',
+      config: {
+        temperature: 0.3,
+        systemInstruction: getSystemInstruction(language),
+      },
+    });
+  }
+  return chatInstances[language];
+};
+
+export const sendMessageToBot = async (message: string, language: string = 'en'): Promise<string> => {
   try {
+    const chat = getOrCreateChat(language);
     const response = await chat.sendMessage({ message });
     return response.text ?? "";
   } catch (error: any) {
+    // Error messages in the user's language
+    const errorMessages: Record<string, { quota: string; apiKey: string; generic: string }> = {
+      en: {
+        quota: "I apologize, but I've reached my daily conversation limit. Please try again in 24 hours.",
+        apiKey: "There seems to be an issue with the API configuration. Please check your API key.",
+        generic: "Sorry, I seem to be having trouble connecting. Please try again later."
+      },
+      ja: {
+        quota: "申し訳ございませんが、本日の会話制限に達しました。24時間後に再度お試しください。",
+        apiKey: "API設定に問題があるようです。APIキーをご確認ください。",
+        generic: "申し訳ございませんが、接続に問題が発生しています。後ほど再度お試しください。"
+      },
+      es: {
+        quota: "Disculpa, he alcanzado mi límite diario de conversación. Por favor, inténtalo de nuevo en 24 horas.",
+        apiKey: "Parece haber un problema con la configuración de la API. Por favor, verifica tu clave API.",
+        generic: "Lo siento, parece que tengo problemas para conectarme. Por favor, inténtalo más tarde."
+      },
+      zh: {
+        quota: "抱歉，我已达到今日对话限制。请在24小时后重试。",
+        apiKey: "API配置似乎有问题。请检查您的API密钥。",
+        generic: "抱歉，我在连接时遇到了问题。请稍后再试。"
+      }
+    };
+
+    const messages = errorMessages[language] || errorMessages.en;
+
     if (error?.message?.includes('429') || error?.message?.includes('quota')) {
-      return "I apologize, but I've reached my daily conversation limit. Please try again in 24 hours.";
+      return messages.quota;
     }
-    
+
     if (error?.message?.includes('API key')) {
-      return "There seems to be an issue with the API configuration. Please check your API key.";
+      return messages.apiKey;
     }
-    
-    return "Sorry, I seem to be having trouble connecting. Please try again later.";
+
+    return messages.generic;
   }
 };
 
