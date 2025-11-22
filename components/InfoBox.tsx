@@ -34,9 +34,8 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
 
     if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
         return (
-          <div className="w-full h-full flex flex-col">
-            <h2 className="text-xl text-cyan-200 mb-3 text-center flex-shrink-0">Please select a concept:</h2>
-            <div className="flex-grow w-full flex flex-col gap-3 overflow-y-auto">
+          <div className="w-full h-full flex flex-col min-h-0">
+            <div className="flex-grow w-full flex flex-col gap-3 min-h-0">
               {generatedImageUrls.map((url, index) => (
                 <button
                   key={index}

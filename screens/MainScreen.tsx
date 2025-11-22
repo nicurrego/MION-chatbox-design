@@ -186,8 +186,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
       <div className="relative w-full h-full landscape:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-8">
 
         {/* Top Left: Info Box */}
-        <div className="absolute top-0 left-0 right-0 h-[15vh] p-4 landscape:relative landscape:inset-auto landscape:h-auto landscape:p-0 landscape:col-start-2 landscape:row-start-1">
-          <InfoBox
+        <div className="absolute top-0 left-0 right-0 h-[15vh] p-4 landscape:relative landscape:inset-auto landscape:h-full landscape:min-h-0 landscape:p-0 landscape:col-start-2 landscape:row-start-1">
+          <InfoBox 
             isGeneratingImage={onsenState.isGeneratingImage}
             generatedImageUrls={onsenState.imageUrls}
             onConceptSelect={handleConceptSelect}
