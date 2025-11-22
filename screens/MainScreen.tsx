@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
-import { generateOnsenImage, generateLoopingVideo } from '../services/geminiService';
-import type { OnsenPreferences } from '../services/geminiService';
+import { generateOnsenImage, generateLoopingVideo } from '../services';
+import type { OnsenPreferences } from '../services';
 import { urlToBase64 } from '../utils/imageUtils';
 
 // Components
@@ -55,10 +55,23 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     hasStartedConversation.current = true;
 
     if (initialAudio) {
-      audioCtrl.play(initialAudio);
+      // Check if this is mock audio (should loop)
+      const shouldLoop = initialAudio.startsWith('MOCK_MP3:');
+      audioCtrl.play(initialAudio, shouldLoop);
     }
     chat.runTypingEffect(initialMessage.text);
   }, [initialMessage, initialAudio, chat, audioCtrl]);
+
+  // Stop audio when typing finishes
+  useEffect(() => {
+    if (!chat.isTyping && audioCtrl.isPlaying) {
+      // Stop audio after a short delay to let the last subtitle show
+      const timer = setTimeout(() => {
+        audioCtrl.stop();
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [chat.isTyping, audioCtrl]);
 
   // --- Handlers ---
 
@@ -68,9 +81,10 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     const result = await chat.processUserMessage(userInput);
     if (!result) return;
 
-    // 1. Play Audio
+    // 1. Play Audio (with looping for mock audio)
     if (result.audio) {
-      audioCtrl.play(result.audio);
+      const shouldLoop = result.audio.startsWith('MOCK_MP3:');
+      audioCtrl.play(result.audio, shouldLoop);
     }
 
     // 2. Trigger Visual Typing
@@ -219,7 +233,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             onSendMessage={handleSendMessage}
             isMuted={isMuted}
             onToggleMute={onToggleMute}
-            onReadAloud={() => audioCtrl.play(chat.lastBotAudio!)}
+            onReadAloud={() => audioCtrl.play(chat.lastBotAudio!, false)}
             onStopAudio={audioCtrl.stop}
             isAudioPlaying={audioCtrl.isPlaying}
             canReadAloud={!!chat.lastBotAudio && !chat.isTyping}

@@ -73,6 +73,9 @@ MION guides you through a structured interview to create your perfect hot spring
    Create a `.env.local` file in the root directory:
    ```bash
    GEMINI_API_KEY=your_api_key_here
+
+   # Optional: Enable development mode to use mock data instead of API
+   VITE_DEV_MODE=false
    ```
 
    > ⚠️ **Important**: Never commit your `.env.local` file! It's already in `.gitignore`.
@@ -85,6 +88,54 @@ MION guides you through a structured interview to create your perfect hot spring
 5. **Open your browser**
 
    Navigate to `http://localhost:3000`
+
+---
+
+## 🦆 Development Mode
+
+MION includes a **development mode** that allows you to test the UI without using the Gemini API. This is perfect for:
+- UI/UX development and testing
+- Avoiding API quota limits during development
+- Working offline
+- Demonstrating the app without API costs
+
+### **How to Enable Development Mode**
+
+Set `VITE_DEV_MODE=true` in your `.env` or `.env.local` file:
+
+```bash
+VITE_DEV_MODE=true
+```
+
+Then restart your development server.
+
+### **What Changes in Development Mode?**
+
+When development mode is enabled, the app uses **mock data** instead of calling the Gemini API:
+
+| Feature | Production (API) | Development (Mock) |
+|---------|------------------|-------------------|
+| **Chat Responses** | Gemini AI | Pre-scripted responses |
+| **Text-to-Speech** | Gemini TTS (Kore voice) | `duck_sound.mp3` audio file |
+| **Image Generation** | AI-generated onsen images | `cp_purple_green_bath.png` & `cp_sunlight.png` |
+| **Video Generation** | Veo 3.1 generated videos | `cp_pg_video.mp4` & `cp_sunlight_video.mp4` |
+
+### **Mock Assets Location**
+
+All mock assets are located in the `public/` directory:
+- **Audio**: `public/audio/duck_sound.mp3`
+- **Images**: `public/images/cp_purple_green_bath.png`, `public/images/cp_sunlight.png`
+- **Videos**: `public/videos/cp_pg_video.mp4`, `public/videos/cp_sunlight_video.mp4`
+
+You can replace these files with your own mock assets for testing different scenarios.
+
+### **Switching Back to Production Mode**
+
+Set `VITE_DEV_MODE=false` (or remove the variable) and restart the server:
+
+```bash
+VITE_DEV_MODE=false
+```
 
 ---
 
@@ -117,16 +168,24 @@ MION-chatbox-design/
 │   ├── VoiceInputUI.tsx     # Voice input interface
 │   └── WelcomeScreen.tsx    # Animated splash screen
 ├── services/
-│   └── geminiService.ts     # Gemini API integration (chat, TTS, images, video)
+│   ├── geminiService.ts     # Gemini API integration (chat, TTS, images, video)
+│   ├── mockService.ts       # Mock service for development mode
+│   └── index.ts             # Service selector (switches between real/mock)
 ├── utils/
 │   ├── audioUtils.ts        # Audio playback utilities
 │   └── imageUtils.ts        # Image conversion utilities
 ├── public/
+│   ├── audio/
+│   │   └── duck_sound.mp3   # Mock TTS audio for development
 │   ├── images/
 │   │   ├── base_ofuro.png   # Base onsen image for generation
-│   │   └── cute_duck.png    # Character sprite
+│   │   ├── TheMION.png      # Character sprite
+│   │   ├── cp_purple_green_bath.png  # Mock generated image 1
+│   │   └── cp_sunlight.png  # Mock generated image 2
 │   └── videos/
-│       └── looping_ofuro.mp4 # Default background video
+│       ├── looping_ofuro.mp4      # Default background video
+│       ├── cp_pg_video.mp4        # Mock generated video 1
+│       └── cp_sunlight_video.mp4  # Mock generated video 2
 ├── types.ts                 # TypeScript type definitions
 ├── App.tsx                  # Root component
 ├── index.tsx                # App entry point

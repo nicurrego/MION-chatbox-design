@@ -11,25 +11,26 @@ export const useAudioController = (isMuted: boolean) => {
     useEffect(() => {
         if (gainNodeRef.current && audioCtxRef.current) {
             gainNodeRef.current.gain.setValueAtTime(
-                isMuted ? 0 : 1, 
+                isMuted ? 0 : 1,
                 audioCtxRef.current.currentTime
             );
         }
     }, [isMuted]);
 
-    const play = useCallback((audioData: string, onComplete?: () => void) => {
+    const play = useCallback((audioData: string, shouldLoop: boolean = false, onComplete?: () => void) => {
         setIsPlaying(true);
         playAudio(
-            audioData, 
-            audioCtxRef, 
-            audioSourceRef, 
-            gainNodeRef, 
-            analyserRef, 
-            isMuted, 
+            audioData,
+            audioCtxRef,
+            audioSourceRef,
+            gainNodeRef,
+            analyserRef,
+            isMuted,
             () => {
                 setIsPlaying(false);
                 if (onComplete) onComplete();
-            }
+            },
+            shouldLoop
         );
     }, [isMuted]);
 

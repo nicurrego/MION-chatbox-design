@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { ChatMessage } from '../types';
-import { sendMessageToBot, generateSpeech } from '../services/geminiService';
-import type { OnsenPreferences } from '../services/geminiService';
+import { sendMessageToBot, generateSpeech } from '../services';
+import type { OnsenPreferences } from '../services';
 
 const splitIntoSentences = (text: string): string[] => {
     if (!text) return [];

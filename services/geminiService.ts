@@ -18,11 +18,18 @@ import { GoogleGenAI, Chat, Modality } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
 
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable not set");
-}
+// Lazy initialization to avoid errors when in dev mode
+let ai: GoogleGenAI | null = null;
 
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+const getAI = (): GoogleGenAI => {
+  if (!API_KEY) {
+    throw new Error("API_KEY environment variable not set");
+  }
+  if (!ai) {
+    ai = new GoogleGenAI({ apiKey: API_KEY });
+  }
+  return ai;
+};
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -83,13 +90,21 @@ After presenting the JSON, tell the user you will now use this information to ge
 
 Always be ready to answer questions about onsen etiquette clearly and helpfully. End conversations with a warm closing like, "Enjoy your virtual bath."`;
 
-const chat: Chat = ai.chats.create({
-  model: 'gemini-2.5-flash',
-  config: {
-    temperature: 0.3,
-    systemInstruction: MION_SYSTEM_INSTRUCTION,
-  },
-});
+// Lazy chat initialization
+let chat: Chat | null = null;
+
+const getChat = (): Chat => {
+  if (!chat) {
+    chat = getAI().chats.create({
+      model: 'gemini-2.5-flash',
+      config: {
+        temperature: 0.3,
+        systemInstruction: MION_SYSTEM_INSTRUCTION,
+      },
+    });
+  }
+  return chat;
+};
 
 // ============================================================================
 // 1. CHAT CONVERSATION (REAL API)
@@ -97,17 +112,17 @@ const chat: Chat = ai.chats.create({
 
 export const sendMessageToBot = async (message: string): Promise<string> => {
   try {
-    const response = await chat.sendMessage({ message });
+    const response = await getChat().sendMessage({ message });
     return response.text ?? "";
   } catch (error: any) {
     if (error?.message?.includes('429') || error?.message?.includes('quota')) {
       return "I apologize, but I've reached my daily conversation limit. Please try again in 24 hours.";
     }
-    
+
     if (error?.message?.includes('API key')) {
       return "There seems to be an issue with the API configuration. Please check your API key.";
     }
-    
+
     return "Sorry, I seem to be having trouble connecting. Please try again later.";
   }
 };
@@ -122,7 +137,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
   }
   
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text }] }],
       config: {
@@ -169,7 +184,7 @@ export const generateOnsenImage = async (preferences: OnsenPreferences): Promise
 
     for (let i = 0; i < variations.length; i++) {
       try {
-        const response = await ai.models.generateContent({
+        const response = await getAI().models.generateContent({
           model: 'gemini-2.5-flash-image',
           contents: {
             parts: [
