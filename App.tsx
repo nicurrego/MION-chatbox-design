@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-import WelcomeScreen from './components/WelcomeScreen';
-import MainScreen from './components/MainScreen';
+import WelcomeScreen from './screens/WelcomeScreen';
+import MainScreen from './screens/MainScreen';
 import { sendMessageToBot, generateSpeech } from './services/geminiService';
 import type { ChatMessage } from './types';
 

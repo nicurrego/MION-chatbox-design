@@ -5,13 +5,13 @@ import type { OnsenPreferences } from '../services/geminiService';
 import { urlToBase64 } from '../utils/imageUtils';
 
 // Components
-import { MionCharacter } from './MionCharacter';
-import ChatBox from './ChatBox';
-import InfoBox from './InfoBox';
-import Subtitles from './Subtitles';
-import ActionButtons from './ActionButtons';
-import VoiceInputUI from './VoiceInputUI';
-import LoadingOverlay from './LoadingOverlay';
+import { MionCharacter } from '../components/MionCharacter';
+import ChatBox from '../components/ChatBox';
+import InfoBox from '../components/InfoBox';
+import Subtitles from '../components/Subtitles';
+import ActionButtons from '../components/ActionButtons';
+import VoiceInputUI from '../components/VoiceInputUI';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 // Custom Hooks
 import { useAudioController } from '../hooks/useAudioController';
