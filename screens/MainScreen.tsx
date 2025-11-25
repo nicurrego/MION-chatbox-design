@@ -62,16 +62,17 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     chat.runTypingEffect(initialMessage.text);
   }, [initialMessage, initialAudio, chat, audioCtrl]);
 
-  // Stop audio when typing finishes
+  // Stop audio when typing finishes (only for mock audio that loops)
   useEffect(() => {
-    if (!chat.isTyping && audioCtrl.isPlaying) {
-      // Stop audio after a short delay to let the last subtitle show
+    if (!chat.isTyping && audioCtrl.isPlaying && chat.lastBotAudio?.startsWith('MOCK_MP3:')) {
+      // Stop looping audio after a short delay to let the last subtitle show
       const timer = setTimeout(() => {
         audioCtrl.stop();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [chat.isTyping, audioCtrl]);
+    // For real TTS audio, let it play completely without interruption
+  }, [chat.isTyping, audioCtrl, chat.lastBotAudio]);
 
   // --- Handlers ---
 

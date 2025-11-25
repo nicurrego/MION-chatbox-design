@@ -19,39 +19,42 @@ import type { OnsenPreferences } from './geminiService';
 // Store mapping of image base64 to video URL
 const imageToVideoMap = new Map<string, string>();
 
-const MOCK_RESPONSES = [
-  "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind.",
-  "To create your personalized onsen experience, I need to understand your needs. Let's begin with your well-being profile. First, could you tell me about your skin type? Is it dry, oily, sensitive, or combination?",
-  "Thank you. Now, do you have any muscle soreness or tension? If so, where do you feel it most?",
-  "I understand. What is your current stress level? Would you say it's low, moderate, or high?",
-  "Perfect. What water temperature do you prefer? Hot, warm, or moderate?",
-  "Excellent. Now for the aesthetic profile. What kind of atmosphere appeals to you? For example, serene and secluded, traditional cedar wood, modern minimalist, or natural outdoor setting?",
-  "Wonderful choice. What color palette would you like for your onsen scene? For example, warm autumn tones, cool blues and greens, earthy browns, or vibrant sunset colors?",
-  "Beautiful. Finally, what time of day would you prefer? Misty morning, golden hour sunset, or starry night?",
-  `Thank you for sharing all that information. Let me summarize what you've told me to make sure I have everything correct. Based on your preferences, here is your personalized onsen profile:
+// Mock responses in different languages
+const MOCK_RESPONSES_BY_LANGUAGE: Record<string, string[]> = {
+  'en-US': [
+    "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind.",
+    "To create your personalized onsen experience, I need to understand your needs. Let's begin with your well-being profile. First, could you tell me about your skin type? Is it dry, oily, sensitive, or combination?",
+    "Thank you. Now, do you have any muscle soreness or tension? If so, where do you feel it most?",
+    "I understand. What is your current stress level? Would you say it's low, moderate, or high?",
+    "Perfect. What water temperature do you prefer? Hot, warm, or moderate?",
+    "Excellent. Now for the aesthetic profile. What kind of atmosphere appeals to you? For example, serene and secluded, traditional cedar wood, modern minimalist, or natural outdoor setting?",
+    "Wonderful choice. What color palette would you like for your onsen scene? For example, warm autumn tones, cool blues and greens, earthy browns, or vibrant sunset colors?",
+    "Beautiful. Finally, what time of day would you prefer? Misty morning, golden hour sunset, or starry night?",
+    `Thank you for sharing all that information. Based on your preferences, here is your personalized onsen profile:\n\n\`\`\`json\n{\n  "wellbeingProfile": {\n    "skinType": "sensitive",\n    "muscleSoreness": "shoulders and neck",\n    "stressLevel": "moderate",\n    "waterTemperature": "warm",\n    "healthGoals": "relaxation and stress relief"\n  },\n  "aestheticProfile": {\n    "atmosphere": "serene natural outdoor setting",\n    "colorPalette": "warm sunset tones with purple accents",\n    "timeOfDay": "golden hour"\n  }\n}\n\`\`\`\n\nThank you. I have everything I need. Now, allow me to prepare a visual representation of your unique onsen. Please give me a moment.`,
+    "I hope you enjoy your personalized onsen experience. The warm waters and beautiful surroundings should help you relax and rejuvenate. Enjoy your virtual bath."
+  ],
+  'es-ES': [
+    "Konnichiwa, bienvenido. Soy MION, tu conserje personal de onsen. Mi propósito es ayudarte a crear la experiencia perfecta de aguas termales para calmar tu cuerpo y mente.",
+    "Para crear tu experiencia personalizada de onsen, necesito entender tus necesidades. Comencemos con tu perfil de bienestar. Primero, ¿podrías decirme sobre tu tipo de piel? ¿Es seca, grasa, sensible o mixta?",
+    "Gracias. Ahora, ¿tienes algún dolor o tensión muscular? Si es así, ¿dónde lo sientes más?",
+    "Entiendo. ¿Cuál es tu nivel de estrés actual? ¿Dirías que es bajo, moderado o alto?",
+    "Perfecto. ¿Qué temperatura de agua prefieres? ¿Caliente, tibia o moderada?",
+    "Excelente. Ahora para el perfil estético. ¿Qué tipo de atmósfera te atrae? Por ejemplo, serena y aislada, madera de cedro tradicional, minimalista moderna, o entorno natural al aire libre?",
+    "Maravillosa elección. ¿Qué paleta de colores te gustaría para tu escena de onsen? Por ejemplo, tonos cálidos de otoño, azules y verdes frescos, marrones terrosos, o colores vibrantes de atardecer?",
+    "Hermoso. Finalmente, ¿qué momento del día preferirías? ¿Mañana brumosa, atardecer dorado, o noche estrellada?",
+    `Gracias por compartir toda esa información. Basándome en tus preferencias, aquí está tu perfil personalizado de onsen:\n\n\`\`\`json\n{\n  "wellbeingProfile": {\n    "skinType": "sensitive",\n    "muscleSoreness": "shoulders and neck",\n    "stressLevel": "moderate",\n    "waterTemperature": "warm",\n    "healthGoals": "relaxation and stress relief"\n  },\n  "aestheticProfile": {\n    "atmosphere": "serene natural outdoor setting",\n    "colorPalette": "warm sunset tones with purple accents",\n    "timeOfDay": "golden hour"\n  }\n}\n\`\`\`\n\nGracias. Tengo todo lo que necesito. Ahora, permíteme preparar una representación visual de tu onsen único. Dame un momento por favor.`,
+    "Espero que disfrutes tu experiencia personalizada de onsen. Las aguas cálidas y el hermoso entorno deberían ayudarte a relajarte y rejuvenecer. Disfruta tu baño virtual."
+  ],
+};
 
-\`\`\`json
-{
-  "wellbeingProfile": {
-    "skinType": "sensitive",
-    "muscleSoreness": "shoulders and neck",
-    "stressLevel": "moderate",
-    "waterTemperature": "warm",
-    "healthGoals": "relaxation and stress relief"
-  },
-  "aestheticProfile": {
-    "atmosphere": "serene natural outdoor setting",
-    "colorPalette": "warm sunset tones with purple accents",
-    "timeOfDay": "golden hour"
-  }
-}
-\`\`\`
-
-Thank you. I have everything I need. Now, allow me to prepare a visual representation of your unique onsen. Please give me a moment.`,
-  "I hope you enjoy your personalized onsen experience. The warm waters and beautiful surroundings should help you relax and rejuvenate. Enjoy your virtual bath."
-];
-
+// Current language for mock responses
+let currentMockLanguage = 'en-US';
 let responseIndex = 0;
+
+export const setMockLanguage = (languageCode: string) => {
+  currentMockLanguage = languageCode;
+  responseIndex = 0; // Reset response index when language changes
+};
 
 // ============================================================================
 // HELPER: Convert file to base64
@@ -85,10 +88,11 @@ const fileToBase64 = async (filePath: string): Promise<string> => {
 export const sendMessageToBot = async (message: string): Promise<string> => {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const response = MOCK_RESPONSES[responseIndex];
-  responseIndex = Math.min(responseIndex + 1, MOCK_RESPONSES.length - 1);
-  
+
+  const responses = MOCK_RESPONSES_BY_LANGUAGE[currentMockLanguage] || MOCK_RESPONSES_BY_LANGUAGE['en-US'];
+  const response = responses[responseIndex];
+  responseIndex = Math.min(responseIndex + 1, responses.length - 1);
+
   return response;
 };
 

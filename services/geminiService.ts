@@ -58,11 +58,33 @@ export interface OnsenPreferences {
 // MION AI SYSTEM INSTRUCTIONS
 // ============================================================================
 
-const MION_SYSTEM_INSTRUCTION = `You are MION, a specialized, warm, and highly knowledgeable AI assistant acting as a personal onsen (Japanese hot spring) concierge. Your core duty is to help the user design their perfect, personalized onsen experience. Your tone is always warm, welcoming, calm, relaxing, knowledgeable, respectful, inquisitive, and personal, embodying the spirit of Japanese hospitality ('omotenashi').
+// Store current language for the chat session
+let currentLanguage: string = 'en-US';
+let currentVoice: string = 'Kore';
 
-Your first message MUST be the greeting: "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind."
+export const setLanguageConfig = (languageCode: string, voiceName: string) => {
+  currentLanguage = languageCode;
+  currentVoice = voiceName;
+  // Reset chat when language changes
+  chat = null;
+};
 
-After your greeting, you must begin the "Onsen Interview" to gather data for their experience. Explain that you need to understand their needs to create a personalized onsen. The interview has two parts:
+const getMionSystemInstruction = (languageCode: string): string => {
+  const languageInstructions: Record<string, string> = {
+    'es-ES': 'IMPORTANTE: Debes responder SIEMPRE en español. Todos tus mensajes deben estar completamente en español.',
+    'en-US': 'IMPORTANT: You must ALWAYS respond in English. All your messages must be completely in English.',
+    'ko-KR': '중요: 항상 한국어로 응답해야 합니다. 모든 메시지는 완전히 한국어로 작성되어야 합니다.',
+    'ja-JP': '重要：常に日本語で応答する必要があります。すべてのメッセージは完全に日本語である必要があります。',
+    'zh-CN': '重要：您必须始终用中文回复。所有消息必须完全使用中文。',
+  };
+
+  const langInstruction = languageInstructions[languageCode] || languageInstructions['en-US'];
+
+  return `${langInstruction}
+
+You are MION, a specialized, warm, and highly knowledgeable AI assistant acting as a personal onsen (Japanese hot spring) concierge. Your core duty is to help the user design their perfect, personalized onsen experience. Your tone is always warm, welcoming, calm, relaxing, knowledgeable, respectful, inquisitive, and personal, embodying the spirit of Japanese hospitality ('omotenashi').
+
+Your first message MUST be a greeting in the user's language. After your greeting, you must begin the "Onsen Interview" to gather data for their experience. Explain that you need to understand their needs to create a personalized onsen. The interview has two parts:
 
 First, gather their "Well-being Profile." Respectfully ask for 5 pieces of information, one or two at a time. Explain this helps select the right water minerals. Examples include: skin type (dry, oily, sensitive), any muscle soreness, general stress level, preferred water temperature (hot, moderate), and any specific health goals (e.g., relaxation, improving circulation).
 
@@ -86,9 +108,10 @@ Once you have all the information, summarize it for the user to confirm. After c
 }
 \`\`\`
 
-After presenting the JSON, tell the user you will now use this information to generate a visual concept of their onsen for their approval, saying something like, "Thank you. I have everything I need. Now, allow me to prepare a visual representation of your unique onsen. Please give me a moment."
+After presenting the JSON, tell the user you will now use this information to generate a visual concept of their onsen for their approval.
 
-Always be ready to answer questions about onsen etiquette clearly and helpfully. End conversations with a warm closing like, "Enjoy your virtual bath."`;
+Always be ready to answer questions about onsen etiquette clearly and helpfully. End conversations with a warm closing.`;
+};
 
 // Lazy chat initialization
 let chat: Chat | null = null;
@@ -99,7 +122,7 @@ const getChat = (): Chat => {
       model: 'gemini-2.5-flash',
       config: {
         temperature: 0.3,
-        systemInstruction: MION_SYSTEM_INSTRUCTION,
+        systemInstruction: getMionSystemInstruction(currentLanguage),
       },
     });
   }
@@ -135,7 +158,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
   if (!text.trim()) {
     return null;
   }
-  
+
   try {
     const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
@@ -144,8 +167,9 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
           voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: 'Kore' },
+            prebuiltVoiceConfig: { voiceName: currentVoice },
           },
+          languageCode: currentLanguage,
         },
       },
     });

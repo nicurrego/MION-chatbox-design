@@ -39,3 +39,11 @@ export const generateLoopingVideo = isDevelopmentMode
   ? mockService.generateLoopingVideo
   : geminiService.generateLoopingVideo;
 
+// Export language configuration
+export const setLanguageConfig = isDevelopmentMode
+  ? (languageCode: string, _voiceName: string) => {
+      console.log(`🦆 [DEV MODE] Setting mock language to ${languageCode}`);
+      mockService.setMockLanguage(languageCode);
+    }
+  : geminiService.setLanguageConfig;
+
