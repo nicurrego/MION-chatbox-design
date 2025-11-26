@@ -3,6 +3,7 @@ import type { ChatMessage } from '../types';
 import { generateOnsenImage, generateLoopingVideo } from '../services';
 import type { OnsenPreferences } from '../services';
 import { urlToBase64 } from '../utils/imageUtils';
+import { useLanguage } from '../contexts/LanguageContext';
 
 // Components
 import { MionCharacter } from '../components/MionCharacter';
@@ -26,9 +27,12 @@ interface MainScreenProps {
 }
 
 const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute }) => {
+  // --- Language Context ---
+  const { languageConfig } = useLanguage();
+
   // --- Custom Hooks ---
   const audioCtrl = useAudioController(isMuted);
-  const voiceInput = useVoiceInput();
+  const voiceInput = useVoiceInput(languageConfig?.geminiLanguageCode || 'en-US');
   const chat = useChatSession();
 
   // --- Local State for Visuals (Onsen/Video) ---

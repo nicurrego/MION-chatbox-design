@@ -27,14 +27,16 @@ Once a language is selected:
 
 In production mode:
 - **Chat**: Gemini API responds in the selected language based on system instructions
-- **TTS**: Gemini TTS generates speech in the selected language with appropriate voice
+- **TTS (Text-to-Speech)**: Gemini TTS generates speech in the selected language with appropriate voice
+- **STT (Speech-to-Text)**: Web Speech API recognizes user voice input in the selected language
 - **Audio Playback**: Audio plays completely without interruption (fixed issue where audio was cut off)
 
 ### 4. Development Mode (VITE_DEV_MODE=true)
 
 In development mode:
 - **Chat**: Mock service provides pre-scripted responses in the selected language
-- **TTS**: Uses `duck_sound.mp3` audio file (loops during subtitle display)
+- **TTS (Text-to-Speech)**: Uses `duck_sound.mp3` audio file (loops during subtitle display)
+- **STT (Speech-to-Text)**: Web Speech API recognizes user voice input in the selected language
 - **Audio Playback**: Looping audio stops 2 seconds after typing finishes
 
 ## Technical Implementation
@@ -79,6 +81,12 @@ In development mode:
    - Fixed TTS audio playback issue
    - Audio stops only for looping mock audio (dev mode)
    - Real TTS audio plays completely without interruption (production mode)
+   - Imports language context to pass to voice input hook
+
+6. **`hooks/useVoiceInput.ts`**
+   - Added `languageCode` parameter to configure Speech Recognition language
+   - Web Speech API now uses the selected language for voice input
+   - Defaults to 'en-US' if no language is provided
 
 ## Language Configuration
 
@@ -112,6 +120,44 @@ TTS audio was being cut off because it stopped 2 seconds after the typing effect
 ### Solution
 - **Mock audio (dev mode)**: Loops during subtitle display, stops 2 seconds after typing finishes
 - **Real TTS audio (production mode)**: Plays completely without interruption, no forced stop
+
+## Voice Input (Speech-to-Text)
+
+The voice input feature uses the **Web Speech API** to recognize user speech in the selected language.
+
+### How It Works
+
+1. User clicks the microphone button in the bottom-right corner
+2. Browser requests microphone permission (if not already granted)
+3. Speech recognition starts in the selected language
+4. User speaks their message
+5. Transcript appears in real-time in the voice input UI
+6. User can edit the transcript before sending
+7. Message is sent to MION in the selected language
+
+### Language Configuration
+
+The `useVoiceInput` hook now accepts a `languageCode` parameter:
+
+```typescript
+const voiceInput = useVoiceInput(languageConfig?.geminiLanguageCode || 'en-US');
+```
+
+This ensures that:
+- **Spanish**: Recognizes Spanish speech (`es-ES`)
+- **English**: Recognizes English speech (`en-US`)
+- **Korean**: Recognizes Korean speech (`ko-KR`)
+- **Japanese**: Recognizes Japanese speech (`ja-JP`)
+- **Chinese**: Recognizes Chinese speech (`zh-CN`)
+
+### Browser Compatibility
+
+The Web Speech API is supported in:
+- ✅ Chrome/Edge (best support)
+- ✅ Safari (iOS and macOS)
+- ⚠️ Firefox (limited support)
+
+If the browser doesn't support speech recognition, the user will see an alert message.
 
 ## Testing
 

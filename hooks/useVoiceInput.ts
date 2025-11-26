@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import type { SpeechRecognition } from '../types/webSpeech';
 
-export const useVoiceInput = () => {
+export const useVoiceInput = (languageCode: string = 'en-US') => {
     const [isActive, setIsActive] = useState(false);
     const [isRecording, setIsRecording] = useState(false);
     const [transcript, setTranscript] = useState('');
@@ -21,7 +21,7 @@ export const useVoiceInput = () => {
         const recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = 'en-US';
+        recognition.lang = languageCode;
 
         recognition.onstart = () => setIsRecording(true);
         
@@ -49,7 +49,7 @@ export const useVoiceInput = () => {
         recognitionRef.current = recognition;
         setIsActive(true);
         setTranscript('');
-    }, []);
+    }, [languageCode]);
 
     const stopListening = useCallback(() => {
         if (recognitionRef.current) {
