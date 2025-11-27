@@ -48,6 +48,22 @@ In development mode:
    - Defines `SupportedLanguage` type: `'es' | 'en' | 'ko' | 'ja' | 'zh'`
    - Stores language configuration (code, name, native name, Gemini voice, language code)
 
+### Files Modified for CJK Support
+
+1. **`hooks/useChatSession.ts`** - Enhanced sentence splitting
+   - Added intelligent sentence detection for CJK languages (Chinese, Japanese, Korean)
+   - Detects CJK characters using Unicode ranges
+   - Splits by CJK punctuation (。？！) for Asian languages
+   - Splits by western punctuation (. ? !) for English/Spanish
+   - Handles mixed language text (e.g., "Welcome。ようこそ。")
+
+2. **`components/Subtitles.tsx`** - Adaptive subtitle display
+   - Automatically detects CJK characters in text
+   - Uses smaller font size for CJK (text-2xl/3xl vs text-3xl/4xl)
+   - Applies tighter line height for CJK (leading-snug vs leading-relaxed)
+   - Uses `word-break: keep-all` to prevent breaking CJK words
+   - Limits display to 4 lines with overflow handling
+
 2. **`screens/LanguageSelectionScreen.tsx`**
    - Black screen with language selection buttons
    - Beautiful gradient hover effects

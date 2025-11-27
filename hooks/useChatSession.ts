@@ -3,9 +3,41 @@ import type { ChatMessage } from '../types';
 import { sendMessageToBot, generateSpeech } from '../services';
 import type { OnsenPreferences } from '../services';
 
+/**
+ * Splits text into sentences, handling multiple languages including CJK (Chinese, Japanese, Korean).
+ *
+ * Sentence endings:
+ * - English/Spanish: . ? !
+ * - Japanese: 。？！
+ * - Chinese: 。？！
+ * - Korean: . ? ! (uses spaces like English)
+ */
 const splitIntoSentences = (text: string): string[] => {
     if (!text) return [];
-    return text.split(/(?<=[.?!])\s+/).map(s => s.trim()).filter(Boolean);
+
+    // Check if text contains CJK characters
+    const hasCJK = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf\uac00-\ud7af]/.test(text);
+
+    if (hasCJK) {
+        // For CJK languages: split by CJK punctuation (。？！) OR western punctuation followed by optional space
+        // This handles mixed language text and pure CJK text
+        const sentences = text.split(/([。？！.?!])/);
+        const result: string[] = [];
+
+        for (let i = 0; i < sentences.length; i += 2) {
+            const sentence = sentences[i];
+            const punctuation = sentences[i + 1] || '';
+            const combined = (sentence + punctuation).trim();
+            if (combined) {
+                result.push(combined);
+            }
+        }
+
+        return result.filter(Boolean);
+    } else {
+        // For non-CJK languages (English, Spanish): split by western punctuation followed by space
+        return text.split(/(?<=[.?!])\s+/).map(s => s.trim()).filter(Boolean);
+    }
 };
 
 export const useChatSession = () => {
