@@ -48,14 +48,27 @@ In development mode:
    - Defines `SupportedLanguage` type: `'es' | 'en' | 'ko' | 'ja' | 'zh'`
    - Stores language configuration (code, name, native name, Gemini voice, language code)
 
+### Files Created for CJK Support
+
+1. **`config/subtitleConfig.ts`** - Subtitle reading speed configuration
+   - Defines reading speeds for each language (characters per second)
+   - Spanish/English: 14 chars/sec (based on 280 WPM)
+   - Korean: 10 chars/sec (denser characters)
+   - Japanese: 8 chars/sec (Kanji-heavy, information-dense)
+   - Chinese: 8 chars/sec (Hanzi similar to Kanji)
+   - Easy to adjust for comfortable subtitle timing
+   - See `config/README.md` for tuning guide
+
 ### Files Modified for CJK Support
 
-1. **`hooks/useChatSession.ts`** - Enhanced sentence splitting
+1. **`hooks/useChatSession.ts`** - Enhanced sentence splitting & subtitle timing
    - Added intelligent sentence detection for CJK languages (Chinese, Japanese, Korean)
    - Detects CJK characters using Unicode ranges
    - Splits by CJK punctuation (。？！) for Asian languages
    - Splits by western punctuation (. ? !) for English/Spanish
    - Handles mixed language text (e.g., "Welcome。ようこそ。")
+   - Uses language-specific reading speeds from `config/subtitleConfig.ts`
+   - Calculates subtitle display time based on sentence length and reading speed
 
 2. **`components/Subtitles.tsx`** - Adaptive subtitle display
    - Automatically detects CJK characters in text

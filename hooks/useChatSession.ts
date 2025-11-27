@@ -2,6 +2,8 @@ import { useState, useRef, useCallback } from 'react';
 import type { ChatMessage } from '../types';
 import { sendMessageToBot, generateSpeech } from '../services';
 import type { OnsenPreferences } from '../services';
+import { useLanguage } from '../contexts/LanguageContext';
+import { getReadingSpeed } from '../config/subtitleConfig';
 
 /**
  * Splits text into sentences, handling multiple languages including CJK (Chinese, Japanese, Korean).
@@ -41,13 +43,14 @@ const splitIntoSentences = (text: string): string[] => {
 };
 
 export const useChatSession = () => {
+    const { selectedLanguage } = useLanguage();
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [currentBotMessage, setCurrentBotMessage] = useState('');
     const [currentSubtitle, setCurrentSubtitle] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [lastBotAudio, setLastBotAudio] = useState<string | null>(null);
-    
+
     const typingIntervalRef = useRef<number | null>(null);
     const subtitleTimeoutRefs = useRef<number[]>([]);
 
@@ -81,13 +84,16 @@ export const useChatSession = () => {
             }
         }, 50);
 
-        // 2. Subtitle Sync
+        // 2. Subtitle Sync with Language-Specific Reading Speed
         const sentences = splitIntoSentences(text);
         let cumulativeDelay = 0;
-        const CHARS_PER_SECOND = (140 * 5) / 50; // WPM calc
+
+        // Get reading speed for current language (uses config/subtitleConfig.ts)
+        const charsPerSecond = getReadingSpeed(selectedLanguage);
 
         sentences.forEach(sentence => {
-            const duration = (sentence.length / CHARS_PER_SECOND) * 1000;
+            // Calculate duration based on sentence length and reading speed
+            const duration = (sentence.length / charsPerSecond) * 1000;
             const timeoutId = window.setTimeout(() => setCurrentSubtitle(sentence), cumulativeDelay);
             subtitleTimeoutRefs.current.push(timeoutId);
             cumulativeDelay += duration;
@@ -95,7 +101,7 @@ export const useChatSession = () => {
 
         const finalTimeoutId = window.setTimeout(() => setCurrentSubtitle(''), cumulativeDelay + 2000);
         subtitleTimeoutRefs.current.push(finalTimeoutId);
-    }, [clearTimeouts]);
+    }, [clearTimeouts, selectedLanguage]);
 
     const processUserMessage = useCallback(async (userInput: string) => {
         if (isTyping || isLoading) return null;
