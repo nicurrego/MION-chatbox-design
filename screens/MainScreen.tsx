@@ -186,9 +186,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         />
       )}
 
-      <div key={`overlay-${backgroundKey}`} className="absolute inset-0 bg-blue-600/10 backdrop-blur-sm backdrop-brightness-75"></div>
-      <div key={`scanlines-${backgroundKey}`} className="absolute inset-0 opacity-20" style={{ backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.5) 2px, rgba(0,0,0,0.5) 4px)', backgroundSize: '100% 4px' }}></div>
-
       {/* Main Grid Layout */}
       <div className="relative w-full h-full landscape:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-8">
 

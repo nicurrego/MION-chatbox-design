@@ -3,7 +3,7 @@ import type { ChatMessage } from '../types';
 import { sendMessageToBot, generateSpeech } from '../services';
 import type { OnsenPreferences } from '../services';
 import { useLanguage } from '../contexts/LanguageContext';
-import { getReadingSpeed } from '../config/subtitleConfig';
+import { calculateSubtitleDuration } from '../config/subtitleConfig';
 
 /**
  * Splits text into sentences, handling multiple languages including CJK (Chinese, Japanese, Korean).
@@ -84,16 +84,13 @@ export const useChatSession = () => {
             }
         }, 50);
 
-        // 2. Subtitle Sync with Language-Specific Reading Speed
+        // 2. Subtitle Sync with Language-Specific Reading Speed & Length Modifiers
         const sentences = splitIntoSentences(text);
         let cumulativeDelay = 0;
 
-        // Get reading speed for current language (uses config/subtitleConfig.ts)
-        const charsPerSecond = getReadingSpeed(selectedLanguage);
-
         sentences.forEach(sentence => {
-            // Calculate duration based on sentence length and reading speed
-            const duration = (sentence.length / charsPerSecond) * 1000;
+            // Calculate duration using advanced subtitle config (handles length modifiers)
+            const duration = calculateSubtitleDuration(sentence, selectedLanguage);
             const timeoutId = window.setTimeout(() => setCurrentSubtitle(sentence), cumulativeDelay);
             subtitleTimeoutRefs.current.push(timeoutId);
             cumulativeDelay += duration;

@@ -2,63 +2,144 @@
 
 This directory contains configuration files for MION's behavior.
 
-## `subtitleConfig.ts` - Subtitle Reading Speed
+## `subtitleConfig.ts` - Advanced Subtitle Timing System
 
-This file controls how long subtitles stay on screen for each language.
+This file controls how long subtitles stay on screen based on **language** and **sentence length**.
 
 ### How It Works
 
-The subtitle display time is calculated using this formula:
+The subtitle display time is calculated using this advanced formula:
 
 ```
-Display Time (seconds) = Sentence Length / Reading Speed
+Display Time = (sentence.length / baseSpeed) * lengthModifier + minDisplayTime
 ```
 
-**Example:**
-- A 20-character sentence with reading speed `10` = 2 seconds on screen
-- A 20-character sentence with reading speed `20` = 1 second on screen
-- A 20-character sentence with reading speed `5` = 4 seconds on screen
+Then constrained between `MIN_DISPLAY_TIME` and `MAX_DISPLAY_TIME`.
 
-### Current Settings
+**Example Calculations:**
+- **Short (10 chars)**: `(10 / 14) * 1.5 + 1.0 = 2.07 seconds`
+- **Medium (50 chars)**: `(50 / 14) * 1.0 + 1.0 = 4.57 seconds`
+- **Long (100 chars)**: `(100 / 14) * 0.9 + 1.0 = 7.43 seconds`
+
+### Configuration Sections
+
+The config file has **6 adjustable sections**:
+
+#### 1. Base Reading Speeds (chars/sec)
 
 ```typescript
-export const SUBTITLE_READING_SPEEDS: Record<SupportedLanguage, number> = {
-    es: 14,   // Spanish: 14 chars/sec
-    en: 14,   // English: 14 chars/sec
-    ko: 10,   // Korean: 10 chars/sec
-    ja: 8,    // Japanese: 8 chars/sec
-    zh: 8,    // Chinese: 8 chars/sec
+export const BASE_READING_SPEEDS: Record<SupportedLanguage, number> = {
+    es: 14,    // Spanish: 14 chars/sec
+    en: 14,    // English: 14 chars/sec
+    ko: 10,    // Korean: 10 chars/sec
+    ja: 6.4,   // Japanese: 6.4 chars/sec
+    zh: 8,     // Chinese: 8 chars/sec
 };
 ```
 
-### How to Adjust
+**How to adjust:**
+- **HIGHER** = faster subtitles (less time on screen)
+- **LOWER** = slower subtitles (more time on screen)
 
-**If subtitles disappear too quickly (you can't finish reading):**
-- **DECREASE** the number (e.g., `14` → `12` → `10`)
-- This makes subtitles stay longer on screen
+#### 2. Length Thresholds (what counts as short/long)
 
-**If subtitles stay too long (feel sluggish):**
-- **INCREASE** the number (e.g., `14` → `16` → `18`)
-- This makes subtitles change faster
+```typescript
+export const LENGTH_THRESHOLDS = {
+    SHORT: 20,   // ≤20 characters = "short"
+    LONG: 60,    // ≥60 characters = "long"
+};
+```
+
+**How to adjust:**
+- Want more sentences to be "short"? **INCREASE** `SHORT` threshold
+- Want fewer sentences to be "long"? **INCREASE** `LONG` threshold
+
+#### 3. Length Multipliers (time adjustments)
+
+```typescript
+export const LENGTH_MULTIPLIERS = {
+    SHORT: 1.5,    // Short sentences get 50% MORE time
+    MEDIUM: 1.0,   // Medium sentences use base speed
+    LONG: 0.9,     // Long sentences get 10% LESS time
+};
+```
+
+**How to adjust:**
+- `SHORT > 1.0`: Short sentences stay **longer** (easier to read)
+- `SHORT < 1.0`: Short sentences stay **shorter**
+- `LONG < 1.0`: Long sentences are **compressed** (don't drag)
+- `LONG > 1.0`: Long sentences stay **longer**
+
+#### 4. Minimum Display Time
+
+```typescript
+export const MIN_DISPLAY_TIME = 1.0;  // seconds
+```
+
+**How to adjust:**
+- **INCREASE**: Even very short subtitles stay longer
+- **DECREASE**: Very short subtitles can disappear faster
+- **Recommended**: 1.0-2.0 seconds
+
+#### 5. Maximum Display Time
+
+```typescript
+export const MAX_DISPLAY_TIME = 8.0;  // seconds
+```
+
+**How to adjust:**
+- **INCREASE**: Very long subtitles can stay longer
+- **DECREASE**: Long subtitles are forced to disappear faster
+- **Recommended**: 6.0-10.0 seconds
+
+### Quick Adjustment Guide
+
+**Problem: All subtitles disappear too fast**
+→ **DECREASE** `BASE_READING_SPEEDS` for that language
+
+**Problem: All subtitles stay too long**
+→ **INCREASE** `BASE_READING_SPEEDS` for that language
+
+**Problem: Short sentences disappear too fast**
+→ **INCREASE** `LENGTH_MULTIPLIERS.SHORT` (e.g., 1.5 → 1.8)
+
+**Problem: Long sentences stay too long**
+→ **DECREASE** `LENGTH_MULTIPLIERS.LONG` (e.g., 0.9 → 0.8)
+
+**Problem: Very short subtitles are unreadable**
+→ **INCREASE** `MIN_DISPLAY_TIME` (e.g., 1.0 → 1.5)
+
+**Problem: Very long subtitles drag on forever**
+→ **DECREASE** `MAX_DISPLAY_TIME` (e.g., 8.0 → 6.0)
 
 ### Recommended Ranges
 
-| Language | Recommended Range | Current | Notes |
-|----------|------------------|---------|-------|
-| **Spanish** | 10-18 chars/sec | 14 | Based on ~280 WPM reading speed |
-| **English** | 10-18 chars/sec | 14 | Based on ~280 WPM reading speed |
-| **Korean** | 8-12 chars/sec | 10 | Denser characters, slightly slower |
-| **Japanese** | 6-10 chars/sec | 8 | Kanji-heavy, very information-dense |
-| **Chinese** | 6-10 chars/sec | 8 | Hanzi similar to Kanji |
+| Setting | Recommended Range | Current Default |
+|---------|------------------|-----------------|
+| **Spanish Speed** | 10-18 chars/sec | 14 |
+| **English Speed** | 10-18 chars/sec | 14 |
+| **Korean Speed** | 8-12 chars/sec | 10 |
+| **Japanese Speed** | 6-10 chars/sec | 6.4 |
+| **Chinese Speed** | 6-10 chars/sec | 8 |
+| **Short Multiplier** | 1.2-2.0 | 1.5 |
+| **Long Multiplier** | 0.7-1.0 | 0.9 |
+| **Min Display Time** | 1.0-2.0 sec | 1.0 |
+| **Max Display Time** | 6.0-10.0 sec | 8.0 |
 
 ### Testing Your Changes
 
 1. Open `config/subtitleConfig.ts`
-2. Modify the number for the language you want to adjust
+2. Modify the values you want to adjust (see sections above)
 3. Save the file
-4. Refresh the browser (the dev server will auto-reload)
-5. Select the language and test the subtitle timing
+4. The dev server will auto-reload
+5. Test in the browser with different sentence lengths
 6. Repeat until it feels comfortable
+
+**Testing Tips:**
+- Test with **short sentences** (< 20 chars)
+- Test with **medium sentences** (20-60 chars)
+- Test with **long sentences** (> 60 chars)
+- Make sure each feels comfortable to read
 
 ### Why Different Speeds?
 
@@ -70,35 +151,88 @@ Different languages have different information density:
 
 This is why CJK languages can be read faster per character, but we still slow them down for comfortable subtitle reading.
 
-### Examples
+### Real-World Examples
 
-**Too Fast (uncomfortable):**
-```typescript
-ja: 15,  // Japanese subtitles disappear before you finish reading
+**Example 1: Short Japanese Sentence (10 chars)**
+```
+Text: "こんにちは。" (10 characters)
+Calculation: (10 / 6.4) * 1.5 + 1.0 = 3.34 seconds
+Result: Stays on screen for 3.34 seconds
 ```
 
-**Too Slow (boring):**
-```typescript
-en: 5,   // English subtitles stay way too long on screen
+**Example 2: Medium English Sentence (45 chars)**
+```
+Text: "Welcome to MION, your onsen concierge!" (45 characters)
+Calculation: (45 / 14) * 1.0 + 1.0 = 4.21 seconds
+Result: Stays on screen for 4.21 seconds
 ```
 
-**Just Right (current defaults):**
+**Example 3: Long Chinese Sentence (80 chars)**
+```
+Text: "我们为您提供最好的温泉体验，包括传统日式温泉和现代设施..." (80 characters)
+Calculation: (80 / 8) * 0.9 + 1.0 = 10.0 seconds
+Capped at MAX: 8.0 seconds
+Result: Stays on screen for 8.0 seconds (max limit)
+```
+
+### Adjustment Examples
+
+**Scenario 1: Japanese subtitles feel too fast**
 ```typescript
-es: 14,  // Spanish: comfortable reading pace
-en: 14,  // English: comfortable reading pace
-ko: 10,  // Korean: slightly slower for denser characters
-ja: 8,   // Japanese: slower for Kanji comprehension
-zh: 8,   // Chinese: slower for Hanzi comprehension
+// Before
+ja: 6.4,
+
+// After (slower)
+ja: 5.0,
+
+// Result: 10-char sentence now stays 4.0 seconds instead of 3.34
+```
+
+**Scenario 2: Short sentences disappear too quickly**
+```typescript
+// Before
+SHORT: 1.5,
+
+// After (stay longer)
+SHORT: 2.0,
+
+// Result: 10-char sentences get 100% more time instead of 50%
+```
+
+**Scenario 3: Long sentences drag on too long**
+```typescript
+// Before
+LONG: 0.9,
+
+// After (more compressed)
+LONG: 0.7,
+
+// Result: 100-char sentences stay 6.0 seconds instead of 7.4
 ```
 
 ### Advanced: Per-User Customization
 
 If you want to add user-adjustable subtitle speed in the future, you can:
 
-1. Add a settings UI with sliders for each language
+1. Add a settings UI with sliders for:
+   - Base reading speed per language
+   - Short/long multipliers
+   - Min/max display times
 2. Store user preferences in localStorage
-3. Modify `getReadingSpeed()` to check localStorage first
+3. Modify `calculateSubtitleDuration()` to check localStorage first
 4. Fall back to these defaults if no user preference exists
 
 This would allow each user to customize subtitle speed to their personal reading pace.
+
+### Summary
+
+The new system gives you **6 adjustment points**:
+1. **Base Speed** - Overall speed per language
+2. **Short Threshold** - What counts as "short"
+3. **Long Threshold** - What counts as "long"
+4. **Short Multiplier** - Extra time for short sentences
+5. **Long Multiplier** - Compression for long sentences
+6. **Min/Max Times** - Hard limits on display duration
+
+This provides fine-grained control over subtitle timing for all languages and sentence lengths! 🎯
 
