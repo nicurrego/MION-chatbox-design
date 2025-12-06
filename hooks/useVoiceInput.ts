@@ -6,6 +6,8 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
     const [isRecording, setIsRecording] = useState(false);
     const [transcript, setTranscript] = useState('');
     const recognitionRef = useRef<SpeechRecognition | null>(null);
+    const baseTranscriptRef = useRef<string>(''); // Transcript from previous sessions
+    const sessionTranscriptRef = useRef<string>(''); // Transcript from current session
 
     const startListening = useCallback(() => {
         const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -14,8 +16,13 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
             return;
         }
 
-        if (recognitionRef.current) {
+        // If already recording, stop and save the current session
+        if (recognitionRef.current && isRecording) {
             recognitionRef.current.stop();
+            // Save the session transcript to base
+            baseTranscriptRef.current = transcript;
+            sessionTranscriptRef.current = '';
+            return;
         }
 
         const recognition = new SpeechRecognition();
@@ -23,33 +30,60 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
         recognition.interimResults = true;
         recognition.lang = languageCode;
 
-        recognition.onstart = () => setIsRecording(true);
-        
-        recognition.onend = () => setIsRecording(false);
-        
+        // Reset session transcript for new recording
+        sessionTranscriptRef.current = '';
+
+        recognition.onstart = () => {
+            setIsRecording(true);
+            if (!isActive) {
+                setIsActive(true);
+            }
+        };
+
+        recognition.onend = () => {
+            setIsRecording(false);
+            // Save session to base when recording ends
+            baseTranscriptRef.current = transcript;
+            sessionTranscriptRef.current = '';
+        };
+
         recognition.onerror = (event: any) => {
             console.error('Speech recognition error', event.error);
             setIsRecording(false);
         };
 
         recognition.onresult = (event: any) => {
-            let finalTranscript = '';
+            // Build the complete transcript from all results
+            // event.results contains ALL results from the start of this recognition session
+            let sessionFinalTranscript = '';
             let interimTranscript = '';
+
             for (let i = 0; i < event.results.length; ++i) {
                 if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
+                    sessionFinalTranscript += event.results[i][0].transcript;
                 } else {
                     interimTranscript += event.results[i][0].transcript;
                 }
             }
-            setTranscript(finalTranscript + interimTranscript);
+
+            // Update session transcript (this already contains all final results from this session)
+            sessionTranscriptRef.current = sessionFinalTranscript;
+
+            // Combine base (from previous sessions) + current session final + current interim
+            const combinedTranscript = baseTranscriptRef.current + sessionFinalTranscript + interimTranscript;
+            setTranscript(combinedTranscript);
         };
 
         recognition.start();
         recognitionRef.current = recognition;
-        setIsActive(true);
-        setTranscript('');
-    }, [languageCode]);
+    }, [languageCode, isRecording, isActive, transcript]);
+
+    const pauseListening = useCallback(() => {
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
+        setIsRecording(false);
+    }, []);
 
     const stopListening = useCallback(() => {
         if (recognitionRef.current) {
@@ -59,6 +93,14 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
         setIsActive(false);
         setIsRecording(false);
         setTranscript('');
+        baseTranscriptRef.current = '';
+        sessionTranscriptRef.current = '';
+    }, []);
+
+    const updateTranscript = useCallback((newTranscript: string) => {
+        setTranscript(newTranscript);
+        baseTranscriptRef.current = newTranscript;
+        sessionTranscriptRef.current = '';
     }, []);
 
     return {
@@ -66,7 +108,9 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
         isRecording,
         transcript,
         startListening,
-        stopListening
+        pauseListening,
+        stopListening,
+        updateTranscript
     };
 };
 

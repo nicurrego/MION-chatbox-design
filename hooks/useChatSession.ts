@@ -50,6 +50,8 @@ export const useChatSession = () => {
     const [isTyping, setIsTyping] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [lastBotAudio, setLastBotAudio] = useState<string | null>(null);
+    const [storedPreferences, setStoredPreferences] = useState<OnsenPreferences | null>(null);
+    const [waitingForConfirmation, setWaitingForConfirmation] = useState(false);
 
     const typingIntervalRef = useRef<number | null>(null);
     const subtitleTimeoutRefs = useRef<number[]>([]);
@@ -100,7 +102,7 @@ export const useChatSession = () => {
         subtitleTimeoutRefs.current.push(finalTimeoutId);
     }, [clearTimeouts, selectedLanguage]);
 
-    const processUserMessage = useCallback(async (userInput: string) => {
+    const processUserMessage = useCallback(async (userInput: string, skipConfirmationCheck: boolean = false) => {
         if (isTyping || isLoading) return null;
 
         clearTimeouts();
@@ -116,47 +118,94 @@ export const useChatSession = () => {
             console.log("🤖 [CHAT] Sending message to bot...");
             const botResponseText = await sendMessageToBot(userInput);
             console.log("✅ [CHAT] Bot response received:", botResponseText.substring(0, 100) + "...");
-            
-            // Check for JSON (Onsen preferences)
-            const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
-            const match = botResponseText.match(jsonRegex);
-            let preferences: OnsenPreferences | null = null;
-            
+
+            // Parse preferences from bot response (hidden format)
+            const prefsRegex = /\[PREFERENCES_START\]([\s\S]*?)\[PREFERENCES_END\]/;
+            const match = botResponseText.match(prefsRegex);
+
             if (match && match[1]) {
-                console.log("📋 [JSON] Found JSON in bot response, parsing preferences...");
-                try { 
-                    preferences = JSON.parse(match[1]);
-                    console.log("✅ [JSON] Preferences parsed successfully:", preferences);
-                } catch (e) { 
-                    console.error("❌ [JSON] Failed to parse preferences:", e);
+                console.log("📋 [PREFS] Found preferences in bot response, storing and waiting for confirmation...");
+                try {
+                    const prefsText = match[1].trim();
+                    const lines = prefsText.split('\n').map(line => line.trim()).filter(line => line);
+
+                    const prefs: any = {};
+                    lines.forEach(line => {
+                        const [key, ...valueParts] = line.split(':');
+                        const value = valueParts.join(':').trim();
+                        prefs[key.trim()] = value;
+                    });
+
+                    const preferences: OnsenPreferences = {
+                        wellbeingProfile: {
+                            skinType: prefs.skinType || '',
+                            muscleSoreness: prefs.muscleSoreness || '',
+                            stressLevel: prefs.stressLevel || '',
+                            waterTemperature: prefs.waterTemperature || '',
+                            healthGoals: prefs.healthGoals || ''
+                        },
+                        aestheticProfile: {
+                            atmosphere: prefs.atmosphere || '',
+                            colorPalette: prefs.colorPalette || '',
+                            timeOfDay: prefs.timeOfDay || ''
+                        }
+                    };
+
+                    setStoredPreferences(preferences);
+                    setWaitingForConfirmation(true);
+                    console.log("✅ [PREFS] Preferences stored, waiting for user confirmation:", preferences);
+                } catch (e) {
+                    console.error("❌ [PREFS] Failed to parse preferences:", e);
                 }
-            } else {
-                console.log("ℹ️ [JSON] No JSON found in bot response - continuing normal conversation");
             }
 
+            // Remove the hidden preferences block from the displayed text
+            const displayText = botResponseText.replace(prefsRegex, '').trim();
+
             console.log("🔊 [TTS] Generating speech for bot response...");
-            const audioData = await generateSpeech(botResponseText);
+            const audioData = await generateSpeech(displayText);
             if (audioData) {
                 console.log("✅ [TTS] Speech generated successfully");
             } else {
                 console.log("ℹ️ [TTS] No speech generated (might be disabled or quota exceeded)");
             }
-            
+
             setLastBotAudio(audioData);
             setIsLoading(false);
 
-            // Return data for the UI to handle (playing audio, generating images)
-            return { 
-                text: botResponseText, 
-                audio: audioData, 
-                preferences 
+            // Return data for the UI to handle (playing audio, showing buttons)
+            return {
+                text: displayText,
+                audio: audioData,
+                showConfirmation: waitingForConfirmation
             };
         } catch (error) {
             setIsLoading(false);
             console.error("❌ [CHAT] Error processing message:", error);
             return null;
         }
-    }, [isTyping, isLoading, clearTimeouts]);
+    }, [isTyping, isLoading, clearTimeouts, waitingForConfirmation]);
+
+    const confirmPreferences = useCallback(() => {
+        console.log("✅ [CONFIRM] User confirmed preferences via button");
+        setWaitingForConfirmation(false);
+        return storedPreferences;
+    }, [storedPreferences]);
+
+    const rejectPreferences = useCallback(async () => {
+        console.log("❌ [REJECT] User wants to change preferences");
+        setWaitingForConfirmation(false);
+        setStoredPreferences(null);
+
+        // Ask what they want to change
+        const rejectionMessage = "What would you like to change or add to your onsen preferences?";
+        const audioData = await generateSpeech(rejectionMessage);
+
+        return {
+            text: rejectionMessage,
+            audio: audioData
+        };
+    }, []);
 
     return {
         messages,
@@ -165,8 +214,11 @@ export const useChatSession = () => {
         isTyping,
         isLoading,
         lastBotAudio,
+        waitingForConfirmation,
         runTypingEffect,
         processUserMessage,
+        confirmPreferences,
+        rejectPreferences,
         clearTimeouts,
         setCurrentSubtitle
     };

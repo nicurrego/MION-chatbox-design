@@ -86,31 +86,27 @@ You are MION, a specialized, warm, and highly knowledgeable AI assistant acting 
 
 Your first message MUST be a greeting in the user's language. After your greeting, you must begin the "Onsen Interview" to gather data for their experience. Explain that you need to understand their needs to create a personalized onsen. The interview has two parts:
 
-First, gather their "Well-being Profile." Respectfully ask for 5 pieces of information, one or two at a time. Explain this helps select the right water minerals. Examples include: skin type (dry, oily, sensitive), any muscle soreness, general stress level, preferred water temperature (hot, moderate), and any specific health goals (e.g., relaxation, improving circulation).
+First, gather their "Well-being Profile." Respectfully ask for information one or two questions at a time. Explain this helps select the right water minerals and temperature. Examples include: skin type (dry, oily, sensitive), any muscle soreness, general stress level, preferred water temperature (hot, moderate), and any specific health goals (e.g., relaxation, improving circulation).
 
-Second, after getting the well-being data, gather their "Aesthetic Profile." Ask for 3 aesthetic preferences for the visual and sensory experience. Examples include: the overall atmosphere (e.g., serene and secluded, traditional cedar wood), a desired color palette for the scene (e.g., warm autumn tones, cool blues), and a preferred time of day (e.g., misty morning, golden hour sunset, starry night).
+Second, after getting the well-being data, gather their "Aesthetic Profile." Ask for aesthetic preferences for the visual and sensory experience. Examples include: the overall atmosphere (e.g., serene and secluded, traditional cedar wood), a desired color palette for the scene (e.g., warm autumn tones, cool blues), and a preferred time of day (e.g., misty morning, golden hour sunset, starry night).
 
-Once you have all the information, summarize it for the user to confirm. After confirmation, you MUST output the gathered data in a single, clean JSON block like this example:
-\`\`\`json
-{
-  "wellbeingProfile": {
-    "skinType": "dry",
-    "muscleSoreness": "shoulders and back",
-    "stressLevel": "high",
-    "waterTemperature": "hot",
-    "healthGoals": "relaxation"
-  },
-  "aestheticProfile": {
-    "atmosphere": "traditional cedar wood",
-    "colorPalette": "warm autumn tones",
-    "timeOfDay": "starry night"
-  }
-}
-\`\`\`
+Once you have all the information, provide a warm summary of their preferences including:
+- Their well-being profile (skin type, muscle soreness, stress level, water temperature, health goals)
+- Their aesthetic profile (atmosphere, color palette, time of day)
 
-After presenting the JSON, tell the user you will now use this information to generate a visual concept of their onsen for their approval.
+After the summary, include a hidden data block (not visible to user) with their preferences in this exact format:
+[PREFERENCES_START]
+skinType: ...
+muscleSoreness: ...
+stressLevel: ...
+waterTemperature: ...
+healthGoals: ...
+atmosphere: ...
+colorPalette: ...
+timeOfDay: ...
+[PREFERENCES_END]
 
-Always be ready to answer questions about onsen etiquette clearly and helpfully. End conversations with a warm closing.`;
+Then ask the user if they would like to proceed with creating their onsen experience based on these preferences. Wait for their confirmation before proceeding.`;
 };
 
 // Lazy chat initialization
@@ -177,6 +173,53 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     return base64Audio ?? null;
   } catch (error) {
+    return null;
+  }
+};
+
+// ============================================================================
+// 2.5. ONSEN DESCRIPTION GENERATION
+// ============================================================================
+
+export const generateOnsenDescription = async (preferences: OnsenPreferences): Promise<string | null> => {
+  try {
+    const descriptionPrompt = `Based on these onsen preferences, create a detailed, immersive description of the personalized onsen experience. Make it vivid, sensory, and inspiring:
+
+Well-being Profile:
+- Skin Type: ${preferences.wellbeingProfile.skinType}
+- Muscle Soreness: ${preferences.wellbeingProfile.muscleSoreness}
+- Stress Level: ${preferences.wellbeingProfile.stressLevel}
+- Water Temperature: ${preferences.wellbeingProfile.waterTemperature}
+- Health Goals: ${preferences.wellbeingProfile.healthGoals}
+
+Aesthetic Profile:
+- Atmosphere: ${preferences.aestheticProfile.atmosphere}
+- Color Palette: ${preferences.aestheticProfile.colorPalette}
+- Time of Day: ${preferences.aestheticProfile.timeOfDay}
+
+Write a comprehensive 4-5 paragraph description that includes:
+
+1. **Visual & Atmospheric Description**: Describe the scene in detail - the colors, lighting, time of day, surrounding nature, and overall ambiance that matches their aesthetic preferences.
+
+2. **Therapeutic Benefits**: Explain the health benefits based on their well-being profile. Be specific about how the water temperature, minerals, and environment address their needs.
+
+3. **Recommended Minerals & Their Benefits**: Based on their diagnostic (skin type, muscle soreness, stress level, health goals), recommend specific minerals that should be in the onsen water and explain why each mineral is beneficial for their specific condition. Examples: sulfur for skin conditions, magnesium for muscle relaxation, calcium for stress relief, iron for circulation, etc.
+
+4. **Sensory Experience**: Evoke the complete sensory experience - the sounds of water and nature, the scents in the air, the texture of the water, the feeling of warmth, the visual beauty.
+
+5. **Emotional & Spiritual Impact**: Create a sense of tranquility, healing, and anticipation. Make them feel the transformative power of this personalized onsen.
+
+Write in the current language (${currentLanguage}). Be poetic but grounded, warm but professional, and scientifically informed about the mineral benefits.`;
+
+    const response = await getAI().models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ parts: [{ text: descriptionPrompt }] }],
+    });
+
+    const description = response.candidates?.[0]?.content?.parts?.[0]?.text;
+    return description ?? null;
+  } catch (error) {
+    console.error("Error generating onsen description:", error);
     return null;
   }
 };

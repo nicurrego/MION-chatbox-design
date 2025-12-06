@@ -31,6 +31,10 @@ export const generateSpeech = isDevelopmentMode
   ? mockService.generateSpeech
   : geminiService.generateSpeech;
 
+export const generateOnsenDescription = isDevelopmentMode
+  ? mockService.generateOnsenDescription
+  : geminiService.generateOnsenDescription;
+
 export const generateOnsenImage = isDevelopmentMode
   ? mockService.generateOnsenImage
   : geminiService.generateOnsenImage;

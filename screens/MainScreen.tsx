@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { ChatMessage } from '../types';
-import { generateOnsenImage, generateLoopingVideo } from '../services';
+import { generateOnsenImage, generateLoopingVideo, generateSpeech, generateOnsenDescription } from '../services';
 import type { OnsenPreferences } from '../services';
 import { urlToBase64 } from '../utils/imageUtils';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -12,7 +12,6 @@ import InfoBox from '../components/InfoBox';
 import Subtitles from '../components/Subtitles';
 import ActionButtons from '../components/ActionButtons';
 import VoiceInputUI from '../components/VoiceInputUI';
-import LoadingOverlay from '../components/LoadingOverlay';
 
 // Custom Hooks
 import { useAudioController } from '../hooks/useAudioController';
@@ -46,9 +45,11 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     isGeneratingVideo: false,
     videoUrl: null as string | null,
     videoLoadingMsg: '',
+    onsenDescription: null as string | null,
     error: null as string | null
   });
 
+  const [currentPreferences, setCurrentPreferences] = useState<OnsenPreferences | null>(null);
   const hasStartedConversation = useRef(false);
 
   // --- Effects ---
@@ -80,7 +81,66 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     // For real TTS audio, let it play completely without interruption
   }, [chat.isTyping, audioCtrl, chat.lastBotAudio, initialAudio]);
 
+  // Keyboard event listener for Ctrl key to toggle voice recording
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if Ctrl key is pressed (both left and right)
+      if (e.key === 'Control' && !e.repeat) {
+        // Don't trigger if chat is open or user is typing in an input field
+        const target = e.target as HTMLElement;
+        if (isChatOpen || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+          return;
+        }
+
+        voiceInput.startListening();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [voiceInput, isChatOpen]);
+
   // --- Handlers ---
+
+  const handleGenerateImages = useCallback(async (prefs: OnsenPreferences) => {
+    // Store preferences for later use
+    setCurrentPreferences(prefs);
+
+    setOnsenState(prev => ({ ...prev, isGeneratingImage: true, error: null }));
+    try {
+      console.log("🖼️ [IMAGE] Starting image generation...");
+      console.log("📝 [DESCRIPTION] Starting description generation in parallel...");
+
+      // Generate images and description in parallel
+      const [base64Array, description] = await Promise.all([
+        generateOnsenImage(prefs),
+        generateOnsenDescription(prefs)
+      ]);
+
+      if (base64Array?.length) {
+        console.log(`✅ [IMAGE] Generated ${base64Array.length} images successfully`);
+        const urls = base64Array.map(b64 => `data:image/png;base64,${b64}`);
+
+        if (description) {
+          console.log("✅ [DESCRIPTION] Onsen description generated successfully");
+        }
+
+        setOnsenState(prev => ({
+          ...prev,
+          imageUrls: urls,
+          onsenDescription: description
+        }));
+      } else {
+        console.warn("⚠️ [IMAGE] No images were generated");
+      }
+    } catch (e) {
+      console.error("❌ [IMAGE] Failed to generate images:", e);
+      setOnsenState(prev => ({ ...prev, error: "Failed to generate images." }));
+    } finally {
+      setOnsenState(prev => ({ ...prev, isGeneratingImage: false }));
+      console.log("🏁 [IMAGE] Image generation process ended");
+    }
+  }, []);
 
   const handleSendMessage = useCallback(async (userInput: string) => {
     audioCtrl.stop();
@@ -97,32 +157,27 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     // 2. Trigger Visual Typing
     chat.runTypingEffect(result.text);
 
-    // 3. Handle Onsen Generation (if preferences found)
-    if (result.preferences) {
-      handleGenerateImages(result.preferences);
-    }
+    // Note: Image generation is now triggered by confirmation button, not automatically
   }, [chat, audioCtrl]);
 
-  const handleGenerateImages = async (prefs: OnsenPreferences) => {
-    setOnsenState(prev => ({ ...prev, isGeneratingImage: true, error: null }));
-    try {
-      console.log("🖼️ [IMAGE] Starting image generation...");
-      const base64Array = await generateOnsenImage(prefs);
-      if (base64Array?.length) {
-        console.log(`✅ [IMAGE] Generated ${base64Array.length} images successfully`);
-        const urls = base64Array.map(b64 => `data:image/png;base64,${b64}`);
-        setOnsenState(prev => ({ ...prev, imageUrls: urls }));
-      } else {
-        console.warn("⚠️ [IMAGE] No images were generated");
-      }
-    } catch (e) {
-      console.error("❌ [IMAGE] Failed to generate images:", e);
-      setOnsenState(prev => ({ ...prev, error: "Failed to generate images." }));
-    } finally {
-      setOnsenState(prev => ({ ...prev, isGeneratingImage: false }));
-      console.log("🏁 [IMAGE] Image generation process ended");
+  const handleConfirmPreferences = useCallback(async () => {
+    const preferences = chat.confirmPreferences();
+    if (preferences) {
+      handleGenerateImages(preferences);
     }
-  };
+  }, [chat, handleGenerateImages]);
+
+  const handleRejectPreferences = useCallback(async () => {
+    const result = await chat.rejectPreferences();
+    if (!result) return;
+
+    // Play audio and show typing effect for rejection message
+    if (result.audio) {
+      const shouldLoop = result.audio.startsWith('MOCK_MP3:');
+      audioCtrl.play(result.audio, shouldLoop);
+    }
+    chat.runTypingEffect(result.text);
+  }, [chat, audioCtrl]);
 
   const handleConceptSelect = useCallback(async (url: string) => {
     setOnsenState(prev => ({
@@ -133,10 +188,34 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
       error: null
     }));
 
+    // Display the description in chat with TTS immediately after selection
+    if (onsenState.onsenDescription) {
+      console.log("📝 [DESCRIPTION] Displaying onsen description in chat...");
+      console.log("🔊 [TTS] Generating speech for description...");
+
+      const { generateSpeech: genSpeech } = await import('../services');
+      const descriptionAudio = await genSpeech(onsenState.onsenDescription);
+
+      if (descriptionAudio) {
+        console.log("✅ [TTS] Description audio generated successfully");
+        const shouldLoop = descriptionAudio.startsWith('MOCK_MP3:');
+        audioCtrl.play(descriptionAudio, shouldLoop);
+      }
+
+      chat.runTypingEffect(onsenState.onsenDescription);
+    }
+
     try {
+      // Start video generation
       const { base64, mimeType } = await urlToBase64(url);
       const videoUrl = await generateLoopingVideo(base64, mimeType);
-      setOnsenState(prev => ({ ...prev, videoUrl }));
+
+      console.log("✅ [VIDEO] Video generated successfully");
+
+      setOnsenState(prev => ({
+        ...prev,
+        videoUrl
+      }));
     } catch (error: any) {
       console.error("Video generation process failed:", error);
       const msg = error.message?.includes("API_KEY")
@@ -146,7 +225,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     } finally {
       setOnsenState(prev => ({ ...prev, isGeneratingVideo: false }));
     }
-  }, []);
+  }, [onsenState.onsenDescription, audioCtrl, chat]);
 
   const handleVoiceSend = (msg: string) => {
     voiceInput.stopListening();
@@ -191,12 +270,17 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
         {/* Top Left: Info Box */}
         <div className="absolute top-0 left-0 right-0 h-[15vh] p-4 landscape:relative landscape:inset-auto landscape:h-full landscape:min-h-0 landscape:p-0 landscape:col-start-2 landscape:row-start-1">
-          <InfoBox 
+          <InfoBox
             isGeneratingImage={onsenState.isGeneratingImage}
             generatedImageUrls={onsenState.imageUrls}
             onConceptSelect={handleConceptSelect}
             isConceptSelected={!!onsenState.selectedConceptUrl}
             generatedVideoUrl={onsenState.videoUrl}
+            isGeneratingVideo={onsenState.isGeneratingVideo}
+            onsenDescription={onsenState.onsenDescription}
+            showConfirmation={chat.waitingForConfirmation}
+            onConfirm={handleConfirmPreferences}
+            onReject={handleRejectPreferences}
           />
         </div>
 
@@ -219,7 +303,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
                 onToggleChat={() => setIsChatOpen(prev => !prev)}
                 isMuted={isMuted}
                 onToggleMute={onToggleMute}
-                onStartVoiceInput={voiceInput.startListening}
                 areSubtitlesVisible={areSubtitlesVisible}
                 onToggleSubtitles={() => setAreSubtitlesVisible(prev => !prev)}
             />
@@ -242,6 +325,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             isAudioPlaying={audioCtrl.isPlaying}
             canReadAloud={!!chat.lastBotAudio && !chat.isTyping}
             onClose={() => setIsChatOpen(false)}
+            showConfirmation={chat.waitingForConfirmation}
+            onConfirm={handleConfirmPreferences}
+            onReject={handleRejectPreferences}
           />
       )}
 
@@ -251,10 +337,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             isRecording={voiceInput.isRecording}
             onSend={handleVoiceSend}
             onCancel={voiceInput.stopListening}
+            onTranscriptChange={voiceInput.updateTranscript}
         />
       )}
-
-      {onsenState.isGeneratingVideo && <LoadingOverlay message={onsenState.videoLoadingMsg} />}
 
       {onsenState.error && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-red-800/90 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn">

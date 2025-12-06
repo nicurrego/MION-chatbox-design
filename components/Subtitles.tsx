@@ -1,4 +1,5 @@
 import React from 'react';
+import { parseMarkdown } from '../utils/markdownParser';
 
 interface SubtitlesProps {
   currentSentence: string;
@@ -29,7 +30,7 @@ const Subtitles: React.FC<SubtitlesProps> = ({ currentSentence, isVisible }) => 
                wordBreak: hasCJK ? 'keep-all' : 'normal',
                overflowWrap: 'break-word',
             }}>
-            {currentSentence}
+            {parseMarkdown(currentSentence)}
         </p>
     </div>
   );

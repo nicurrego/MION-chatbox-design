@@ -19,32 +19,33 @@ interface VoiceInputUIProps {
   isRecording: boolean;
   onSend: (message: string) => void;
   onCancel: () => void;
+  onTranscriptChange?: (transcript: string) => void;
 }
 
-const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, onSend, onCancel }) => {
+const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, onSend, onCancel, onTranscriptChange }) => {
   const [editedTranscript, setEditedTranscript] = useState(transcript);
   const [isEditing, setIsEditing] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    if (!isEditing) {
-        setEditedTranscript(transcript);
-    }
-  }, [transcript, isEditing]);
+    // Always update the edited transcript when the transcript prop changes
+    setEditedTranscript(transcript);
+  }, [transcript]);
 
   useEffect(() => {
-    if (isEditing && textAreaRef.current) {
+    if (textAreaRef.current) {
         textAreaRef.current.focus();
+        // Move cursor to the end
         textAreaRef.current.setSelectionRange(textAreaRef.current.value.length, textAreaRef.current.value.length);
     }
-  }, [isEditing]);
+  }, [editedTranscript]);
 
   const handleSend = () => {
     if (editedTranscript.trim()) {
       onSend(editedTranscript);
     }
   };
-  
+
   const handleTextClick = () => {
       setIsEditing(true);
   }
@@ -52,6 +53,14 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
   const handleBlur = () => {
       setIsEditing(false);
   }
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setEditedTranscript(newValue);
+    if (onTranscriptChange) {
+      onTranscriptChange(newValue);
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {
@@ -83,22 +92,16 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
         {isRecording && (
           <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-500 rounded-full border-2 border-white pulse-ring-animation"></div>
         )}
-        <div className="flex-grow text-white text-xl" onClick={handleTextClick}>
-            {isEditing ? (
-                <textarea
-                    ref={textAreaRef}
-                    value={editedTranscript}
-                    onChange={(e) => setEditedTranscript(e.target.value)}
-                    onBlur={handleBlur}
-                    onKeyDown={handleKeyDown}
-                    className="w-full bg-slate-800/50 border-0 focus:ring-1 focus:ring-cyan-400 rounded-md p-2 resize-none"
-                    rows={3}
-                />
-            ) : (
-                <p className="min-h-[4rem] p-2 cursor-text rounded-md hover:bg-white/10 transition-colors">
-                    {editedTranscript || <span className="text-white/50">{isRecording ? "Listening..." : "Click here to type, or press the mic again."}</span>}
-                </p>
-            )}
+        <div className="flex-grow text-white text-xl">
+            <textarea
+                ref={textAreaRef}
+                value={editedTranscript}
+                onChange={handleChange}
+                onKeyDown={handleKeyDown}
+                placeholder={isRecording ? "Listening..." : "Press Ctrl to record, or type here..."}
+                className="w-full bg-slate-800/50 border-0 focus:ring-1 focus:ring-cyan-400 rounded-md p-2 resize-none text-white placeholder-white/50"
+                rows={3}
+            />
         </div>
         <button
             onClick={handleSend}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ConfirmationButtons from './ConfirmationButtons';
 
 interface InfoBoxProps {
   isGeneratingImage: boolean;
@@ -6,9 +7,25 @@ interface InfoBoxProps {
   onConceptSelect: (url: string) => void;
   isConceptSelected: boolean;
   generatedVideoUrl: string | null;
+  isGeneratingVideo: boolean;
+  onsenDescription: string | null;
+  showConfirmation: boolean;
+  onConfirm: () => void;
+  onReject: () => void;
 }
 
-const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls, onConceptSelect, isConceptSelected, generatedVideoUrl }) => {
+const InfoBox: React.FC<InfoBoxProps> = ({
+  isGeneratingImage,
+  generatedImageUrls,
+  onConceptSelect,
+  isConceptSelected,
+  generatedVideoUrl,
+  isGeneratingVideo,
+  onsenDescription,
+  showConfirmation,
+  onConfirm,
+  onReject
+}) => {
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {
@@ -23,6 +40,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
   });
 
   const renderContent = () => {
+    // Priority 1: Show image generation loading
     if (isGeneratingImage) {
       return (
         <div className="w-full h-full flex flex-col items-center justify-center text-white animate-pulse">
@@ -32,6 +50,33 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
       );
     }
 
+    // Priority 2: Show video generation loading with description
+    if (isGeneratingVideo) {
+      return (
+        <div className="w-full h-full flex flex-col text-white overflow-y-auto">
+          <div className="mb-4">
+            <h2 className="text-2xl text-cyan-200 border-b-2 border-cyan-400/50 pb-2 mb-3 animate-pulse">
+              Creating Your Experience...
+            </h2>
+            {onsenDescription ? (
+              <div className="text-base text-white/90 leading-relaxed space-y-3 animate-fadeIn">
+                {onsenDescription.split('\n\n').map((paragraph, index) => (
+                  <p key={index} className="text-justify">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <div className="text-lg text-cyan-200 animate-pulse">
+                Preparing your personalized onsen sanctuary...
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    // Priority 3: Show image selection
     if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
         return (
           <div className="w-full h-full flex flex-col min-h-0">
@@ -59,7 +104,20 @@ const InfoBox: React.FC<InfoBoxProps> = ({ isGeneratingImage, generatedImageUrls
           </div>
         );
       }
-    
+
+    // Priority 4: Show confirmation buttons if waiting for user decision
+    if (showConfirmation) {
+      return (
+        <div className="w-full h-full flex flex-col items-center justify-center text-white">
+          <div className="text-2xl mb-6 text-center">
+            Would you like to proceed with this onsen profile?
+          </div>
+          <ConfirmationButtons onConfirm={onConfirm} onReject={onReject} />
+        </div>
+      );
+    }
+
+    // Priority 5: Show session info (default state)
     return (
       <>
         <div>

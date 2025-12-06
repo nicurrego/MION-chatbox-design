@@ -22,28 +22,38 @@ const imageToVideoMap = new Map<string, string>();
 // Mock responses in different languages
 const MOCK_RESPONSES_BY_LANGUAGE: Record<string, string[]> = {
   'en-US': [
-    "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind.",
-    "To create your personalized onsen experience, I need to understand your needs. Let's begin with your well-being profile. First, could you tell me about your skin type? Is it dry, oily, sensitive, or combination?",
-    "Thank you. Now, do you have any muscle soreness or tension? If so, where do you feel it most?",
-    "I understand. What is your current stress level? Would you say it's low, moderate, or high?",
-    "Perfect. What water temperature do you prefer? Hot, warm, or moderate?",
-    "Excellent. Now for the aesthetic profile. What kind of atmosphere appeals to you? For example, serene and secluded, traditional cedar wood, modern minimalist, or natural outdoor setting?",
-    "Wonderful choice. What color palette would you like for your onsen scene? For example, warm autumn tones, cool blues and greens, earthy browns, or vibrant sunset colors?",
-    "Beautiful. Finally, what time of day would you prefer? Misty morning, golden hour sunset, or starry night?",
-    `Thank you for sharing all that information. Based on your preferences, here is your personalized onsen profile:\n\n\`\`\`json\n{\n  "wellbeingProfile": {\n    "skinType": "sensitive",\n    "muscleSoreness": "shoulders and neck",\n    "stressLevel": "moderate",\n    "waterTemperature": "warm",\n    "healthGoals": "relaxation and stress relief"\n  },\n  "aestheticProfile": {\n    "atmosphere": "serene natural outdoor setting",\n    "colorPalette": "warm sunset tones with purple accents",\n    "timeOfDay": "golden hour"\n  }\n}\n\`\`\`\n\nThank you. I have everything I need. Now, allow me to prepare a visual representation of your unique onsen. Please give me a moment.`,
-    "I hope you enjoy your personalized onsen experience. The warm waters and beautiful surroundings should help you relax and rejuvenate. Enjoy your virtual bath."
+    "Konnichiwa, welcome. I am MION, your personal onsen concierge. My purpose is to help you create the perfect hot spring experience to soothe your body and mind. Let me ask you a few questions to understand your needs better. First, could you tell me about your skin type and if you have any muscle soreness?",
+    "Thank you for sharing. Now, what is your current stress level, and what water temperature do you prefer? Also, do you have any specific health goals like relaxation or improving circulation?",
+    "Perfect! Now for the aesthetic preferences. What kind of atmosphere and color palette appeals to you? And what time of day would you prefer for your onsen experience?",
+    "Thank you for sharing all that information. Based on your preferences, here is your personalized onsen profile:\n\nWell-being Profile:\n- Skin type: Sensitive\n- Muscle soreness: Shoulders and neck\n- Stress level: Moderate\n- Water temperature: Warm (38-39°C)\n- Health goals: Relaxation and stress relief\n\nAesthetic Profile:\n- Atmosphere: Serene natural outdoor setting\n- Color palette: Warm sunset tones with purple accents\n- Time of day: Golden hour\n\n[PREFERENCES_START]\nskinType: sensitive\nmuscleSoreness: shoulders and neck\nstressLevel: moderate\nwaterTemperature: warm\nhealthGoals: relaxation and stress relief\natmosphere: serene natural outdoor setting\ncolorPalette: warm sunset tones with purple accents\ntimeOfDay: golden hour\n[PREFERENCES_END]\n\nWould you like to proceed with creating your onsen experience based on these preferences?",
+    "Perfect! Let me prepare your personalized onsen experience. This will just take a moment..."
   ],
   'es-ES': [
-    "Konnichiwa, bienvenido. Soy MION, tu conserje personal de onsen. Mi propósito es ayudarte a crear la experiencia perfecta de aguas termales para calmar tu cuerpo y mente.",
-    "Para crear tu experiencia personalizada de onsen, necesito entender tus necesidades. Comencemos con tu perfil de bienestar. Primero, ¿podrías decirme sobre tu tipo de piel? ¿Es seca, grasa, sensible o mixta?",
-    "Gracias. Ahora, ¿tienes algún dolor o tensión muscular? Si es así, ¿dónde lo sientes más?",
-    "Entiendo. ¿Cuál es tu nivel de estrés actual? ¿Dirías que es bajo, moderado o alto?",
-    "Perfecto. ¿Qué temperatura de agua prefieres? ¿Caliente, tibia o moderada?",
-    "Excelente. Ahora para el perfil estético. ¿Qué tipo de atmósfera te atrae? Por ejemplo, serena y aislada, madera de cedro tradicional, minimalista moderna, o entorno natural al aire libre?",
-    "Maravillosa elección. ¿Qué paleta de colores te gustaría para tu escena de onsen? Por ejemplo, tonos cálidos de otoño, azules y verdes frescos, marrones terrosos, o colores vibrantes de atardecer?",
-    "Hermoso. Finalmente, ¿qué momento del día preferirías? ¿Mañana brumosa, atardecer dorado, o noche estrellada?",
-    `Gracias por compartir toda esa información. Basándome en tus preferencias, aquí está tu perfil personalizado de onsen:\n\n\`\`\`json\n{\n  "wellbeingProfile": {\n    "skinType": "sensitive",\n    "muscleSoreness": "shoulders and neck",\n    "stressLevel": "moderate",\n    "waterTemperature": "warm",\n    "healthGoals": "relaxation and stress relief"\n  },\n  "aestheticProfile": {\n    "atmosphere": "serene natural outdoor setting",\n    "colorPalette": "warm sunset tones with purple accents",\n    "timeOfDay": "golden hour"\n  }\n}\n\`\`\`\n\nGracias. Tengo todo lo que necesito. Ahora, permíteme preparar una representación visual de tu onsen único. Dame un momento por favor.`,
-    "Espero que disfrutes tu experiencia personalizada de onsen. Las aguas cálidas y el hermoso entorno deberían ayudarte a relajarte y rejuvenecer. Disfruta tu baño virtual."
+    "Konnichiwa, bienvenido. Soy MION, tu conserje personal de onsen. Mi propósito es ayudarte a crear la experiencia perfecta de aguas termales para calmar tu cuerpo y mente. Déjame hacerte algunas preguntas para entender mejor tus necesidades. Primero, ¿podrías decirme sobre tu tipo de piel y si tienes algún dolor muscular?",
+    "Gracias por compartir. Ahora, ¿cuál es tu nivel de estrés actual y qué temperatura de agua prefieres? Además, ¿tienes algún objetivo de salud específico como relajación o mejorar la circulación?",
+    "¡Perfecto! Ahora para las preferencias estéticas. ¿Qué tipo de atmósfera y paleta de colores te atrae? ¿Y qué momento del día preferirías para tu experiencia de onsen?",
+    "Gracias por compartir toda esa información. Basándome en tus preferencias, aquí está tu perfil personalizado de onsen:\n\nPerfil de Bienestar:\n- Tipo de piel: Sensible\n- Dolor muscular: Hombros y cuello\n- Nivel de estrés: Moderado\n- Temperatura del agua: Tibia (38-39°C)\n- Objetivos de salud: Relajación y alivio del estrés\n\nPerfil Estético:\n- Atmósfera: Entorno natural sereno al aire libre\n- Paleta de colores: Tonos cálidos de atardecer con acentos púrpura\n- Momento del día: Hora dorada\n\n[PREFERENCES_START]\nskinType: sensitive\nmuscleSoreness: shoulders and neck\nstressLevel: moderate\nwaterTemperature: warm\nhealthGoals: relaxation and stress relief\natmosphere: serene natural outdoor setting\ncolorPalette: warm sunset tones with purple accents\ntimeOfDay: golden hour\n[PREFERENCES_END]\n\n¿Te gustaría proceder con la creación de tu experiencia de onsen basada en estas preferencias?",
+    "¡Perfecto! Déjame preparar tu experiencia personalizada de onsen. Esto solo tomará un momento..."
+  ],
+  'ja-JP': [
+    "ルーフィさん、こんバーン！ 今日も一日お疲れ様でした！\nさあ、まずは今日の気分や体調をチェックさせてね！ 疲れレベルやストレス度、お肌の調子で気になることがあったら教えて！",
+    "ふむふむ、お疲れとストレス、そして乾燥ですね！ それなら、お肌を優しく包む単純泉をメインに、あったかポカポカになる塩化物泉を少しだけ隠し味で入れちゃおう！\n温度は、のんびり長湯できる38℃〜39℃のゆるめがおすすめだよ！\n香りは癒やしの定番、ラベンダーで決定！ 色は爽やかな水色にしようかな。この香りや色の濃さは、このままの設定でGOサイン出ますか？",
+    "了解です！ あなたの温泉プロフィールはこちら：\n\nウェルビーイングプロフィール：\n- 肌タイプ：乾燥肌\n- 筋肉の痛み：肩と首\n- ストレスレベル：中程度\n- 水温：ぬるめ（38-39°C）\n- 健康目標：リラックスとストレス解消\n\n美的プロフィール：\n- 雰囲気：静かな自然の屋外設定\n- カラーパレット：温かい夕焼けの色調と紫のアクセント\n- 時間帯：ゴールデンアワー\n\n[PREFERENCES_START]\nskinType: dry\nmuscleSoreness: shoulders and neck\nstressLevel: moderate\nwaterTemperature: warm\nhealthGoals: relaxation and stress relief\natmosphere: serene natural outdoor setting\ncolorPalette: warm sunset tones with purple accents\ntimeOfDay: golden hour\n[PREFERENCES_END]\n\nこの設定で温泉体験を作ってもいいですか？",
+    "了解です！ それじゃあ、極上リラックスバスを秒速で準備しますね！ もう少しだけ待っててね〜！"
+  ],
+  'ko-KR': [
+    "안녕하세요, 환영합니다. 저는 MION, 당신의 개인 온천 컨시어지입니다. 몸과 마음을 달래는 완벽한 온천 경험을 만들어 드리는 것이 제 목적입니다. 먼저 몇 가지 질문을 드려 당신의 필요를 더 잘 이해하고 싶습니다. 먼저 피부 타입과 근육통이 있는지 말씀해 주시겠어요?",
+    "공유해 주셔서 감사합니다. 이제 현재 스트레스 수준과 선호하는 물 온도는 어떻게 되나요? 또한 이완이나 혈액 순환 개선과 같은 특정 건강 목표가 있으신가요?",
+    "완벽합니다! 이제 미적 선호도에 대해 알아볼게요. 어떤 분위기와 색상 팔레트가 마음에 드시나요? 그리고 온천 경험을 위해 어떤 시간대를 선호하시나요?",
+    "모든 정보를 공유해 주셔서 감사합니다. 당신의 선호도를 바탕으로 개인화된 온천 프로필은 다음과 같습니다:\n\n웰빙 프로필:\n- 피부 타입: 민감성\n- 근육통: 어깨와 목\n- 스트레스 수준: 중간\n- 물 온도: 따뜻함 (38-39°C)\n- 건강 목표: 이완 및 스트레스 해소\n\n미적 프로필:\n- 분위기: 고요한 자연 야외 환경\n- 색상 팔레트: 보라색 악센트가 있는 따뜻한 석양 톤\n- 시간대: 골든 아워\n\n[PREFERENCES_START]\nskinType: sensitive\nmuscleSoreness: shoulders and neck\nstressLevel: moderate\nwaterTemperature: warm\nhealthGoals: relaxation and stress relief\natmosphere: serene natural outdoor setting\ncolorPalette: warm sunset tones with purple accents\ntimeOfDay: golden hour\n[PREFERENCES_END]\n\n이 설정으로 온천 경험을 만들어도 될까요?",
+    "완벽합니다! 개인화된 온천 경험을 준비하겠습니다. 잠시만 기다려 주세요..."
+  ],
+  'zh-CN': [
+    "你好，欢迎。我是MION，您的私人温泉礼宾员。我的目的是帮助您创造完美的温泉体验，以舒缓您的身心。让我问您几个问题，以更好地了解您的需求。首先，您能告诉我您的皮肤类型以及是否有任何肌肉酸痛吗？",
+    "感谢您的分享。现在，您目前的压力水平如何，您喜欢什么水温？此外，您是否有任何特定的健康目标，如放松或改善血液循环？",
+    "完美！现在来了解美学偏好。您喜欢什么样的氛围和色彩搭配？您希望在一天中的什么时间享受温泉体验？",
+    "感谢您分享所有这些信息。根据您的偏好，这是您的个性化温泉档案：\n\n健康档案：\n- 皮肤类型：敏感\n- 肌肉酸痛：肩膀和颈部\n- 压力水平：中等\n- 水温：温暖（38-39°C）\n- 健康目标：放松和缓解压力\n\n美学档案：\n- 氛围：宁静的自然户外环境\n- 色彩搭配：带紫色点缀的温暖日落色调\n- 时间：黄金时刻\n\n[PREFERENCES_START]\nskinType: sensitive\nmuscleSoreness: shoulders and neck\nstressLevel: moderate\nwaterTemperature: warm\nhealthGoals: relaxation and stress relief\natmosphere: serene natural outdoor setting\ncolorPalette: warm sunset tones with purple accents\ntimeOfDay: golden hour\n[PREFERENCES_END]\n\n您想根据这些偏好继续创建温泉体验吗？",
+    "完美！让我为您准备个性化的温泉体验。这只需要一会儿..."
   ],
 };
 
@@ -111,6 +121,62 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
   // Return a special marker to indicate this is a mock MP3 file
   // The audio player will detect this and handle it differently
   return 'MOCK_MP3:/audio/duck_sound.mp3';
+};
+
+// ============================================================================
+// 2.5. MOCK ONSEN DESCRIPTION GENERATION
+// ============================================================================
+
+export const generateOnsenDescription = async (preferences: OnsenPreferences): Promise<string | null> => {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  console.log('🦆 [MOCK] Generating onsen description with preferences:', preferences);
+
+  const mockDescriptions: Record<string, string> = {
+    'en-US': `Your personalized onsen sanctuary awaits. Nestled in a ${preferences.aestheticProfile.atmosphere} setting, the waters shimmer with ${preferences.aestheticProfile.colorPalette} hues as ${preferences.aestheticProfile.timeOfDay} light dances across the surface.
+
+The mineral-rich waters, heated to ${preferences.wellbeingProfile.waterTemperature} perfection, are specially formulated for ${preferences.wellbeingProfile.skinType} skin. As you immerse yourself, feel the therapeutic minerals working to ease ${preferences.wellbeingProfile.muscleSoreness}, while the tranquil environment melts away your ${preferences.wellbeingProfile.stressLevel} stress.
+
+This sanctuary is designed with your ${preferences.wellbeingProfile.healthGoals} in mind. The gentle steam carries hints of cedar and minerals, while the soft sounds of water create a meditative atmosphere. Every element has been carefully curated to restore your body and calm your mind.
+
+Take a deep breath. Your journey to wellness begins now.`,
+
+    'es-ES': `Tu santuario onsen personalizado te espera. Ubicado en un entorno ${preferences.aestheticProfile.atmosphere}, las aguas brillan con tonos ${preferences.aestheticProfile.colorPalette} mientras la luz de ${preferences.aestheticProfile.timeOfDay} baila sobre la superficie.
+
+Las aguas ricas en minerales, calentadas a la perfección ${preferences.wellbeingProfile.waterTemperature}, están especialmente formuladas para piel ${preferences.wellbeingProfile.skinType}. Al sumergirte, siente cómo los minerales terapéuticos trabajan para aliviar ${preferences.wellbeingProfile.muscleSoreness}, mientras el ambiente tranquilo derrite tu estrés ${preferences.wellbeingProfile.stressLevel}.
+
+Este santuario está diseñado pensando en ${preferences.wellbeingProfile.healthGoals}. El vapor suave lleva toques de cedro y minerales, mientras los sonidos del agua crean una atmósfera meditativa. Cada elemento ha sido cuidadosamente seleccionado para restaurar tu cuerpo y calmar tu mente.
+
+Respira profundo. Tu viaje hacia el bienestar comienza ahora.`,
+
+    'ja-JP': `あなた専用の温泉の聖域がお待ちしています。${preferences.aestheticProfile.atmosphere}の環境に佇み、${preferences.aestheticProfile.colorPalette}の色合いで輝く水面に${preferences.aestheticProfile.timeOfDay}の光が踊ります。
+
+${preferences.wellbeingProfile.waterTemperature}に完璧に温められたミネラル豊富な湯は、${preferences.wellbeingProfile.skinType}肌のために特別に調合されています。身を浸すと、治療効果のあるミネラルが${preferences.wellbeingProfile.muscleSoreness}を和らげ、静かな環境が${preferences.wellbeingProfile.stressLevel}ストレスを溶かしていきます。
+
+この聖域は、あなたの${preferences.wellbeingProfile.healthGoals}を念頭に設計されています。優しい湯気は杉と鉱物の香りを運び、水の柔らかな音が瞑想的な雰囲気を作り出します。すべての要素が、あなたの体を回復させ、心を落ち着かせるために慎重に選ばれています。
+
+深呼吸してください。あなたのウェルネスへの旅が今始まります。`,
+
+    'ko-KR': `당신만을 위한 온천 성역이 기다리고 있습니다. ${preferences.aestheticProfile.atmosphere} 환경에 자리잡고 있으며, ${preferences.aestheticProfile.timeOfDay} 빛이 수면 위에서 춤추면서 ${preferences.aestheticProfile.colorPalette} 색조로 물이 반짝입니다.
+
+${preferences.wellbeingProfile.waterTemperature}로 완벽하게 데워진 미네랄이 풍부한 물은 ${preferences.wellbeingProfile.skinType} 피부를 위해 특별히 조제되었습니다. 몸을 담그면 치료 미네랄이 ${preferences.wellbeingProfile.muscleSoreness}를 완화하고, 고요한 환경이 ${preferences.wellbeingProfile.stressLevel} 스트레스를 녹여줍니다.
+
+이 성역은 당신의 ${preferences.wellbeingProfile.healthGoals}를 염두에 두고 설계되었습니다. 부드러운 증기는 삼나무와 미네랄의 향을 전하고, 물의 부드러운 소리가 명상적인 분위기를 만듭니다. 모든 요소가 당신의 몸을 회복시키고 마음을 진정시키기 위해 신중하게 선별되었습니다.
+
+깊게 숨을 쉬세요. 웰니스로의 여정이 지금 시작됩니다.`,
+
+    'zh-CN': `您的专属温泉圣地正在等待。坐落在${preferences.aestheticProfile.atmosphere}的环境中，水面闪烁着${preferences.aestheticProfile.colorPalette}的色调，${preferences.aestheticProfile.timeOfDay}的光线在水面上舞动。
+
+富含矿物质的水被加热到${preferences.wellbeingProfile.waterTemperature}的完美温度，专为${preferences.wellbeingProfile.skinType}肌肤配制。当您沉浸其中时，感受治疗性矿物质缓解${preferences.wellbeingProfile.muscleSoreness}，而宁静的环境融化您的${preferences.wellbeingProfile.stressLevel}压力。
+
+这个圣地是为您的${preferences.wellbeingProfile.healthGoals}而设计的。温柔的蒸汽带着雪松和矿物的气息，而水的柔和声音创造出冥想的氛围。每个元素都经过精心策划，以恢复您的身体并平静您的心灵。
+
+深呼吸。您的健康之旅现在开始。`
+  };
+
+  const currentLang = currentMockLanguage || 'en-US';
+  return mockDescriptions[currentLang] || mockDescriptions['en-US'];
 };
 
 // ============================================================================

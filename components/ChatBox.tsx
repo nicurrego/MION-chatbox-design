@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { ChatMessage } from '../types';
+import { parseMarkdown } from '../utils/markdownParser';
+import ConfirmationButtons from './ConfirmationButtons';
 
 interface ChatBoxProps {
   characterName: string;
@@ -16,6 +18,9 @@ interface ChatBoxProps {
   isAudioPlaying: boolean;
   canReadAloud: boolean;
   onClose: () => void;
+  showConfirmation: boolean;
+  onConfirm: () => void;
+  onReject: () => void;
 }
 
 const TypingIndicator: React.FC = () => (
@@ -153,22 +158,22 @@ const ChatBox: React.FC<ChatBoxProps> = ({
         <div ref={messageAreaRef} className="flex-grow p-6 text-white text-3xl tracking-wide leading-relaxed overflow-y-auto flex flex-col space-y-4">
           {/* Render completed messages */}
           {history.map((msg, index) => (
-              <div 
-                  key={`hist-${index}`} 
+              <div
+                  key={`hist-${index}`}
                   className={`w-full flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                  <p className={`px-4 py-2 rounded-xl max-w-[85%] whitespace-pre-wrap ${msg.sender === 'user' ? 'bg-slate-700' : 'bg-cyan-900/80'}`}>
-                      {msg.text}
-                  </p>
+                  <div className={`px-4 py-2 rounded-xl max-w-[85%] ${msg.sender === 'user' ? 'bg-slate-700' : 'bg-cyan-900/80'}`}>
+                      {msg.sender === 'user' ? msg.text : parseMarkdown(msg.text)}
+                  </div>
               </div>
           ))}
           {/* Render the bot message that is currently being typed in the main screen */}
           {currentBotMessage && isTyping && (
               <div className="w-full flex justify-start">
-                  <p className="px-4 py-2 rounded-xl max-w-[85%] bg-cyan-900/80 whitespace-pre-wrap">
-                      {currentBotMessage}
+                  <div className="px-4 py-2 rounded-xl max-w-[85%] bg-cyan-900/80">
+                      {parseMarkdown(currentBotMessage)}
                       <TypingIndicator />
-                  </p>
+                  </div>
               </div>
           )}
           {/* Render a placeholder while the bot is "thinking" */}
@@ -177,6 +182,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   <p className="px-4 py-2 rounded-xl bg-cyan-900/80 animate-pulse">
                       ...
                   </p>
+              </div>
+          )}
+          {/* Show confirmation buttons after summary */}
+          {showConfirmation && !isTyping && !isLoading && (
+              <div className="w-full flex justify-center">
+                  <ConfirmationButtons onConfirm={onConfirm} onReject={onReject} />
               </div>
           )}
         </div>
