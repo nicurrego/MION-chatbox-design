@@ -60,9 +60,10 @@ const CloseIcon: React.FC = () => (
 );
 
 
-const ChatBox: React.FC<ChatBoxProps> = ({ 
-    characterName, history, currentBotMessage, isTyping, isLoading, onSendMessage, 
-    isMuted, onToggleMute, onReadAloud, onStopAudio, isAudioPlaying, canReadAloud, onClose
+const ChatBox: React.FC<ChatBoxProps> = ({
+    characterName, history, currentBotMessage, isTyping, isLoading, onSendMessage,
+    isMuted, onToggleMute, onReadAloud, onStopAudio, isAudioPlaying, canReadAloud, onClose,
+    showConfirmation, onConfirm, onReject
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messageAreaRef = useRef<HTMLDivElement>(null);

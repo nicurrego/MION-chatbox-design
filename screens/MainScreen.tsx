@@ -278,7 +278,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             generatedVideoUrl={onsenState.videoUrl}
             isGeneratingVideo={onsenState.isGeneratingVideo}
             onsenDescription={onsenState.onsenDescription}
-            showConfirmation={chat.waitingForConfirmation}
+            showConfirmation={chat.waitingForConfirmation || false}
             onConfirm={handleConfirmPreferences}
             onReject={handleRejectPreferences}
           />
@@ -325,7 +325,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             isAudioPlaying={audioCtrl.isPlaying}
             canReadAloud={!!chat.lastBotAudio && !chat.isTyping}
             onClose={() => setIsChatOpen(false)}
-            showConfirmation={chat.waitingForConfirmation}
+            showConfirmation={chat.waitingForConfirmation || false}
             onConfirm={handleConfirmPreferences}
             onReject={handleRejectPreferences}
           />
