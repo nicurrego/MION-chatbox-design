@@ -17,6 +17,7 @@ import VoiceInputUI from '../components/VoiceInputUI';
 import { useAudioController } from '../hooks/useAudioController';
 import { useVoiceInput } from '../hooks/useVoiceInput';
 import { useChatSession } from '../hooks/useChatSession';
+import { useBackgroundMusic, type BackgroundMusicTrack } from '../hooks/useBackgroundMusic';
 
 interface MainScreenProps {
   initialMessage: ChatMessage | null;
@@ -37,6 +38,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   // --- Local State for Visuals (Onsen/Video) ---
   const [areSubtitlesVisible, setAreSubtitlesVisible] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [backgroundMusicTrack, setBackgroundMusicTrack] = useState<BackgroundMusicTrack>('whirlwind');
 
   const [onsenState, setOnsenState] = useState({
     isGeneratingImage: false,
@@ -52,7 +54,24 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const [currentPreferences, setCurrentPreferences] = useState<OnsenPreferences | null>(null);
   const hasStartedConversation = useRef(false);
 
+  // --- Background Music Hook ---
+  useBackgroundMusic({ track: backgroundMusicTrack, isMuted, isTTSPlaying: audioCtrl.isPlaying });
+
   // --- Effects ---
+
+  // Background Music Control based on app state
+  useEffect(() => {
+    if (onsenState.videoUrl) {
+      // Video is playing - stop background music (video has its own audio)
+      setBackgroundMusicTrack('none');
+    } else if (onsenState.isGeneratingImage || onsenState.imageUrls || onsenState.isGeneratingVideo) {
+      // User clicked "Create onsen" - play Rivulet
+      setBackgroundMusicTrack('rivulet');
+    } else {
+      // Default state - play Whirlwind of Joy
+      setBackgroundMusicTrack('whirlwind');
+    }
+  }, [onsenState.videoUrl, onsenState.isGeneratingImage, onsenState.imageUrls, onsenState.isGeneratingVideo]);
 
   // Initial Message Handling
   useEffect(() => {
@@ -249,7 +268,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         <video
           key={onsenState.videoUrl}
           src={onsenState.videoUrl}
-          autoPlay loop muted playsInline
+          autoPlay loop muted={isMuted} playsInline
           className="absolute inset-0 w-full h-full object-cover animate-fadeIn"
         />
       ) : onsenState.selectedConceptUrl ? (
@@ -291,6 +310,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             imageUrl="/images/TheMION.png"
             analyser={audioCtrl.analyser}
             isPlaying={audioCtrl.isPlaying}
+            isLoading={chat.isLoading || onsenState.isGeneratingImage || onsenState.isGeneratingVideo}
           />
         </div>
 

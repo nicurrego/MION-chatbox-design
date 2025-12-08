@@ -1,11 +1,12 @@
 import React, { useRef, useEffect } from 'react';
 import { VisualizerProps } from '../types';
 
-export const Visualizer: React.FC<VisualizerProps> = ({ 
-  analyser, 
-  isPlaying, 
-  width, 
-  height
+export const Visualizer: React.FC<VisualizerProps> = ({
+  analyser,
+  isPlaying,
+  width,
+  height,
+  isLoading = false
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -21,10 +22,61 @@ export const Visualizer: React.FC<VisualizerProps> = ({
 
     let animationId: number;
     let colorOffset = 0;
+    let pulsePhase = 0;
+
+    // Loading/Thinking animation
+    const renderLoading = () => {
+      pulsePhase += 0.05;
+      colorOffset -= 2;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const bars = 20;
+      const barMaxWidth = width / bars;
+      const barWidth = barMaxWidth * 0.6;
+      const gap = barMaxWidth * 0.4;
+      const centerY = height / 2;
+      const totalVisualizerWidth = bars * barMaxWidth;
+      const startX = (width - totalVisualizerWidth) / 2 + (gap / 2);
+
+      for (let i = 0; i < bars; i++) {
+        // Create a wave pattern that pulses
+        const wave = Math.sin(pulsePhase + i * 0.3);
+        const barHeight = Math.max(8, (wave * 0.5 + 0.5) * height * 0.4);
+
+        const x = startX + i * barMaxWidth;
+        const y = centerY - barHeight / 2;
+
+        // Cyan/blue color for thinking state
+        const hue = (180 + i * 10 + colorOffset) % 360; // Cyan-blue range
+        const color = `hsl(${hue}, 80%, 60%)`;
+
+        const gradient = ctx.createLinearGradient(x, centerY - barHeight/2, x, centerY + barHeight/2);
+        gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+        gradient.addColorStop(0.2, color);
+        gradient.addColorStop(0.8, color);
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0.2)');
+
+        ctx.fillStyle = gradient;
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = color;
+
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, y, barWidth, barHeight, 20);
+        } else {
+          ctx.rect(x, y, barWidth, barHeight);
+        }
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      animationId = requestAnimationFrame(renderLoading);
+    };
 
     const render = () => {
       colorOffset -= 1; // Move colors for the wave effect
-      
+
       if (!analyser) {
         ctx.clearRect(0, 0, width, height);
         return;
@@ -81,21 +133,27 @@ export const Visualizer: React.FC<VisualizerProps> = ({
         ctx.shadowBlur = 0;
       }
 
-      if (isPlaying) {
+      if (isPlaying && !isLoading) {
         animationId = requestAnimationFrame(render);
       }
     };
 
-    if (isPlaying) {
+    // Choose which animation to run
+    if (isLoading) {
+      // Show thinking/loading animation
+      renderLoading();
+    } else if (isPlaying) {
+      // Show normal audio visualization
       render();
     } else {
+      // Clear canvas when not playing
       ctx.clearRect(0, 0, width, height);
     }
 
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [analyser, isPlaying, width, height]);
+  }, [analyser, isPlaying, width, height, isLoading]);
 
   return (
     <canvas 

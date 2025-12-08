@@ -9,4 +9,5 @@ export interface VisualizerProps {
   width: number;
   height: number;
   color?: string;
+  isLoading?: boolean;
 }

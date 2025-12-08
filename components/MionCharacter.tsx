@@ -5,12 +5,14 @@ interface MionCharacterProps {
   analyser: AnalyserNode | null;
   isPlaying: boolean;
   imageUrl: string;
+  isLoading?: boolean;
 }
 
-export const MionCharacter: React.FC<MionCharacterProps> = ({ 
-  analyser, 
+export const MionCharacter: React.FC<MionCharacterProps> = ({
+  analyser,
   isPlaying,
-  imageUrl
+  imageUrl,
+  isLoading = false
 }) => {
   const imageRef = useRef<HTMLImageElement>(null);
   const size = 500; 
@@ -109,21 +111,22 @@ export const MionCharacter: React.FC<MionCharacterProps> = ({
         }}
       />
 
-      <div 
+      <div
         className="absolute z-10 flex items-center justify-center"
-        style={{ 
-          width: visWidth, 
+        style={{
+          width: visWidth,
           height: visHeight,
           bottom: '6.5%',
           left: '53%',
           transform: 'translateX(-50%)',
         }}
       >
-        <Visualizer 
-          analyser={analyser} 
-          isPlaying={isPlaying} 
-          width={visWidth} 
+        <Visualizer
+          analyser={analyser}
+          isPlaying={isPlaying}
+          width={visWidth}
           height={visHeight}
+          isLoading={isLoading}
         />
       </div>
 
