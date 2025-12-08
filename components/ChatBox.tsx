@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { ChatMessage } from '../types';
 import { parseMarkdown } from '../utils/markdownParser';
+import ConfirmationButtons from './ConfirmationButtons';
 
 interface ChatBoxProps {
   characterName: string;
@@ -13,6 +14,9 @@ interface ChatBoxProps {
   isMuted: boolean;
   onToggleMute: () => void;
   onClose: () => void;
+  showConfirmation: boolean;
+  onConfirm: () => void;
+  onReject: () => void;
 }
 
 const TypingIndicator: React.FC = () => (
@@ -40,7 +44,8 @@ const CloseIcon: React.FC = () => (
 
 const ChatBox: React.FC<ChatBoxProps> = ({
     characterName, history, currentBotMessage, isTyping, isLoading, onSendMessage,
-    isMuted, onToggleMute, onClose
+    isMuted, onToggleMute, onClose,
+    showConfirmation, onConfirm, onReject
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messageAreaRef = useRef<HTMLDivElement>(null);
@@ -135,6 +140,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   <p className="px-4 py-2 rounded-xl bg-cyan-900/80 animate-pulse">
                       ...
                   </p>
+              </div>
+          )}
+          {/* Show confirmation buttons after summary */}
+          {showConfirmation && !isTyping && !isLoading && (
+              <div className="w-full flex justify-center">
+                  <ConfirmationButtons onConfirm={onConfirm} onReject={onReject} />
               </div>
           )}
         </div>

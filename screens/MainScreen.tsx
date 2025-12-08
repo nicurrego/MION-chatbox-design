@@ -322,6 +322,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             isMuted={isMuted}
             onToggleMute={onToggleMute}
             onClose={() => setIsChatOpen(false)}
+            showConfirmation={chat.waitingForConfirmation || false}
+            onConfirm={handleConfirmPreferences}
+            onReject={handleRejectPreferences}
           />
       )}
 
