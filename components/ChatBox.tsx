@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { ChatMessage } from '../types';
 import { parseMarkdown } from '../utils/markdownParser';
-import ConfirmationButtons from './ConfirmationButtons';
 
 interface ChatBoxProps {
   characterName: string;
@@ -13,14 +12,7 @@ interface ChatBoxProps {
   onSendMessage: (message: string) => void;
   isMuted: boolean;
   onToggleMute: () => void;
-  onReadAloud: () => void;
-  onStopAudio: () => void;
-  isAudioPlaying: boolean;
-  canReadAloud: boolean;
   onClose: () => void;
-  showConfirmation: boolean;
-  onConfirm: () => void;
-  onReject: () => void;
 }
 
 const TypingIndicator: React.FC = () => (
@@ -39,20 +31,6 @@ const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
   </svg>
 );
 
-const PlayIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-
-const StopIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10h6v4H9z" />
-    </svg>
-);
-
 const CloseIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -62,8 +40,7 @@ const CloseIcon: React.FC = () => (
 
 const ChatBox: React.FC<ChatBoxProps> = ({
     characterName, history, currentBotMessage, isTyping, isLoading, onSendMessage,
-    isMuted, onToggleMute, onReadAloud, onStopAudio, isAudioPlaying, canReadAloud, onClose,
-    showConfirmation, onConfirm, onReject
+    isMuted, onToggleMute, onClose
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messageAreaRef = useRef<HTMLDivElement>(null);
@@ -102,31 +79,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             {characterName}
           </div>
           <div className="flex items-center space-x-3">
-              {/* Play/Stop Button */}
-              <div className="relative group">
-                  {isAudioPlaying ? (
-                      <button
-                          onClick={onStopAudio}
-                          className="text-white/70 hover:text-white transition-colors duration-300 p-1"
-                          aria-label="Stop audio"
-                      >
-                          <StopIcon />
-                      </button>
-                  ) : (
-                      <button
-                          onClick={onReadAloud}
-                          disabled={!canReadAloud}
-                          className="text-white/70 hover:text-white transition-colors duration-300 p-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                          aria-label="Read message aloud"
-                      >
-                          <PlayIcon />
-                      </button>
-                  )}
-                  <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                    {isAudioPlaying ? 'Stop audio' : 'Read aloud'}
-                  </div>
-              </div>
-
               {/* Mute Button */}
               <div className="relative group">
                   <button
@@ -183,12 +135,6 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   <p className="px-4 py-2 rounded-xl bg-cyan-900/80 animate-pulse">
                       ...
                   </p>
-              </div>
-          )}
-          {/* Show confirmation buttons after summary */}
-          {showConfirmation && !isTyping && !isLoading && (
-              <div className="w-full flex justify-center">
-                  <ConfirmationButtons onConfirm={onConfirm} onReject={onReject} />
               </div>
           )}
         </div>

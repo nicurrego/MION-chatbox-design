@@ -215,6 +215,7 @@ export const useChatSession = () => {
         isLoading,
         lastBotAudio,
         waitingForConfirmation,
+        storedPreferences,
         runTypingEffect,
         processUserMessage,
         confirmPreferences,

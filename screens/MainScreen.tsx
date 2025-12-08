@@ -281,6 +281,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             showConfirmation={chat.waitingForConfirmation || false}
             onConfirm={handleConfirmPreferences}
             onReject={handleRejectPreferences}
+            userPreferences={chat.storedPreferences}
           />
         </div>
 
@@ -320,14 +321,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             onSendMessage={handleSendMessage}
             isMuted={isMuted}
             onToggleMute={onToggleMute}
-            onReadAloud={() => audioCtrl.play(chat.lastBotAudio!, false)}
-            onStopAudio={audioCtrl.stop}
-            isAudioPlaying={audioCtrl.isPlaying}
-            canReadAloud={!!chat.lastBotAudio && !chat.isTyping}
             onClose={() => setIsChatOpen(false)}
-            showConfirmation={chat.waitingForConfirmation || false}
-            onConfirm={handleConfirmPreferences}
-            onReject={handleRejectPreferences}
           />
       )}
 
