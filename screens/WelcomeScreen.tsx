@@ -29,7 +29,7 @@ const getBackgroundVideos = () => {
 
   return {
     loopVideo: isMobile ? 'videos/intro_loop_mobile.mp4' : 'videos/intro_loop.mp4',
-    introVideo: isMobile ? 'videos/starting_video_mobile.mp4' : 'videos/starting_video.mp4',
+    introVideo: isMobile ? 'videos/starting_video_mobile.mp4' : 'videos/starting_video4.mp4',
     isMobile
   };
 };
