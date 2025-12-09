@@ -62,8 +62,8 @@ export const MionCharacter: React.FC<MionCharacterProps> = ({
   }, [analyser, isPlaying]);
 
   return (
-    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
-      
+    <div className="relative flex items-center justify-center w-full h-full max-w-[500px] max-h-[500px]" style={{ aspectRatio: '1/1' }}>
+
       <style>{`
         @keyframes mist-breathe {
           0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(0.95); }
@@ -78,33 +78,33 @@ export const MionCharacter: React.FC<MionCharacterProps> = ({
         }
       `}</style>
 
-      {/* 
+      {/*
         Layer -1: Solid Color Background
         - Behind the mist
         - Solid color that also cycles through rainbow
       */}
-      <div 
+      <div
         className="mist-animation absolute z-0 rounded-full"
-        style={{ 
-          width: visWidth, 
-          height: visHeight,
+        style={{
+          width: '50%',
+          height: '33%',
           bottom: '13%',
           left: '53%',
           background: '#ff0000', // Solid red base
-          opacity: 0.3, 
+          opacity: 0.3,
         }}
       />
 
-      {/* 
+      {/*
         Layer 0: The Rainbow Mist
         - Uses hue-rotate to cycle through colors (rainbow)
         - Base color is Red, which rotates through the spectrum
       */}
-      <div 
+      <div
         className="mist-animation absolute z-0 rounded-full"
-        style={{ 
-          width: visWidth, 
-          height: visHeight,
+        style={{
+          width: '50%',
+          height: '33%',
           bottom: '0%',
           left: '53%',
           background: `radial-gradient(circle at center, #ff0000 0%, transparent 70%)`,
@@ -114,8 +114,8 @@ export const MionCharacter: React.FC<MionCharacterProps> = ({
       <div
         className="absolute z-10 flex items-center justify-center"
         style={{
-          width: visWidth,
-          height: visHeight,
+          width: '50%',
+          height: '33%',
           bottom: '6.5%',
           left: '53%',
           transform: 'translateX(-50%)',
@@ -124,8 +124,8 @@ export const MionCharacter: React.FC<MionCharacterProps> = ({
         <Visualizer
           analyser={analyser}
           isPlaying={isPlaying}
-          width={visWidth}
-          height={visHeight}
+          width={250}
+          height={165}
           isLoading={isLoading}
         />
       </div>

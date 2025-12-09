@@ -75,7 +75,7 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 p-4 flex justify-center items-end animate-slideUp">
+    <div className="fixed inset-x-0 bottom-0 z-40 p-2 sm:p-4 pb-safe flex justify-center items-end animate-slideUp">
       <style>{`
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes pulse-ring {
@@ -88,32 +88,32 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
             animation: pulse-ring 2s infinite;
         }
       `}</style>
-      <div className="relative w-full max-w-2xl bg-slate-900/90 backdrop-blur-md rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-4 flex items-center space-x-4">
+      <div className="relative w-full max-w-2xl bg-slate-900/95 backdrop-blur-md rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-3 sm:p-4 flex items-center space-x-2 sm:space-x-4">
         {isRecording && (
           <div className="absolute -top-2 -left-2 w-5 h-5 bg-red-500 rounded-full border-2 border-white pulse-ring-animation"></div>
         )}
-        <div className="flex-grow text-white text-xl">
+        <div className="flex-grow text-white text-base sm:text-lg md:text-xl">
             <textarea
                 ref={textAreaRef}
                 value={editedTranscript}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 placeholder={isRecording ? "Listening..." : "Press Ctrl to record, or type here..."}
-                className="w-full bg-slate-800/50 border-0 focus:ring-1 focus:ring-cyan-400 rounded-md p-2 resize-none text-white placeholder-white/50"
+                className="w-full bg-slate-800/50 border-0 focus:ring-1 focus:ring-cyan-400 rounded-md p-2 sm:p-3 resize-none text-white placeholder-white/50 text-base sm:text-lg"
                 rows={3}
             />
         </div>
         <button
             onClick={handleSend}
             disabled={!editedTranscript.trim()}
-            className="bg-cyan-600 text-white p-3 rounded-full hover:bg-cyan-500 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed self-end"
+            className="bg-cyan-600 text-white p-3 sm:p-3 rounded-full hover:bg-cyan-500 transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed self-end min-w-[48px] min-h-[48px] flex items-center justify-center active:scale-95"
             aria-label="Send message"
         >
             <SendIcon />
         </button>
         <button
             onClick={onCancel}
-            className="absolute -top-3 -right-3 bg-slate-800 text-white p-1.5 rounded-full hover:bg-red-500 transition-colors duration-300"
+            className="absolute -top-3 -right-3 bg-slate-800 text-white p-2 rounded-full hover:bg-red-500 transition-colors duration-300 min-w-[40px] min-h-[40px] flex items-center justify-center active:scale-95"
             aria-label="Cancel voice input"
         >
             <CloseIcon />

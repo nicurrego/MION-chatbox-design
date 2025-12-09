@@ -180,21 +180,21 @@ const InfoBox: React.FC<InfoBoxProps> = ({
   // Render the title row
   const renderTitle = () => {
     if (isGeneratingImage) {
-      return <h2 className="text-2xl text-cyan-200 border-b-2 border-cyan-400/50 pb-2">{t.craftingOnsen}</h2>;
+      return <h2 className="text-lg sm:text-xl md:text-2xl text-cyan-200 border-b-2 border-cyan-400/50 pb-1 sm:pb-2">{t.craftingOnsen}</h2>;
     }
     if (isGeneratingVideo) {
-      return <h2 className="text-2xl text-cyan-200 border-b-2 border-cyan-400/50 pb-2 animate-pulse">{t.creatingExperience}</h2>;
+      return <h2 className="text-lg sm:text-xl md:text-2xl text-cyan-200 border-b-2 border-cyan-400/50 pb-1 sm:pb-2 animate-pulse">{t.creatingExperience}</h2>;
     }
     if (showConfirmation && userPreferences) {
-      return <h2 className="text-2xl text-cyan-200 border-b-2 border-cyan-400/50 pb-2">{t.yourOnsenProfile}</h2>;
+      return <h2 className="text-lg sm:text-xl md:text-2xl text-cyan-200 border-b-2 border-cyan-400/50 pb-1 sm:pb-2">{t.yourOnsenProfile}</h2>;
     }
-    return <h2 className="text-3xl text-cyan-200 border-b-2 border-cyan-400/50 pb-2">{t.sessionInfo}</h2>;
+    return <h2 className="text-xl sm:text-2xl md:text-3xl text-cyan-200 border-b-2 border-cyan-400/50 pb-1 sm:pb-2">{t.sessionInfo}</h2>;
   };
 
   // Render the widgets row (time, temperature, buttons, etc.)
   const renderWidgets = () => {
     return (
-      <div className="flex justify-between items-end">
+      <div className="flex justify-between items-end gap-2">
         {/* Left side: Confirmation buttons (if waiting for confirmation) */}
         <div className="flex-shrink-0">
           {showConfirmation && (
@@ -204,13 +204,75 @@ const InfoBox: React.FC<InfoBoxProps> = ({
 
         {/* Right side: Time and Temperature */}
         <div className="text-right">
-          <div className="text-5xl md:text-7xl" style={{ textShadow: '0 0 10px rgba(0, 255, 255, 0.7)' }}>
+          <div className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl" style={{ textShadow: '0 0 10px rgba(0, 255, 255, 0.7)' }}>
             {formattedTime}
           </div>
-          <div className="text-2xl md:text-3xl text-cyan-200">
+          <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-cyan-200">
             ☀️ 27°
           </div>
         </div>
+      </div>
+    );
+  };
+
+  // Render guidance text for mobile (bottom row)
+  const renderGuidanceText = () => {
+    // Priority 1: Image generation in progress
+    if (isGeneratingImage) {
+      return (
+        <div className="text-center text-cyan-200 pulse-glow">
+          <p className="text-lg font-medium">{t.craftingOnsen}</p>
+          <p className="text-sm mt-1 opacity-70">{t.pleaseWait}</p>
+        </div>
+      );
+    }
+
+    // Priority 2: Video generation in progress
+    if (isGeneratingVideo) {
+      return (
+        <div className="text-center text-cyan-200 pulse-glow">
+          <p className="text-lg font-medium">{t.creatingExperience}</p>
+          <p className="text-sm mt-1 opacity-70">{t.preparingSanctuary}</p>
+        </div>
+      );
+    }
+
+    // Priority 3: Waiting for confirmation
+    if (showConfirmation && userPreferences) {
+      return (
+        <div className="text-center text-cyan-200">
+          <p className="text-base font-medium">Review your profile and confirm to continue</p>
+          <div className="mt-3">
+            <ConfirmationButtons onConfirm={onConfirm} onReject={onReject} compact={false} />
+          </div>
+        </div>
+      );
+    }
+
+    // Priority 4: Images ready for selection (will be shown in chat)
+    if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
+      return (
+        <div className="text-center text-cyan-200">
+          <p className="text-base font-medium">Open the chat to select your favorite onsen concept</p>
+          <p className="text-sm mt-1 opacity-70">💬 Tap the chat button below</p>
+        </div>
+      );
+    }
+
+    // Priority 5: Video ready
+    if (generatedVideoUrl) {
+      return (
+        <div className="text-center text-cyan-200">
+          <p className="text-lg font-medium">{t.experienceReady}</p>
+          <p className="text-sm mt-1 opacity-70">Enjoy your personalized onsen experience</p>
+        </div>
+      );
+    }
+
+    // Default: Session info
+    return (
+      <div className="text-center text-cyan-200/70">
+        <p className="text-sm">Chat with MION to create your personalized onsen experience</p>
       </div>
     );
   };
@@ -328,9 +390,10 @@ const InfoBox: React.FC<InfoBoxProps> = ({
     );
   }
 
-  // Three-row structure: Title | Content | Widgets
+  // Mobile: Two-row structure (Title+Time | Guidance Text)
+  // Desktop: Three-row structure (Title | Content | Widgets)
   return (
-    <div className="bg-slate-900/30 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-6 flex flex-col text-white h-full transition-all duration-500">
+    <div className="bg-slate-900/40 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-3 sm:p-4 md:p-6 flex flex-col text-white h-full transition-all duration-500">
       <style>{`
         @keyframes fadeInImage {
           from { opacity: 0; }
@@ -339,19 +402,49 @@ const InfoBox: React.FC<InfoBoxProps> = ({
         .animate-fadeInImage {
             animation: fadeInImage 1s ease-in-out forwards;
         }
+        @keyframes pulse-glow {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+        .pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
       `}</style>
 
-      {/* Top Row: Title */}
-      <div className="mb-4">
-        {renderTitle()}
+      {/* Mobile Layout: 2 rows */}
+      <div className="flex flex-col h-full landscape:hidden">
+        {/* Row 1: Title (80%) + Time (20%) */}
+        <div className="flex items-center gap-2 mb-2">
+          <div className="flex-[8]">
+            {renderTitle()}
+          </div>
+          <div className="flex-[2] text-right">
+            <div className="text-2xl font-bold" style={{ textShadow: '0 0 10px rgba(0, 255, 255, 0.7)' }}>
+              {formattedTime}
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Guidance Text */}
+        <div className="flex-1 flex items-center justify-center">
+          {renderGuidanceText()}
+        </div>
       </div>
 
-      {/* Middle Row: Content */}
-      {renderContent()}
+      {/* Desktop/Landscape Layout: 3 rows (original) */}
+      <div className="hidden landscape:flex landscape:flex-col landscape:h-full">
+        {/* Top Row: Title */}
+        <div className="mb-2 sm:mb-3 md:mb-4">
+          {renderTitle()}
+        </div>
 
-      {/* Bottom Row: Widgets */}
-      <div className="mt-auto pt-4">
-        {renderWidgets()}
+        {/* Middle Row: Content */}
+        {renderContent()}
+
+        {/* Bottom Row: Widgets */}
+        <div className="mt-auto pt-2 sm:pt-3 md:pt-4">
+          {renderWidgets()}
+        </div>
       </div>
     </div>
   );

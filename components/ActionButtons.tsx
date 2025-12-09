@@ -32,17 +32,17 @@ interface ActionButtonsProps {
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, onToggleMute, areSubtitlesVisible, onToggleSubtitles }) => {
     return (
-        <div className="absolute bottom-4 right-4 flex items-center space-x-3 z-30">
+        <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 flex items-center space-x-2 sm:space-x-3 z-30">
             {/* Subtitles Button */}
             <div className="relative group">
                 <button
                     onClick={onToggleSubtitles}
-                    className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
+                    className="bg-black/50 text-white/70 p-3 sm:p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300 min-w-[48px] min-h-[48px] flex items-center justify-center active:scale-95"
                     aria-label={areSubtitlesVisible ? 'Hide subtitles' : 'Show subtitles'}
                 >
                     <SubtitlesIcon isVisible={areSubtitlesVisible} />
                 </button>
-                <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
+                <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-xs sm:text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
                     {areSubtitlesVisible ? 'Hide subtitles' : 'Show subtitles'}
                 </div>
             </div>
@@ -50,19 +50,19 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, on
             <div className="relative group">
                 <button
                     onClick={onToggleMute}
-                    className="bg-black/50 text-white/70 p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300"
+                    className="bg-black/50 text-white/70 p-3 sm:p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300 min-w-[48px] min-h-[48px] flex items-center justify-center active:scale-95"
                     aria-label={isMuted ? 'Unmute' : 'Mute'}
                 >
                     <SoundIcon isMuted={isMuted} />
                 </button>
-                <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
+                <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-xs sm:text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
                     {isMuted ? 'Unmute' : 'Mute'}
                 </div>
             </div>
              {/* Chat Button */}
             <button
                 onClick={onToggleChat}
-                className="bg-black/50 text-white/70 px-6 py-3 rounded-md text-xl tracking-wider hover:bg-white hover:text-black transition-colors duration-300"
+                className="bg-black/50 text-white/70 px-5 py-2.5 sm:px-6 sm:py-3 rounded-md text-lg sm:text-xl tracking-wider hover:bg-white hover:text-black transition-colors duration-300 min-h-[48px] flex items-center justify-center active:scale-95"
                 aria-label="Open chat"
             >
                 CHAT

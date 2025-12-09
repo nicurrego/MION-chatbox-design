@@ -7,33 +7,33 @@ interface LanguageSelectionScreenProps {
 
 const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = ({ onLanguageSelect }) => {
   return (
-    <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-      <div className="text-center px-8 max-w-2xl w-full">
+    <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-4">
+      <div className="text-center px-4 sm:px-8 max-w-2xl w-full">
         {/* Title */}
-        <h1 className="text-5xl md:text-6xl font-bold text-white mb-4 tracking-wide">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-3 sm:mb-4 tracking-wide">
           MION
         </h1>
-        <p className="text-xl md:text-2xl text-gray-300 mb-12">
+        <p className="text-lg sm:text-xl md:text-2xl text-gray-300 mb-8 sm:mb-12">
           Select Your Language / Seleccione su idioma
         </p>
 
         {/* Language Options */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-xl mx-auto">
           {Object.values(SUPPORTED_LANGUAGES).map((lang) => (
             <button
               key={lang.code}
               onClick={() => onLanguageSelect(lang.code)}
-              className="group relative bg-gradient-to-br from-gray-800 to-gray-900 hover:from-blue-600 hover:to-purple-600 text-white p-6 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl border border-gray-700 hover:border-transparent"
+              className="group relative bg-gradient-to-br from-gray-800 to-gray-900 hover:from-blue-600 hover:to-purple-600 active:from-blue-700 active:to-purple-700 text-white p-5 sm:p-6 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 hover:shadow-2xl border border-gray-700 hover:border-transparent min-h-[80px] sm:min-h-[100px]"
             >
-              <div className="flex flex-col items-center justify-center space-y-2">
-                <span className="text-3xl md:text-4xl font-bold">
+              <div className="flex flex-col items-center justify-center space-y-1 sm:space-y-2">
+                <span className="text-2xl sm:text-3xl md:text-4xl font-bold">
                   {lang.nativeName}
                 </span>
-                <span className="text-sm md:text-base text-gray-400 group-hover:text-gray-200">
+                <span className="text-xs sm:text-sm md:text-base text-gray-400 group-hover:text-gray-200">
                   {lang.name}
                 </span>
               </div>
-              
+
               {/* Hover effect overlay */}
               <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-blue-400/0 to-purple-400/0 group-hover:from-blue-400/10 group-hover:to-purple-400/10 transition-all duration-300"></div>
             </button>
@@ -41,7 +41,7 @@ const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = ({ onLan
         </div>
 
         {/* Footer note */}
-        <p className="text-sm text-gray-500 mt-12">
+        <p className="text-xs sm:text-sm text-gray-500 mt-8 sm:mt-12">
           MION will speak and respond in your selected language
         </p>
       </div>

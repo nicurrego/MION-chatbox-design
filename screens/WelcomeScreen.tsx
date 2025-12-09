@@ -87,24 +87,24 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
         >
             <video
                 ref={loopVideoRef}
-                src="videos\intro_loop.mp4"
+                src="videos/intro_loop.mp4"
                 autoPlay
                 loop
                 muted // Start muted, will be synced by useEffect
                 playsInline
                 className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"
             />
-             <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 animate-fadeIn">
-                <div className="text-center">
+             <div className="absolute inset-0 bg-black/30 flex items-center justify-center z-10 animate-fadeIn px-4">
+                <div className="text-center max-w-4xl w-full">
                     <div className="mb-8">
-                    <h1 className="text-5xl md:text-7xl animate-title-bob" style={{ color: '#FFF8E1', textShadow: '0 0 20px rgba(255, 165, 0, 0.7)' }}>TALK TO MION</h1>
-                    <h2 className="text-xl md:text-2xl tracking-widest uppercase animate-subtitle-bob" style={{ color: '#FFDAB9', textShadow: '0 0 10px rgba(239, 137, 61, 0.5)' }}>a MION experience</h2>
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl animate-title-bob font-bold" style={{ color: '#FFF8E1', textShadow: '0 0 20px rgba(255, 165, 0, 0.7)' }}>TALK TO MION</h1>
+                    <h2 className="text-lg sm:text-xl md:text-2xl tracking-widest uppercase animate-subtitle-bob mt-2" style={{ color: '#FFDAB9', textShadow: '0 0 10px rgba(239, 137, 61, 0.5)' }}>a MION experience</h2>
                     </div>
-                    <p className="mt-24 text-white/70 text-xl tracking-widest animate-pulse">- click to start -</p>
+                    <p className="mt-16 sm:mt-24 text-white/70 text-lg sm:text-xl tracking-widest animate-pulse">- tap to start -</p>
                 </div>
                 <button
                     onClick={toggleSound}
-                    className="absolute bottom-4 right-4 z-20 bg-black/40 rounded-full p-3 text-white/70 hover:text-white hover:bg-black/60 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-white/50"
+                    className="absolute bottom-4 right-4 z-20 bg-black/40 rounded-full p-4 sm:p-3 text-white/70 hover:text-white hover:bg-black/60 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-[48px] min-h-[48px] flex items-center justify-center"
                     aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
                 >
                     <SoundIcon isMuted={isMuted} />
@@ -124,7 +124,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
             />
             <button
               onClick={onContinue}
-              className="absolute bottom-5 right-5 z-20 bg-black/50 text-white/70 px-4 py-2 rounded-md text-lg tracking-wider hover:bg-white hover:text-black transition-colors duration-300 animate-fadeIn"
+              className="absolute bottom-5 right-5 z-20 bg-black/50 text-white/70 px-6 py-3 sm:px-4 sm:py-2 rounded-md text-lg tracking-wider hover:bg-white hover:text-black transition-colors duration-300 animate-fadeIn min-h-[48px] flex items-center justify-center"
               aria-label="Skip intro video"
             >
               SKIP

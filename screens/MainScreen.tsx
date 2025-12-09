@@ -285,10 +285,10 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
       )}
 
       {/* Main Grid Layout */}
-      <div className="relative w-full h-full landscape:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-8">
+      <div className="relative w-full h-full landscape:p-4 landscape:md:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-4 landscape:md:gap-8">
 
         {/* Top Left: Info Box */}
-        <div className="absolute top-0 left-0 right-0 h-[15vh] p-4 landscape:relative landscape:inset-auto landscape:h-full landscape:min-h-0 landscape:p-0 landscape:col-start-2 landscape:row-start-1">
+        <div className="absolute top-0 left-0 right-0 h-[15vh] min-h-[100px] p-2 sm:p-4 landscape:relative landscape:inset-auto landscape:h-full landscape:min-h-0 landscape:p-0 landscape:col-start-2 landscape:row-start-1">
           <InfoBox
             isGeneratingImage={onsenState.isGeneratingImage}
             generatedImageUrls={onsenState.imageUrls}
@@ -305,7 +305,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         </div>
 
         {/* Center: Character */}
-        <div className="absolute inset-0 top-[15vh] p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1 flex items-center justify-center">
+        <div className="absolute inset-0 top-[15vh] bottom-[120px] p-2 sm:p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1 flex items-center justify-center">
           <MionCharacter
             imageUrl="/images/TheMION.png"
             analyser={audioCtrl.analyser}
@@ -315,7 +315,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         </div>
 
         {/* Bottom: Controls & Subtitles */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 flex flex-col items-center">
+        <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 pb-safe flex flex-col items-center">
             <Subtitles
                 currentSentence={chat.currentSubtitle}
                 isVisible={areSubtitlesVisible}
@@ -345,6 +345,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             showConfirmation={chat.waitingForConfirmation || false}
             onConfirm={handleConfirmPreferences}
             onReject={handleRejectPreferences}
+            generatedImageUrls={onsenState.imageUrls}
+            onConceptSelect={handleConceptSelect}
+            isConceptSelected={!!onsenState.selectedConceptUrl}
           />
       )}
 
