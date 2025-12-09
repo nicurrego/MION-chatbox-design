@@ -32,7 +32,7 @@ interface ActionButtonsProps {
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, onToggleMute, areSubtitlesVisible, onToggleSubtitles }) => {
     return (
-        <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 flex items-center space-x-2 sm:space-x-3 z-30">
+        <div className="flex items-center justify-end space-x-2 sm:space-x-3 z-30">
             {/* Subtitles Button */}
             <div className="relative group">
                 <button

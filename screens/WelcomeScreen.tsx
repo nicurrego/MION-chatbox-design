@@ -8,6 +8,32 @@ interface WelcomeScreenProps {
   onToggleMute: () => void;
 }
 
+// Detect if device is mobile
+const isMobileDevice = (): boolean => {
+  // Check if window is available (for SSR compatibility)
+  if (typeof window === 'undefined') return false;
+
+  // Check user agent for mobile devices
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+  const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+
+  // Also check screen size (mobile typically < 768px width)
+  const isMobileSize = window.innerWidth < 768;
+
+  return mobileRegex.test(userAgent.toLowerCase()) || isMobileSize;
+};
+
+// Background video configuration
+const getBackgroundVideos = () => {
+  const isMobile = isMobileDevice();
+
+  return {
+    loopVideo: isMobile ? 'videos/intro_loop_mobile.mp4' : 'videos/intro_loop.mp4',
+    introVideo: isMobile ? 'videos/starting_video_mobile.mp4' : 'videos/starting_video.mp4',
+    isMobile
+  };
+};
+
 const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     {isMuted ? (
@@ -23,6 +49,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
   const [screen, setScreen] = useState<'loop' | 'intro'>('loop');
   const introVideoRef = useRef<HTMLVideoElement>(null);
   const loopVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Get appropriate background videos based on device type
+  const backgroundVideos = getBackgroundVideos();
 
   const handleStartIntro = () => {
     setScreen('intro');
@@ -81,13 +110,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
       `}</style>
       
       {screen === 'loop' && (
-        <div 
+        <div
           className="w-full h-full cursor-pointer"
           onClick={handleStartIntro}
         >
             <video
                 ref={loopVideoRef}
-                src="videos/intro_loop.mp4"
+                src={backgroundVideos.loopVideo}
                 autoPlay
                 loop
                 muted // Start muted, will be synced by useEffect
@@ -117,7 +146,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
         <>
             <video
                 ref={introVideoRef}
-                src="videos/starting_video.mp4"
+                src={backgroundVideos.introVideo}
                 playsInline
                 onEnded={onContinue}
                 className="absolute top-1/2 left-1/2 w-auto h-auto min-w-full min-h-full object-cover transform -translate-x-1/2 -translate-y-1/2"

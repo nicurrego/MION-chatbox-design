@@ -19,6 +19,21 @@ import { useVoiceInput } from '../hooks/useVoiceInput';
 import { useChatSession } from '../hooks/useChatSession';
 import { useBackgroundMusic, type BackgroundMusicTrack } from '../hooks/useBackgroundMusic';
 
+// Detect if device is mobile
+const isMobileDevice = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+  const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+  const isMobileSize = window.innerWidth < 768;
+  return mobileRegex.test(userAgent.toLowerCase()) || isMobileSize;
+};
+
+// Get background video based on device type
+const getDefaultBackgroundVideo = (): string => {
+  const isMobile = isMobileDevice();
+  return isMobile ? 'videos/looping_ofuro_mobile.mp4' : 'videos/looping_ofuro.mp4';
+};
+
 interface MainScreenProps {
   initialMessage: ChatMessage | null;
   initialAudio: string | null;
@@ -278,17 +293,17 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
          ></div>
       ) : (
         <video
-            src="videos/looping_ofuro.mp4"
+            src={getDefaultBackgroundVideo()}
             autoPlay loop muted playsInline
             className="absolute inset-0 w-full h-full object-cover"
         />
       )}
 
       {/* Main Grid Layout */}
-      <div className="relative w-full h-full landscape:p-4 landscape:md:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-4 landscape:md:gap-8">
+      <div className="relative w-full h-full p-2 sm:p-4 landscape:p-4 landscape:md:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-4 landscape:md:gap-8 flex flex-col portrait:flex-col">
 
-        {/* Top Left: Info Box */}
-        <div className="absolute top-0 left-0 right-0 h-[15vh] min-h-[100px] p-2 sm:p-4 landscape:relative landscape:inset-auto landscape:h-full landscape:min-h-0 landscape:p-0 landscape:col-start-2 landscape:row-start-1">
+        {/* Top: Info Box (Portrait) / Right (Landscape) */}
+        <div className="w-full flex-shrink-0 h-auto max-h-[20vh] portrait:max-h-[20vh] landscape:max-h-none landscape:h-full landscape:col-start-2 landscape:row-start-1 mb-2 landscape:mb-0 z-10">
           <InfoBox
             isGeneratingImage={onsenState.isGeneratingImage}
             generatedImageUrls={onsenState.imageUrls}
@@ -304,8 +319,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
           />
         </div>
 
-        {/* Center: Character */}
-        <div className="absolute inset-0 top-[15vh] bottom-[120px] p-2 sm:p-4 landscape:relative landscape:inset-auto landscape:p-0 landscape:min-h-0 landscape:col-start-1 landscape:row-start-1 flex items-center justify-center">
+        {/* Center: Character (Portrait) / Left (Landscape) - Takes all remaining space */}
+        <div className="absolute inset-0 top-[calc(20vh+0.5rem)] bottom-[80px] sm:bottom-[90px] p-2 sm:p-4 landscape:relative landscape:inset-auto landscape:top-auto landscape:bottom-auto landscape:col-start-1 landscape:row-start-1 landscape:h-full flex items-center justify-center z-0">
           <MionCharacter
             imageUrl="/images/TheMION.png"
             analyser={audioCtrl.analyser}
@@ -314,19 +329,23 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
           />
         </div>
 
-        {/* Bottom: Controls & Subtitles */}
-        <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-4 pb-safe flex flex-col items-center">
-            <Subtitles
-                currentSentence={chat.currentSubtitle}
-                isVisible={areSubtitlesVisible}
-            />
-             <ActionButtons
-                onToggleChat={() => setIsChatOpen(prev => !prev)}
-                isMuted={isMuted}
-                onToggleMute={onToggleMute}
-                areSubtitlesVisible={areSubtitlesVisible}
-                onToggleSubtitles={() => setAreSubtitlesVisible(prev => !prev)}
-            />
+        {/* Subtitles - Overlay on top of character */}
+        <div className="absolute bottom-[80px] sm:bottom-[90px] left-0 right-0 z-40 pointer-events-none landscape:bottom-[80px] landscape:left-0 landscape:right-0">
+          <Subtitles
+            currentSentence={chat.currentSubtitle}
+            isVisible={areSubtitlesVisible}
+          />
+        </div>
+
+        {/* Bottom: Controls */}
+        <div className="absolute bottom-0 left-0 right-0 w-full flex-shrink-0 p-2 sm:p-4 z-30 landscape:relative landscape:col-span-2">
+          <ActionButtons
+            onToggleChat={() => setIsChatOpen(prev => !prev)}
+            isMuted={isMuted}
+            onToggleMute={onToggleMute}
+            areSubtitlesVisible={areSubtitlesVisible}
+            onToggleSubtitles={() => setAreSubtitlesVisible(prev => !prev)}
+          />
         </div>
       </div>
 
