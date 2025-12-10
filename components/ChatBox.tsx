@@ -76,7 +76,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   return (
     <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-2 sm:p-4 h-dvh"
+        className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-0 sm:p-4 h-dvh"
         onClick={onClose}
     >
        <style>{`
@@ -86,7 +86,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             .animate-slideUp { animation: slideUp 0.3s ease-out; }
         `}</style>
       <div
-        className="w-full sm:w-11/12 max-w-4xl h-full sm:h-4/5 flex flex-col bg-slate-900/90 rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
+        className="w-full sm:w-11/12 max-w-4xl h-full sm:h-4/5 flex flex-col bg-slate-900/90 rounded-t-lg sm:rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-3 sm:px-6 pt-2 sm:pt-3 pb-2 sm:pb-3 flex justify-between items-center border-b-2 border-cyan-400/50">
