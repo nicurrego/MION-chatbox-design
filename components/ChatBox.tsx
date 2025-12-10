@@ -76,7 +76,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   return (
     <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-2 sm:p-4"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-2 sm:p-4 h-dvh"
         onClick={onClose}
     >
        <style>{`
