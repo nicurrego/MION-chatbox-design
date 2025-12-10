@@ -13,6 +13,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+      :root {
+        /* CSS custom property for dynamic viewport height */
+        --dvh: 1vh;
+      }
+
+      /* Update custom property on resize to handle browser UI changes */
+      @supports (height: 100dvh) {
+        :root {
+          --dvh: 1dvh;
+        }
+      }
+
       * {
         /* Prevent text size adjustment on mobile */
         -webkit-text-size-adjust: 100%;
@@ -26,8 +38,9 @@
         overscroll-behavior: none;
         /* Prevent scrolling on the body */
         overflow: hidden;
-        /* Full height */
-        height: 100%;
+        /* Full height - use dvh for mobile browser compatibility */
+        height: 100vh; /* Fallback for older browsers */
+        height: 100dvh; /* Dynamic viewport height accounts for browser UI */
         width: 100%;
         margin: 0;
         padding: 0;
@@ -51,7 +64,8 @@
       }
 
       #root {
-        height: 100%;
+        height: 100vh; /* Fallback for older browsers */
+        height: 100dvh; /* Dynamic viewport height accounts for browser UI */
         width: 100%;
       }
 
