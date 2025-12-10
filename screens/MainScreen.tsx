@@ -338,7 +338,14 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         </div>
 
         {/* Action Buttons - Overlay always visible at bottom */}
-        <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 z-30 landscape:bottom-2 landscape:sm:bottom-4 landscape:right-2 landscape:sm:right-4">
+        {/* CHANGED: 
+            1. 'absolute' -> 'fixed' to ignore container height quirks 
+            2. Added 'mb-[env(...)]' for iPhone Home Bar safety
+            3. Increased z-index to 50 just to be safe
+        */}
+        <div className="fixed bottom-2 sm:bottom-4 right-2 sm:right-4 z-50 
+                        mb-[env(safe-area-inset-bottom)] 
+                        landscape:bottom-2 landscape:sm:bottom-4 landscape:right-2 landscape:sm:right-4">
           <ActionButtons
             onToggleChat={() => setIsChatOpen(prev => !prev)}
             isMuted={isMuted}
