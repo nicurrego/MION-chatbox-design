@@ -320,7 +320,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         </div>
 
         {/* Center: Character (Portrait) / Left (Landscape) - Takes all remaining space */}
-        <div className="absolute inset-0 top-[calc(20vh+0.5rem)] bottom-[80px] sm:bottom-[90px] p-2 sm:p-4 landscape:relative landscape:inset-auto landscape:top-auto landscape:bottom-auto landscape:col-start-1 landscape:row-start-1 landscape:h-full flex items-center justify-center z-0">
+        <div className="absolute inset-0 top-[calc(20vh+0.5rem)] bottom-0 p-2 sm:p-4 landscape:relative landscape:inset-auto landscape:top-auto landscape:bottom-auto landscape:col-start-1 landscape:row-start-1 landscape:h-full flex items-center justify-center z-0">
           <MionCharacter
             imageUrl="/images/TheMION.png"
             analyser={audioCtrl.analyser}
@@ -330,15 +330,15 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         </div>
 
         {/* Subtitles - Overlay on top of character */}
-        <div className="absolute bottom-[80px] sm:bottom-[90px] left-0 right-0 z-40 pointer-events-none landscape:bottom-[80px] landscape:left-0 landscape:right-0">
+        <div className="absolute bottom-[72px] sm:bottom-[80px] left-0 right-0 z-40 pointer-events-none landscape:bottom-[72px] landscape:sm:bottom-[80px]">
           <Subtitles
             currentSentence={chat.currentSubtitle}
             isVisible={areSubtitlesVisible}
           />
         </div>
 
-        {/* Bottom: Controls */}
-        <div className="absolute bottom-0 left-0 right-0 w-full flex-shrink-0 p-2 sm:p-4 z-30 landscape:relative landscape:col-span-2">
+        {/* Action Buttons - Overlay always visible at bottom */}
+        <div className="absolute bottom-2 sm:bottom-4 right-2 sm:right-4 z-30 landscape:bottom-2 landscape:sm:bottom-4 landscape:right-2 landscape:sm:right-4">
           <ActionButtons
             onToggleChat={() => setIsChatOpen(prev => !prev)}
             isMuted={isMuted}
