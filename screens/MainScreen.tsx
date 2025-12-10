@@ -320,11 +320,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         </div>
 
         {/* Center: Character (Portrait) / Left (Landscape) - Takes all remaining space */}
-<<<<<<< HEAD
         <div className="absolute inset-0 top-[calc(20dvh+0.5rem)] top-[calc(20vh+0.5rem)] bottom-0 p-2 sm:p-4 landscape:relative landscape:inset-auto landscape:top-auto landscape:bottom-auto landscape:col-start-1 landscape:row-start-1 landscape:h-full flex items-center justify-center z-0">
-=======
-        <div className="absolute inset-0 top-[calc(20vh+0.5rem)] bottom-0 p-2 sm:p-4 landscape:relative landscape:inset-auto landscape:top-auto landscape:bottom-auto landscape:col-start-1 landscape:row-start-1 landscape:h-full flex items-center justify-center z-0">
->>>>>>> f5674df208239c6c471b0d84e4a42dcf416b4dd8
           <MionCharacter
             imageUrl="/images/TheMION.png"
             analyser={audioCtrl.analyser}
