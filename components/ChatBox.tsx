@@ -76,6 +76,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
   return (
     <div
+        /* CHANGED: 
+           1. items-center -> items-end sm:items-center (Fixes header being cut off)
+           2. p-2 -> p-0 sm:p-4 (Maximizes space on mobile)
+        */
         className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/70 backdrop-blur-sm animate-fadeIn p-0 sm:p-4 h-dvh"
         onClick={onClose}
     >
@@ -86,6 +90,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             .animate-slideUp { animation: slideUp 0.3s ease-out; }
         `}</style>
       <div
+        /* CHANGED: 
+           1. rounded-lg -> rounded-t-lg sm:rounded-lg (Looks better attached to bottom)
+           2. h-full (Ensures it fills the available height above the keyboard)
+        */
         className="w-full sm:w-11/12 max-w-4xl h-full sm:h-4/5 flex flex-col bg-slate-900/90 rounded-t-lg sm:rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
