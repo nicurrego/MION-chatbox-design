@@ -36,10 +36,9 @@ const MOCK_RESPONSES_BY_LANGUAGE: Record<string, string[]> = {
     "¡Perfecto! Déjame preparar tu experiencia personalizada de onsen. Esto solo tomará un momento..."
   ],
   'ja-JP': [
-    "ルーフィさん、こんバーン！ 今日も一日お疲れ様でした！\nさあ、まずは今日の気分や体調をチェックさせてね！ 疲れレベルやストレス度、お肌の調子で気になることがあったら教えて！",
-    "ふむふむ、お疲れとストレス、そして乾燥ですね！ それなら、お肌を優しく包む単純泉をメインに、あったかポカポカになる塩化物泉を少しだけ隠し味で入れちゃおう！\n温度は、のんびり長湯できる38℃〜39℃のゆるめがおすすめだよ！\n香りは癒やしの定番、ラベンダーで決定！ 色は爽やかな水色にしようかな。この香りや色の濃さは、このままの設定でGOサイン出ますか？",
-    "了解です！ あなたの温泉プロフィールはこちら：\n\nウェルビーイングプロフィール：\n- 肌タイプ：乾燥肌\n- 筋肉の痛み：肩と首\n- ストレスレベル：中程度\n- 水温：ぬるめ（38-39°C）\n- 健康目標：リラックスとストレス解消\n\n美的プロフィール：\n- 雰囲気：静かな自然の屋外設定\n- カラーパレット：温かい夕焼けの色調と紫のアクセント\n- 時間帯：ゴールデンアワー\n\n[PREFERENCES_START]\nskinType: dry\nmuscleSoreness: shoulders and neck\nstressLevel: moderate\nwaterTemperature: warm\nhealthGoals: relaxation and stress relief\natmosphere: serene natural outdoor setting\ncolorPalette: warm sunset tones with purple accents\ntimeOfDay: golden hour\n[PREFERENCES_END]\n\nこの設定で温泉体験を作ってもいいですか？",
-    "了解です！ それじゃあ、極上リラックスバスを秒速で準備しますね！ もう少しだけ待っててね〜！"
+    "やあ、ニコラス！ 君がこの2か月間、準備してきたプレゼンテーションの真っ最中だね！ もしよかったら、君にぴったりの温泉を準備しておくよ！ プレゼンが終わるころには、あなたが入れるようにね！",
+    "了解です！ あなたの温泉プロフィールはこちら：\n\nウェルビーイングプロフィール：\n- 肌タイプ：乾燥肌\n- 筋肉の痛み：足筋肉痛\n- ストレスレベル：ちょっとやばいね\n- 水温：集めお湯\n- 健康目標：リカバリーとストレス解消\n\n美的プロフィール：\n- 雰囲気：コロンビアの山での景色\n- カラーパレット：たくさんの緑\n- 時間帯：ゴールデンアワー\n\n[PREFERENCES_START]\nskinType: dry\nmuscleSoreness: legs muscle pain\nstressLevel: very high\nwaterTemperature: hot\nhealthGoals: recovery and stress relief\natmosphere: colombian mountain view\ncolorPalette: very greeny\ntimeOfDay: golden hour\n[PREFERENCES_END]\n\nこの設定で温泉体験を作ってもいいですか？",
+    "スキャン完了！ それじゃあ、極上リラックスバスを秒速で準備しますね！ もう少しだけ待っててね〜！"
   ],
   'ko-KR': [
     "안녕하세요, 환영합니다. 저는 MION, 당신의 개인 온천 컨시어지입니다. 몸과 마음을 달래는 완벽한 온천 경험을 만들어 드리는 것이 제 목적입니다. 먼저 몇 가지 질문을 드려 당신의 필요를 더 잘 이해하고 싶습니다. 먼저 피부 타입과 근육통이 있는지 말씀해 주시겠어요?",
