@@ -303,7 +303,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
       <div className="relative w-full h-full p-2 sm:p-4 landscape:p-4 landscape:md:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-4 landscape:md:gap-8 flex flex-col portrait:flex-col">
 
         {/* Top: Info Box (Portrait) / Right (Landscape) */}
-        <div className="w-full flex-shrink-0 h-auto max-h-[20dvh] max-h-[20vh] portrait:max-h-[20dvh] portrait:max-h-[20vh] landscape:max-h-none landscape:h-full landscape:col-start-2 landscape:row-start-1 mb-2 landscape:mb-0 z-10">
+        <div className="w-full flex-shrink-0 h-[20dvh] h-[20vh] portrait:h-[20dvh] portrait:h-[20vh] landscape:h-full landscape:col-start-2 landscape:row-start-1 mb-2 landscape:mb-0 z-10 overflow-hidden">
           <InfoBox
             isGeneratingImage={onsenState.isGeneratingImage}
             generatedImageUrls={onsenState.imageUrls}

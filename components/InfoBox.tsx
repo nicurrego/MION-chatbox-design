@@ -300,12 +300,12 @@ const InfoBox: React.FC<InfoBoxProps> = ({
     // Priority 3: Show image selection (FULL HEIGHT - no three-row structure)
     if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
       return (
-        <div className="flex-1 flex flex-col gap-3 min-h-0">
+        <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-hidden w-full max-h-full">
           {generatedImageUrls.map((url, index) => (
             <button
               key={index}
               onClick={() => onConceptSelect(url)}
-              className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg group focus:outline-none focus:ring-4 focus:ring-cyan-400/80 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-300 hover:ring-2 hover:ring-cyan-400/50"
+              className="relative w-full flex-1 min-h-0 overflow-hidden rounded-lg group focus:outline-none focus:ring-2 focus:ring-cyan-400/80 focus:ring-offset-1 focus:ring-offset-slate-900 transition-all duration-300 hover:ring-2 hover:ring-cyan-400/50"
               aria-label={`Select onsen concept variation ${index + 1}`}
             >
               <img
@@ -314,7 +314,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({
                 className="w-full h-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                <span className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 px-4 py-2 rounded-full">
+                <span className="text-white text-xs sm:text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/60 px-2 sm:px-3 py-1 rounded-full">
                   Concept {index + 1}
                 </span>
               </div>
@@ -375,7 +375,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({
   // Special case: Image selection takes full height (no three-row structure)
   if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
     return (
-      <div className="bg-slate-900/30 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-6 flex flex-col text-white h-full transition-all duration-500">
+      <div className="bg-slate-900/30 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-2 sm:p-2 md:p-3 flex flex-col text-white h-full w-full overflow-hidden transition-all duration-500">
         <style>{`
           @keyframes fadeInImage {
             from { opacity: 0; }
