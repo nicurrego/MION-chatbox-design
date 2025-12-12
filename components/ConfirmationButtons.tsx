@@ -4,9 +4,30 @@ interface ConfirmationButtonsProps {
   onConfirm: () => void;
   onReject: () => void;
   compact?: boolean; // For InfoBox widgets row
+  mobile?: boolean; // For mobile InfoBox guidance text
 }
 
-const ConfirmationButtons: React.FC<ConfirmationButtonsProps> = ({ onConfirm, onReject, compact = false }) => {
+const ConfirmationButtons: React.FC<ConfirmationButtonsProps> = ({ onConfirm, onReject, compact = false, mobile = false }) => {
+  if (mobile) {
+    // Mobile version for InfoBox guidance text (very compact)
+    return (
+      <div className="flex gap-1.5 items-center justify-center animate-fadeIn w-full">
+        <button
+          onClick={onConfirm}
+          className="px-2.5 py-1 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-cyan-500/50 whitespace-nowrap"
+        >
+          ✓ Create
+        </button>
+        <button
+          onClick={onReject}
+          className="px-2.5 py-1 bg-slate-600 hover:bg-slate-500 text-white text-xs font-bold rounded transition-all duration-300 transform hover:scale-105 shadow-lg whitespace-nowrap"
+        >
+          ✗ Change
+        </button>
+      </div>
+    );
+  }
+
   if (compact) {
     // Compact version for InfoBox widgets row
     return (

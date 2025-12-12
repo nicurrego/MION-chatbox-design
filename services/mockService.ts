@@ -37,7 +37,7 @@ const MOCK_RESPONSES_BY_LANGUAGE: Record<string, string[]> = {
   ],
   'ja-JP': [
     "やあ、ニコラス！ 君がこの2か月間、準備してきたプレゼンテーションの真っ最中だね！ もしよかったら、君にぴったりの温泉を準備しておくよ！ プレゼンが終わるころには、あなたが入れるようにね！",
-    "了解です！ あなたの温泉プロフィールはこちら：\n\nウェルビーイングプロフィール：\n- 肌タイプ：乾燥肌\n- 筋肉の痛み：足筋肉痛\n- ストレスレベル：ちょっとやばいね\n- 水温：集めお湯\n- 健康目標：リカバリーとストレス解消\n\n美的プロフィール：\n- 雰囲気：コロンビアの山での景色\n- カラーパレット：たくさんの緑\n- 時間帯：ゴールデンアワー\n\n[PREFERENCES_START]\nskinType: dry\nmuscleSoreness: legs muscle pain\nstressLevel: very high\nwaterTemperature: hot\nhealthGoals: recovery and stress relief\natmosphere: colombian mountain view\ncolorPalette: very greeny\ntimeOfDay: golden hour\n[PREFERENCES_END]\n\nこの設定で温泉体験を作ってもいいですか？",
+    "了解です！ あなたの温泉プロフィールはこちら：\n\nウェルビーイングプロフィール：\n- 肌タイプ：乾燥肌\n- 筋肉の痛み：足筋肉痛\n- ストレスレベル：ちょっとやばいね\n- 水温：熱め\n- 健康目標：リカバリーとストレス解消\n\n美的プロフィール：\n- 雰囲気：コロンビアの山の中\n- カラーパレット：緑\n- 時間帯： 夕暮れ時\n\n[PREFERENCES_START]\nskinType: dry\nmuscleSoreness: legs muscle pain\nstressLevel: very high\nwaterTemperature: hot\nhealthGoals: recovery and stress relief\natmosphere: colombian mountain view\ncolorPalette: very greeny\ntimeOfDay: sunset\n[PREFERENCES_END]\n\nこの設定で温泉体験を作ってもいいですか？",
     "スキャン完了！ それじゃあ、極上リラックスバスを秒速で準備しますね！ もう少しだけ待っててね〜！"
   ],
   'ko-KR': [
@@ -149,7 +149,8 @@ Este santuario está diseñado pensando en ${preferences.wellbeingProfile.health
 
 Respira profundo. Tu viaje hacia el bienestar comienza ahora.`,
 
-    'ja-JP': `あなた専用の温泉の聖域がお待ちしています。${preferences.aestheticProfile.atmosphere}の環境に佇み、${preferences.aestheticProfile.colorPalette}の色合いで輝く水面に${preferences.aestheticProfile.timeOfDay}の光が踊ります。
+    // 'ja-JP': `あなた専用の温泉の聖域がお待ちしています。${preferences.aestheticProfile.atmosphere}の環境に佇み、${preferences.aestheticProfile.colorPalette}の色合いで輝く水面に${preferences.aestheticProfile.timeOfDay}の光が踊ります。
+    'ja-JP': `あなたのための温泉の聖域が用意されました。雰囲気：コロンビアの山の中の環境に佇む、緑の色合いの水面に夕暮れ時の光が舞い回っています。
 
 ${preferences.wellbeingProfile.waterTemperature}に完璧に温められたミネラル豊富な湯は、${preferences.wellbeingProfile.skinType}肌のために特別に調合されています。身を浸すと、治療効果のあるミネラルが${preferences.wellbeingProfile.muscleSoreness}を和らげ、静かな環境が${preferences.wellbeingProfile.stressLevel}ストレスを溶かしていきます。
 
@@ -189,12 +190,12 @@ export const generateOnsenImage = async (preferences: OnsenPreferences): Promise
   console.log('🦆 [MOCK] Generating images with preferences:', preferences);
 
   // Convert the two pre-generated images to base64
-  const image1Base64 = await fileToBase64('/images/cp_purple_green_bath.png');
-  const image2Base64 = await fileToBase64('/images/cp_sunlight.png');
+  const image1Base64 = await fileToBase64('/images/present1.png');
+  const image2Base64 = await fileToBase64('/images/present2.png');
 
   // Map each image to its corresponding video
-  imageToVideoMap.set(image1Base64, '/videos/cp_pg_video.mp4');
-  imageToVideoMap.set(image2Base64, '/videos/cp_sunlight_video.mp4');
+  imageToVideoMap.set(image1Base64, '/videos/present_v1.mp4');
+  imageToVideoMap.set(image2Base64, '/videos/present_v2.mp4');
 
   console.log('🦆 [MOCK] Generated 2 images and mapped to videos');
 

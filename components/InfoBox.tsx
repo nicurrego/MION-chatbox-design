@@ -240,10 +240,10 @@ const InfoBox: React.FC<InfoBoxProps> = ({
     // Priority 3: Waiting for confirmation
     if (showConfirmation && userPreferences) {
       return (
-        <div className="text-center text-cyan-200">
-          <p className="text-base font-medium">Review your profile and confirm to continue</p>
-          <div className="mt-3">
-            <ConfirmationButtons onConfirm={onConfirm} onReject={onReject} compact={false} />
+        <div className="text-center text-cyan-200 flex flex-col items-center justify-center gap-1">
+          <p className="text-xs sm:text-sm font-medium">Review your profile and confirm</p>
+          <div className="w-full">
+            <ConfirmationButtons onConfirm={onConfirm} onReject={onReject} mobile={true} />
           </div>
         </div>
       );
