@@ -93,10 +93,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       <div
         /* CHANGED:
            1. rounded-lg -> rounded-t-lg sm:rounded-lg (Looks better attached to bottom)
-           2. h-full sm:h-4/5 -> h-[calc(100dvh-1.5rem)] sm:h-4/5 (Accounts for padding on mobile)
+           2. h-1/2 for all screen sizes (top 50% of available space)
            3. w-full sm:w-11/12 -> w-full sm:w-11/12 (Responsive width with padding)
         */
-        className="w-full sm:w-11/12 max-w-4xl h-[calc(100dvh-1.5rem)] sm:h-4/5 flex flex-col bg-slate-900/90 rounded-t-lg sm:rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
+        className="w-full sm:w-11/12 max-w-4xl h-1/2 flex flex-col bg-slate-900/90 rounded-t-lg sm:rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-3 sm:px-6 pt-2 sm:pt-3 pb-2 sm:pb-3 flex justify-between items-center border-b-2 border-cyan-400/50">
