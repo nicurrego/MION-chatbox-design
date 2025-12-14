@@ -39,6 +39,7 @@ const translations: Record<SupportedLanguage, {
   experienceReady: string;
   finalizingExperience: string;
   profileWillAppear: string;
+  tapToDownload: string;
 }> = {
   en: {
     sessionInfo: 'SESSION INFO',
@@ -60,6 +61,7 @@ const translations: Record<SupportedLanguage, {
     experienceReady: 'Your unique onsen experience is ready. Enjoy the moment.',
     finalizingExperience: 'Finalizing your onsen experience...',
     profileWillAppear: 'Your onsen profile will appear here once created.',
+    tapToDownload: 'Tap the menu to download your experience',
   },
   es: {
     sessionInfo: 'INFO DE SESIÓN',
@@ -81,6 +83,7 @@ const translations: Record<SupportedLanguage, {
     experienceReady: 'Tu experiencia onsen única está lista. Disfruta el momento.',
     finalizingExperience: 'Finalizando tu experiencia onsen...',
     profileWillAppear: 'Tu perfil de onsen aparecerá aquí una vez creado.',
+    tapToDownload: 'Toca el menú para descargar tu experiencia',
   },
   ja: {
     sessionInfo: 'セッション情報',
@@ -102,6 +105,7 @@ const translations: Record<SupportedLanguage, {
     experienceReady: 'あなた専用の温泉体験の準備が整いました。お楽しみください。',
     finalizingExperience: '温泉体験を仕上げ中...',
     profileWillAppear: '温泉プロフィールは作成後にここに表示されます。',
+    tapToDownload: 'メニューをタップして体験をダウンロード',
   },
   ko: {
     sessionInfo: '세션 정보',
@@ -123,6 +127,7 @@ const translations: Record<SupportedLanguage, {
     experienceReady: '당신만의 온천 경험이 준비되었습니다. 즐기세요.',
     finalizingExperience: '온천 경험을 마무리하는 중...',
     profileWillAppear: '온천 프로필은 생성 후 여기에 표시됩니다.',
+    tapToDownload: '메뉴를 탭하여 경험 다운로드',
   },
   zh: {
     sessionInfo: '会话信息',
@@ -144,6 +149,7 @@ const translations: Record<SupportedLanguage, {
     experienceReady: '您的专属温泉体验已准备就绪。尽情享受吧。',
     finalizingExperience: '正在完成您的温泉体验...',
     profileWillAppear: '温泉档案创建后将显示在此处。',
+    tapToDownload: '点击菜单下载您的体验',
   },
 };
 

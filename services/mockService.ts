@@ -183,11 +183,11 @@ ${preferences.wellbeingProfile.waterTemperature}로 완벽하게 데워진 미�
 // 3. MOCK IMAGE GENERATION
 // ============================================================================
 
-export const generateOnsenImage = async (preferences: OnsenPreferences): Promise<string[] | null> => {
+export const generateOnsenImage = async (preferences: OnsenPreferences, isMobile: boolean = false): Promise<string[] | null> => {
   // Simulate network delay for image generation
   await new Promise(resolve => setTimeout(resolve, 2000));
 
-  console.log('🦆 [MOCK] Generating images with preferences:', preferences);
+  console.log('🦆 [MOCK] Generating images with preferences:', preferences, 'isMobile:', isMobile);
 
   // Convert the two pre-generated images to base64
   const image1Base64 = await fileToBase64('/images/present1.png');
@@ -209,11 +209,12 @@ export const generateOnsenImage = async (preferences: OnsenPreferences): Promise
 export const generateLoopingVideo = async (
   base64Image: string,
   mimeType: string,
+  aspectRatio: '9:16' | '16:9' = '9:16'
 ): Promise<string> => {
   // Simulate network delay for video generation
   await new Promise(resolve => setTimeout(resolve, 3000));
 
-  console.log('🦆 [MOCK] Generating video for selected image');
+  console.log('🦆 [MOCK] Generating video for selected image with aspect ratio:', aspectRatio);
 
   // Look up the video URL from our mapping
   const videoUrl = imageToVideoMap.get(base64Image);

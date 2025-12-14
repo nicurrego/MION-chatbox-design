@@ -93,10 +93,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       <div
         /* CHANGED:
            1. rounded-lg -> rounded-t-lg sm:rounded-lg (Looks better attached to bottom)
-           2. h-1/2 for all screen sizes (top 50% of available space)
+           2. h-1/2 sm:h-3/4 md:h-5/6 lg:h-[85vh] (Responsive height: 50% mobile, 75% tablet, 85% desktop)
            3. w-full sm:w-11/12 -> w-full sm:w-11/12 (Responsive width with padding)
+           4. max-w-4xl -> max-w-6xl (Larger max width for desktop)
         */
-        className="w-full sm:w-11/12 max-w-4xl h-1/2 flex flex-col bg-slate-900/90 rounded-t-lg sm:rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
+        className="w-full sm:w-11/12 max-w-6xl h-1/2 sm:h-3/4 md:h-5/6 lg:h-[85vh] flex flex-col bg-slate-900/90 rounded-t-lg sm:rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-3 sm:px-6 pt-2 sm:pt-3 pb-2 sm:pb-3 flex justify-between items-center border-b-2 border-cyan-400/50">
@@ -133,14 +134,14 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               </div>
           </div>
         </div>
-        <div ref={messageAreaRef} className="flex-grow p-3 sm:p-6 text-white text-xl sm:text-2xl md:text-3xl tracking-wide leading-relaxed overflow-y-auto flex flex-col space-y-3 sm:space-y-4">
+        <div ref={messageAreaRef} className="flex-grow p-3 sm:p-6 lg:p-8 text-white text-lg sm:text-xl md:text-2xl lg:text-2xl tracking-wide leading-relaxed overflow-y-auto flex flex-col space-y-3 sm:space-y-4 lg:space-y-5">
           {/* Render completed messages */}
           {history.map((msg, index) => (
               <div
                   key={`hist-${index}`}
                   className={`w-full flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                  <div className={`px-3 sm:px-4 py-2 rounded-xl max-w-[90%] sm:max-w-[85%] ${msg.sender === 'user' ? 'bg-slate-700' : 'bg-cyan-900/80'}`}>
+                  <div className={`px-3 sm:px-4 lg:px-5 py-2 sm:py-3 lg:py-3 rounded-xl max-w-[90%] sm:max-w-[85%] lg:max-w-[75%] ${msg.sender === 'user' ? 'bg-slate-700' : 'bg-cyan-900/80'}`}>
                       {msg.sender === 'user' ? msg.text : parseMarkdown(msg.text)}
                   </div>
               </div>
@@ -208,21 +209,21 @@ const ChatBox: React.FC<ChatBoxProps> = ({
               </div>
           )}
         </div>
-        <form onSubmit={handleSubmit} className="bg-black/30 p-2 sm:p-3 flex items-center gap-2">
+        <form onSubmit={handleSubmit} className="bg-black/30 p-2 sm:p-3 lg:p-4 flex items-center gap-2 lg:gap-3">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder={isLoading ? "Mion is thinking..." : (isTyping ? "..." : "Type your message here...")}
             disabled={isLoading || isTyping}
-            className="flex-1 bg-transparent text-white text-lg sm:text-xl md:text-2xl placeholder-cyan-300/70 border-0 focus:ring-0 px-3 sm:px-4 py-2 sm:py-3"
+            className="flex-1 bg-transparent text-white text-base sm:text-lg lg:text-xl placeholder-cyan-300/70 border-0 focus:ring-0 px-3 sm:px-4 lg:px-5 py-2 sm:py-3 lg:py-3"
             autoComplete="off"
             autoFocus
           />
           <button
             type="submit"
             disabled={!inputValue.trim() || isLoading || isTyping}
-            className="bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 disabled:bg-gray-600 disabled:opacity-50 text-white rounded-full p-3 min-w-[48px] min-h-[48px] flex items-center justify-center transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:scale-100 disabled:cursor-not-allowed"
+            className="bg-cyan-600 hover:bg-cyan-500 active:bg-cyan-700 disabled:bg-gray-600 disabled:opacity-50 text-white rounded-full p-3 lg:p-4 min-w-[48px] min-h-[48px] lg:min-w-[56px] lg:min-h-[56px] flex items-center justify-center transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:scale-100 disabled:cursor-not-allowed"
             aria-label="Send message"
           >
             <SendIcon />

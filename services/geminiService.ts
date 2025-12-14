@@ -228,10 +228,11 @@ Write in the current language (${currentLanguage}). Be poetic but grounded, warm
 // 3. IMAGE GENERATION (REAL API)
 // ============================================================================
 
-export const generateOnsenImage = async (preferences: OnsenPreferences): Promise<string[] | null> => {
+export const generateOnsenImage = async (preferences: OnsenPreferences, isMobile: boolean = false): Promise<string[] | null> => {
   try {
-    // STEP 1: Load base image
-    const { base64, mimeType } = await loadBaseImage();
+    // STEP 1: Load base image (use mobile version if on mobile device)
+    const baseImagePath = isMobile ? '/images/base_ofuro_mobile.png' : '/images/base_ofuro.png';
+    const { base64, mimeType } = await loadBaseImage(baseImagePath);
 
     // STEP 2: Create prompt
     const basePrompt = `Modify this onsen image to create a custom experience based on these preferences:
@@ -284,8 +285,8 @@ export const generateOnsenImage = async (preferences: OnsenPreferences): Promise
   }
 };
 
-async function loadBaseImage(): Promise<{ base64: string; mimeType: string }> {
-  const response = await fetch('/images/base_ofuro.png');
+async function loadBaseImage(imagePath: string = '/images/base_ofuro.png'): Promise<{ base64: string; mimeType: string }> {
+  const response = await fetch(imagePath);
   if (!response.ok) {
     throw new Error(`Failed to fetch base image: ${response.statusText}`);
   }
@@ -313,6 +314,7 @@ async function loadBaseImage(): Promise<{ base64: string; mimeType: string }> {
 export async function generateLoopingVideo(
   base64Image: string,
   mimeType: string,
+  aspectRatio: '9:16' | '16:9' = '9:16'
 ): Promise<string> {
   if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable not set");
@@ -335,7 +337,7 @@ export async function generateLoopingVideo(
       numberOfVideos: 1,
       resolution: '720p',
       lastFrame: imagePayload,
-      aspectRatio: '9:16'
+      aspectRatio: aspectRatio
     }
   });
 

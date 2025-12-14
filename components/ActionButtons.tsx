@@ -1,5 +1,6 @@
 
 import React from 'react';
+import MenuButton from './MenuButton';
 
 // --- Icon Components ---
 
@@ -57,9 +58,25 @@ interface ActionButtonsProps {
     onToggleSubtitles: () => void;
     onStartVoiceInput: () => void;
     isVoiceRecording: boolean;
+    onDownload?: () => void;
+    onReturnToLanguage?: () => void;
+    onCloseMenu?: () => void;
+    hasVideoGenerated?: boolean;
 }
 
-const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, onToggleMute, areSubtitlesVisible, onToggleSubtitles, onStartVoiceInput, isVoiceRecording }) => {
+const ActionButtons: React.FC<ActionButtonsProps> = ({
+    onToggleChat,
+    isMuted,
+    onToggleMute,
+    areSubtitlesVisible,
+    onToggleSubtitles,
+    onStartVoiceInput,
+    isVoiceRecording,
+    onDownload = () => {},
+    onReturnToLanguage = () => {},
+    onCloseMenu = () => {},
+    hasVideoGenerated = false
+}) => {
     return (
         <div className="flex items-center justify-end space-x-2 sm:space-x-3 z-30">
             {/* Subtitles Button */}
@@ -105,7 +122,15 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({ onToggleChat, isMuted, on
                     {isVoiceRecording ? 'Stop recording (Ctrl)' : 'Voice input (Ctrl)'}
                 </div>
             </div>
-             {/* Chat Button */}
+            {/* Menu Button */}
+            <MenuButton
+                onDownload={onDownload}
+                onReturnToLanguage={onReturnToLanguage}
+                onClose={onCloseMenu}
+                hasVideoGenerated={hasVideoGenerated}
+            />
+
+            {/* Chat Button */}
             <button
                 onClick={onToggleChat}
                 className="bg-black/50 text-white/70 px-5 py-2.5 sm:px-6 sm:py-3 rounded-md text-lg sm:text-xl tracking-wider hover:bg-white hover:text-black transition-colors duration-300 min-h-[48px] flex items-center justify-center active:scale-95"

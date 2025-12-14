@@ -3,6 +3,7 @@ import type { ChatMessage } from '../types';
 import { generateOnsenImage, generateLoopingVideo, generateSpeech, generateOnsenDescription } from '../services';
 import type { OnsenPreferences } from '../services';
 import { urlToBase64 } from '../utils/imageUtils';
+import { downloadAllContent } from '../utils/downloadUtils';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // Components
@@ -32,6 +33,17 @@ const isMobileDevice = (): boolean => {
 const getDefaultBackgroundVideo = (): string => {
   const isMobile = isMobileDevice();
   return isMobile ? 'videos/looping_ofuro_mobile.mp4' : 'videos/looping_ofuro.mp4';
+};
+
+// Detect if device is in portrait orientation
+const isPortraitOrientation = (): boolean => {
+  if (typeof window === 'undefined') return true;
+  return window.innerHeight > window.innerWidth;
+};
+
+// Get video aspect ratio based on device orientation
+const getVideoAspectRatio = (): '9:16' | '16:9' => {
+  return isPortraitOrientation() ? '9:16' : '16:9';
 };
 
 interface MainScreenProps {
@@ -68,6 +80,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
   const [currentPreferences, setCurrentPreferences] = useState<OnsenPreferences | null>(null);
   const hasStartedConversation = useRef(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // --- Background Music Hook ---
   useBackgroundMusic({ track: backgroundMusicTrack, isMuted, isTTSPlaying: audioCtrl.isPlaying });
@@ -99,6 +112,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
       audioCtrl.play(initialAudio, shouldLoop);
     }
     chat.runTypingEffect(initialMessage.text);
+    setIsInitialLoading(false);
   }, [initialMessage, initialAudio, chat, audioCtrl]);
 
   // Stop audio when typing finishes (only for mock audio that loops)
@@ -142,12 +156,13 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
     setOnsenState(prev => ({ ...prev, isGeneratingImage: true, error: null }));
     try {
+      const isMobile = isMobileDevice();
       console.log("🖼️ [IMAGE] Starting image generation...");
-      console.log("📝 [DESCRIPTION] Starting description generation in parallel...");
+      console.log(`📝 [DESCRIPTION] Starting description generation in parallel... (isMobile: ${isMobile})`);
 
       // Generate images and description in parallel
       const [base64Array, description] = await Promise.all([
-        generateOnsenImage(prefs),
+        generateOnsenImage(prefs, isMobile),
         generateOnsenDescription(prefs)
       ]);
 
@@ -242,7 +257,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     try {
       // Start video generation
       const { base64, mimeType } = await urlToBase64(url);
-      const videoUrl = await generateLoopingVideo(base64, mimeType);
+      const aspectRatio = getVideoAspectRatio();
+      console.log(`🎬 [VIDEO] Generating video with aspect ratio: ${aspectRatio}`);
+      const videoUrl = await generateLoopingVideo(base64, mimeType, aspectRatio);
 
       console.log("✅ [VIDEO] Video generated successfully");
 
@@ -266,8 +283,29 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     handleSendMessage(msg);
   };
 
+  const handleDownloadContent = useCallback(async () => {
+    try {
+      await downloadAllContent(onsenState.imageUrls, onsenState.videoUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      setOnsenState(prev => ({
+        ...prev,
+        error: 'Failed to download content. Please try again.'
+      }));
+    }
+  }, [onsenState.imageUrls, onsenState.videoUrl]);
+
+  const handleReturnToLanguageSelection = useCallback(() => {
+    // Reload the page to return to language selection
+    window.location.reload();
+  }, []);
+
+  const handleCloseMenu = useCallback(() => {
+    // Menu closes automatically, but this can be used for additional cleanup if needed
+  }, []);
+
   // --- Render Helpers ---
-  const backgroundKey = onsenState.videoUrl || onsenState.selectedConceptUrl || 'default';
+  const hasVideoGenerated = !!onsenState.videoUrl;
 
   return (
     <main className="relative w-full h-dvh h-screen overflow-hidden select-none bg-black animate-fadeInMain">
@@ -325,7 +363,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             imageUrl="/images/TheMION.png"
             analyser={audioCtrl.analyser}
             isPlaying={audioCtrl.isPlaying}
-            isLoading={chat.isLoading || onsenState.isGeneratingImage || onsenState.isGeneratingVideo}
+            isLoading={isInitialLoading || chat.isLoading || onsenState.isGeneratingImage || onsenState.isGeneratingVideo}
           />
         </div>
 
@@ -354,6 +392,10 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             onToggleSubtitles={() => setAreSubtitlesVisible(prev => !prev)}
             onStartVoiceInput={() => voiceInput.startListening()}
             isVoiceRecording={voiceInput.isRecording}
+            onDownload={handleDownloadContent}
+            onReturnToLanguage={handleReturnToLanguageSelection}
+            onCloseMenu={handleCloseMenu}
+            hasVideoGenerated={hasVideoGenerated}
           />
         </div>
       </div>
