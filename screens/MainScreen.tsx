@@ -4,6 +4,7 @@ import { generateOnsenImage, generateLoopingVideo, generateSpeech, generateOnsen
 import type { OnsenPreferences } from '../services';
 import { urlToBase64 } from '../utils/imageUtils';
 import { downloadAllContent } from '../utils/downloadUtils';
+import { isMobileDevice, getVideoAspectRatio, getDefaultBackgroundVideo } from '../utils/deviceUtils';
 import { useLanguage } from '../contexts/LanguageContext';
 
 // Components
@@ -20,31 +21,7 @@ import { useVoiceInput } from '../hooks/useVoiceInput';
 import { useChatSession } from '../hooks/useChatSession';
 import { useBackgroundMusic, type BackgroundMusicTrack } from '../hooks/useBackgroundMusic';
 
-// Detect if device is mobile
-const isMobileDevice = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
-  const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
-  const isMobileSize = window.innerWidth < 768;
-  return mobileRegex.test(userAgent.toLowerCase()) || isMobileSize;
-};
 
-// Get background video based on device type
-const getDefaultBackgroundVideo = (): string => {
-  const isMobile = isMobileDevice();
-  return isMobile ? 'videos/looping_ofuro_mobile.mp4' : 'videos/looping_ofuro.mp4';
-};
-
-// Detect if device is in portrait orientation
-const isPortraitOrientation = (): boolean => {
-  if (typeof window === 'undefined') return true;
-  return window.innerHeight > window.innerWidth;
-};
-
-// Get video aspect ratio based on device orientation
-const getVideoAspectRatio = (): '9:16' | '16:9' => {
-  return isPortraitOrientation() ? '9:16' : '16:9';
-};
 
 interface MainScreenProps {
   initialMessage: ChatMessage | null;
@@ -69,18 +46,24 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const chatInputRef = useRef<HTMLInputElement>(null);
   const [backgroundMusicTrack, setBackgroundMusicTrack] = useState<BackgroundMusicTrack>('whirlwind');
 
-  const [onsenState, setOnsenState] = useState({
-    isGeneratingImage: false,
-    imageUrls: null as string[] | null,
-    selectedConceptUrl: null as string | null,
-    isGeneratingVideo: false,
-    videoUrl: null as string | null,
-    videoLoadingMsg: '',
-    onsenDescription: null as string | null,
-    error: null as string | null
+  // --- Onsen Image State ---
+  const [imageState, setImageState] = useState({
+    isGenerating: false,
+    urls: null as string[] | null,
+    selectedUrl: null as string | null,
+    description: null as string | null
   });
 
-  const [currentPreferences, setCurrentPreferences] = useState<OnsenPreferences | null>(null);
+  // --- Onsen Video State ---
+  const [videoState, setVideoState] = useState({
+    isGenerating: false,
+    url: null as string | null,
+    loadingMsg: ''
+  });
+
+  // --- Error State ---
+  const [error, setError] = useState<string | null>(null);
+
   const hasStartedConversation = useRef(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
@@ -91,17 +74,17 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
   // Background Music Control based on app state
   useEffect(() => {
-    if (onsenState.videoUrl) {
+    if (videoState.url) {
       // Video is playing - stop background music (video has its own audio)
       setBackgroundMusicTrack('none');
-    } else if (onsenState.isGeneratingImage || onsenState.imageUrls || onsenState.isGeneratingVideo) {
+    } else if (imageState.isGenerating || imageState.urls || videoState.isGenerating) {
       // User clicked "Create onsen" - play Rivulet
       setBackgroundMusicTrack('rivulet');
     } else {
       // Default state - play Whirlwind of Joy
       setBackgroundMusicTrack('whirlwind');
     }
-  }, [onsenState.videoUrl, onsenState.isGeneratingImage, onsenState.imageUrls, onsenState.isGeneratingVideo]);
+  }, [videoState.url, imageState.isGenerating, imageState.urls, videoState.isGenerating]);
 
   // Initial Message Handling
   useEffect(() => {
@@ -119,9 +102,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
   // Track progress - notify parent when user has made progress
   useEffect(() => {
-    const hasProgress = chat.messages.length > 0 || onsenState.imageUrls !== null || onsenState.videoUrl !== null;
+    const hasProgress = chat.messages.length > 0 || imageState.urls !== null || videoState.url !== null;
     onProgressChange?.(hasProgress);
-  }, [chat.messages.length, onsenState.imageUrls, onsenState.videoUrl, onProgressChange]);
+  }, [chat.messages.length, imageState.urls, videoState.url, onProgressChange]);
 
   // Stop audio when typing finishes (only for mock audio that loops)
   useEffect(() => {
@@ -192,10 +175,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   // --- Handlers ---
 
   const handleGenerateImages = useCallback(async (prefs: OnsenPreferences) => {
-    // Store preferences for later use
-    setCurrentPreferences(prefs);
-
-    setOnsenState(prev => ({ ...prev, isGeneratingImage: true, error: null }));
+    setImageState(prev => ({ ...prev, isGenerating: true }));
+    setError(null);
     try {
       const isMobile = isMobileDevice();
       console.log("🖼️ [IMAGE] Starting image generation...");
@@ -215,19 +196,19 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
           console.log("✅ [DESCRIPTION] Onsen description generated successfully");
         }
 
-        setOnsenState(prev => ({
+        setImageState(prev => ({
           ...prev,
-          imageUrls: urls,
-          onsenDescription: description
+          urls,
+          description
         }));
       } else {
         console.warn("⚠️ [IMAGE] No images were generated");
       }
     } catch (e) {
       console.error("❌ [IMAGE] Failed to generate images:", e);
-      setOnsenState(prev => ({ ...prev, error: "Failed to generate images." }));
+      setError("Failed to generate images.");
     } finally {
-      setOnsenState(prev => ({ ...prev, isGeneratingImage: false }));
+      setImageState(prev => ({ ...prev, isGenerating: false }));
       console.log("🏁 [IMAGE] Image generation process ended");
     }
   }, []);
@@ -270,21 +251,24 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   }, [chat, audioCtrl]);
 
   const handleConceptSelect = useCallback(async (url: string) => {
-    setOnsenState(prev => ({
+    setImageState(prev => ({
       ...prev,
-      selectedConceptUrl: url,
-      isGeneratingVideo: true,
-      videoLoadingMsg: "Preparing your onsen experience...",
-      error: null
+      selectedUrl: url
     }));
+    setVideoState(prev => ({
+      ...prev,
+      isGenerating: true,
+      loadingMsg: "Preparing your onsen experience..."
+    }));
+    setError(null);
 
     // Display the description in chat with TTS immediately after selection
-    if (onsenState.onsenDescription) {
+    if (imageState.description) {
       console.log("📝 [DESCRIPTION] Displaying onsen description in chat...");
       console.log("🔊 [TTS] Generating speech for description...");
 
       const { generateSpeech: genSpeech } = await import('../services');
-      const descriptionAudio = await genSpeech(onsenState.onsenDescription);
+      const descriptionAudio = await genSpeech(imageState.description);
 
       if (descriptionAudio) {
         console.log("✅ [TTS] Description audio generated successfully");
@@ -292,7 +276,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         audioCtrl.play(descriptionAudio, shouldLoop);
       }
 
-      chat.runTypingEffect(onsenState.onsenDescription);
+      chat.runTypingEffect(imageState.description);
     }
 
     try {
@@ -304,20 +288,20 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
       console.log("✅ [VIDEO] Video generated successfully");
 
-      setOnsenState(prev => ({
+      setVideoState(prev => ({
         ...prev,
-        videoUrl
+        url: videoUrl
       }));
     } catch (error: any) {
       console.error("Video generation process failed:", error);
       const msg = error.message?.includes("API_KEY")
         ? "API configuration error."
         : "Could not create video.";
-      setOnsenState(prev => ({ ...prev, error: msg }));
+      setError(msg);
     } finally {
-      setOnsenState(prev => ({ ...prev, isGeneratingVideo: false }));
+      setVideoState(prev => ({ ...prev, isGenerating: false }));
     }
-  }, [onsenState.onsenDescription, audioCtrl, chat]);
+  }, [imageState.description, audioCtrl, chat]);
 
   const handleVoiceSend = (msg: string) => {
     voiceInput.stopListening();
@@ -326,15 +310,12 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
   const handleDownloadContent = useCallback(async () => {
     try {
-      await downloadAllContent(onsenState.imageUrls, onsenState.videoUrl);
+      await downloadAllContent(imageState.urls, videoState.url);
     } catch (error) {
       console.error('Download failed:', error);
-      setOnsenState(prev => ({
-        ...prev,
-        error: 'Failed to download content. Please try again.'
-      }));
+      setError('Failed to download content. Please try again.');
     }
-  }, [onsenState.imageUrls, onsenState.videoUrl]);
+  }, [imageState.urls, videoState.url]);
 
   const handleReturnToLanguageSelection = useCallback(() => {
     // Reload the page to return to language selection
@@ -346,7 +327,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   }, []);
 
   // --- Render Helpers ---
-  const hasVideoGenerated = !!onsenState.videoUrl;
+  const hasVideoGenerated = !!videoState.url;
 
   return (
     <main className="relative w-full h-dvh h-screen overflow-hidden select-none bg-black animate-fadeInMain">
@@ -358,17 +339,17 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
       `}</style>
 
       {/* Background Layer */}
-      {onsenState.videoUrl ? (
+      {videoState.url ? (
         <video
-          key={onsenState.videoUrl}
-          src={onsenState.videoUrl}
+          key={videoState.url}
+          src={videoState.url}
           autoPlay loop muted={isMuted} playsInline
           className="absolute inset-0 w-full h-full object-cover animate-fadeIn"
         />
-      ) : onsenState.selectedConceptUrl ? (
+      ) : imageState.selectedUrl ? (
          <div
             className="absolute inset-0 w-full h-full bg-cover bg-center animate-fadeIn"
-            style={{ backgroundImage: `url(${onsenState.selectedConceptUrl})` }}
+            style={{ backgroundImage: `url(${imageState.selectedUrl})` }}
          ></div>
       ) : (
         <video
@@ -384,13 +365,13 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         {/* Top: Info Box (Portrait) / Right (Landscape) */}
         <div className="w-full flex-shrink-0 h-[20dvh] h-[20vh] portrait:h-[20dvh] portrait:h-[20vh] landscape:h-full landscape:col-start-2 landscape:row-start-1 mb-2 landscape:mb-0 z-10 overflow-hidden">
           <InfoBox
-            isGeneratingImage={onsenState.isGeneratingImage}
-            generatedImageUrls={onsenState.imageUrls}
+            isGeneratingImage={imageState.isGenerating}
+            generatedImageUrls={imageState.urls}
             onConceptSelect={handleConceptSelect}
-            isConceptSelected={!!onsenState.selectedConceptUrl}
-            generatedVideoUrl={onsenState.videoUrl}
-            isGeneratingVideo={onsenState.isGeneratingVideo}
-            onsenDescription={onsenState.onsenDescription}
+            isConceptSelected={!!imageState.selectedUrl}
+            generatedVideoUrl={videoState.url}
+            isGeneratingVideo={videoState.isGenerating}
+            onsenDescription={imageState.description}
             showConfirmation={chat.waitingForConfirmation || false}
             onConfirm={handleConfirmPreferences}
             onReject={handleRejectPreferences}
@@ -404,7 +385,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             imageUrl="/images/TheMION.png"
             analyser={audioCtrl.analyser}
             isPlaying={audioCtrl.isPlaying}
-            isLoading={isInitialLoading || chat.isLoading || onsenState.isGeneratingImage || onsenState.isGeneratingVideo}
+            isLoading={isInitialLoading || chat.isLoading || imageState.isGenerating || videoState.isGenerating}
           />
         </div>
 
@@ -448,7 +429,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             history={chat.messages}
             currentBotMessage={chat.currentBotMessage}
             isTyping={chat.isTyping}
-            isLoading={chat.isLoading || onsenState.isGeneratingImage || onsenState.isGeneratingVideo}
+            isLoading={chat.isLoading || imageState.isGenerating || videoState.isGenerating}
             onSendMessage={handleSendMessage}
             isMuted={isMuted}
             onToggleMute={onToggleMute}
@@ -456,9 +437,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             showConfirmation={chat.waitingForConfirmation || false}
             onConfirm={handleConfirmPreferences}
             onReject={handleRejectPreferences}
-            generatedImageUrls={onsenState.imageUrls}
+            generatedImageUrls={imageState.urls}
             onConceptSelect={handleConceptSelect}
-            isConceptSelected={!!onsenState.selectedConceptUrl}
+            isConceptSelected={!!imageState.selectedUrl}
           />
       )}
 
@@ -472,10 +453,10 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         />
       )}
 
-      {onsenState.error && (
+      {error && (
         <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 bg-red-800/90 text-white px-6 py-3 rounded-lg shadow-lg animate-fadeIn">
-            <p>{onsenState.error}</p>
-            <button onClick={() => setOnsenState(prev => ({...prev, error: null}))} className="absolute top-1 right-1 text-white/70 hover:text-white">&times;</button>
+            <p>{error}</p>
+            <button onClick={() => setError(null)} className="absolute top-1 right-1 text-white/70 hover:text-white">&times;</button>
         </div>
       )}
 

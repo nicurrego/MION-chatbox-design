@@ -6,40 +6,21 @@ import LanguageSelectionScreen from './screens/LanguageSelectionScreen';
 import LeaveConfirmationDialog from './components/LeaveConfirmationDialog';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import type { SupportedLanguage } from './contexts/LanguageContext';
-import { sendMessageToBot, generateSpeech, setLanguageConfig } from './services';
-import type { ChatMessage } from './types';
-import { useBeforeUnload } from './hooks/useBeforeUnload';
+import { useInitialBotMessage } from './hooks/useInitialBotMessage';
+
+// Constants
+const WELCOME_TRANSITION_DURATION_MS = 1000; // Matches WelcomeScreen.tsx animation duration
 
 const AppContent: React.FC = () => {
   const { selectedLanguage, languageConfig, setLanguage } = useLanguage();
   const [showWelcome, setShowWelcome] = useState(true);
   const [isExitingWelcome, setIsExitingWelcome] = useState(false);
-  const [initialBotMessage, setInitialBotMessage] = useState<ChatMessage | null>(null);
-  const [initialAudioData, setInitialAudioData] = useState<string | null>(null);
   const [isMuted, setIsMuted] = useState(true); // Mute state for the whole app
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
   const [hasProgress, setHasProgress] = useState(false); // Track if user has made progress
 
-  // Preload initial content ONLY after language is selected
-  useEffect(() => {
-    if (!selectedLanguage || !languageConfig) return;
-
-    const preloadContent = async () => {
-      console.log(`🌍 [LANGUAGE] Setting language to ${languageConfig.nativeName} (${languageConfig.geminiLanguageCode})`);
-
-      // Configure the language for Gemini service
-      setLanguageConfig(languageConfig.geminiLanguageCode, languageConfig.geminiVoice);
-
-      // "Hello" is a dummy message to trigger the bot's predefined first response.
-      const botResponseText = await sendMessageToBot("Hello");
-      const audioData = await generateSpeech(botResponseText);
-
-      setInitialBotMessage({ sender: 'bot', text: botResponseText });
-      setInitialAudioData(audioData);
-    };
-
-    preloadContent();
-  }, [selectedLanguage, languageConfig]); // Only run when language is selected
+  // Preload initial bot message and audio when language is selected
+  const { initialMessage, initialAudio } = useInitialBotMessage(languageConfig);
 
   const handleLanguageSelect = (lang: SupportedLanguage) => {
     setLanguage(lang);
@@ -54,17 +35,12 @@ const AppContent: React.FC = () => {
     // This timeout should match the transition duration in WelcomeScreen.tsx
     setTimeout(() => {
       setShowWelcome(false);
-    }, 1000);
+    }, WELCOME_TRANSITION_DURATION_MS);
   };
 
   const handleToggleMute = () => {
     setIsMuted(prev => !prev);
   };
-
-  // Use the beforeunload hook to show confirmation when user tries to leave
-  useBeforeUnload({
-    isDirty: hasProgress && !showWelcome, // Only show confirmation if user has progress and is past welcome screen
-  });
 
   // Handle browser beforeunload event
   useEffect(() => {
@@ -72,7 +48,6 @@ const AppContent: React.FC = () => {
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      e.returnValue = '';
       setShowLeaveConfirmation(true);
       return '';
     };
@@ -125,8 +100,8 @@ const AppContent: React.FC = () => {
       )}
       {!showWelcome && (
         <MainScreen
-          initialMessage={initialBotMessage}
-          initialAudio={initialAudioData}
+          initialMessage={initialMessage}
+          initialAudio={initialAudio}
           isMuted={isMuted}
           onToggleMute={handleToggleMute}
           onProgressChange={setHasProgress}
