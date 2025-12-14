@@ -51,9 +51,10 @@ interface MainScreenProps {
   initialAudio: string | null;
   isMuted: boolean;
   onToggleMute: () => void;
+  onProgressChange?: (hasProgress: boolean) => void;
 }
 
-const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute }) => {
+const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, isMuted, onToggleMute, onProgressChange }) => {
   // --- Language Context ---
   const { languageConfig } = useLanguage();
 
@@ -115,6 +116,12 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     chat.runTypingEffect(initialMessage.text);
     setIsInitialLoading(false);
   }, [initialMessage, initialAudio, chat, audioCtrl]);
+
+  // Track progress - notify parent when user has made progress
+  useEffect(() => {
+    const hasProgress = chat.messages.length > 0 || onsenState.imageUrls !== null || onsenState.videoUrl !== null;
+    onProgressChange?.(hasProgress);
+  }, [chat.messages.length, onsenState.imageUrls, onsenState.videoUrl, onProgressChange]);
 
   // Stop audio when typing finishes (only for mock audio that loops)
   useEffect(() => {
