@@ -40,6 +40,11 @@ const translations: Record<SupportedLanguage, {
   finalizingExperience: string;
   profileWillAppear: string;
   tapToDownload: string;
+  reviewAndConfirm: string;
+  openChatToSelect: string;
+  tapChatButton: string;
+  enjoyExperience: string;
+  selectFavoriteInChat: string;
 }> = {
   en: {
     sessionInfo: 'SESSION INFO',
@@ -62,6 +67,11 @@ const translations: Record<SupportedLanguage, {
     finalizingExperience: 'Finalizing your onsen experience...',
     profileWillAppear: 'Your onsen profile will appear here once created.',
     tapToDownload: 'Tap the menu to download your experience',
+    reviewAndConfirm: 'Review your profile and confirm',
+    openChatToSelect: 'Open the chat to select your favorite onsen concept',
+    tapChatButton: '💬 Tap the chat button below',
+    enjoyExperience: 'Enjoy your personalized onsen experience',
+    selectFavoriteInChat: 'Select your favorite onsen in the chat',
   },
   es: {
     sessionInfo: 'INFO DE SESIÓN',
@@ -84,6 +94,11 @@ const translations: Record<SupportedLanguage, {
     finalizingExperience: 'Finalizando tu experiencia onsen...',
     profileWillAppear: 'Tu perfil de onsen aparecerá aquí una vez creado.',
     tapToDownload: 'Toca el menú para descargar tu experiencia',
+    reviewAndConfirm: 'Revisa tu perfil y confirma',
+    openChatToSelect: 'Abre el chat para seleccionar tu concepto de onsen favorito',
+    tapChatButton: '💬 Toca el botón de chat a continuación',
+    enjoyExperience: 'Disfruta tu experiencia onsen personalizada',
+    selectFavoriteInChat: 'Selecciona tu onsen favorito en el chat',
   },
   ja: {
     sessionInfo: 'セッション情報',
@@ -106,6 +121,11 @@ const translations: Record<SupportedLanguage, {
     finalizingExperience: '温泉体験を仕上げ中...',
     profileWillAppear: '温泉プロフィールは作成後にここに表示されます。',
     tapToDownload: 'メニューをタップして体験をダウンロード',
+    reviewAndConfirm: 'プロフィールを確認して確定してください',
+    openChatToSelect: 'チャットを開いてお気に入りの温泉コンセプトを選択してください',
+    tapChatButton: '💬 下のチャットボタンをタップしてください',
+    enjoyExperience: 'あなた専用の温泉体験をお楽しみください',
+    selectFavoriteInChat: 'チャットでお気に入りの温泉を選択してください',
   },
   ko: {
     sessionInfo: '세션 정보',
@@ -128,6 +148,11 @@ const translations: Record<SupportedLanguage, {
     finalizingExperience: '온천 경험을 마무리하는 중...',
     profileWillAppear: '온천 프로필은 생성 후 여기에 표시됩니다.',
     tapToDownload: '메뉴를 탭하여 경험 다운로드',
+    reviewAndConfirm: '프로필을 검토하고 확인하세요',
+    openChatToSelect: '채팅을 열어 좋아하는 온천 컨셉을 선택하세요',
+    tapChatButton: '💬 아래 채팅 버튼을 탭하세요',
+    enjoyExperience: '맞춤형 온천 경험을 즐기세요',
+    selectFavoriteInChat: '채팅에서 좋아하는 온천을 선택하세요',
   },
   zh: {
     sessionInfo: '会话信息',
@@ -150,6 +175,11 @@ const translations: Record<SupportedLanguage, {
     finalizingExperience: '正在完成您的温泉体验...',
     profileWillAppear: '温泉档案创建后将显示在此处。',
     tapToDownload: '点击菜单下载您的体验',
+    reviewAndConfirm: '查看您的档案并确认',
+    openChatToSelect: '打开聊天以选择您最喜欢的温泉概念',
+    tapChatButton: '💬 点击下面的聊天按钮',
+    enjoyExperience: '享受您的个性化温泉体验',
+    selectFavoriteInChat: '在聊天中选择您最喜欢的温泉',
   },
 };
 
@@ -247,7 +277,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({
     if (showConfirmation && userPreferences) {
       return (
         <div className="text-center text-cyan-200 flex flex-col items-center justify-center gap-1">
-          <p className="text-xs sm:text-sm font-medium">Review your profile and confirm</p>
+          <p className="text-xs sm:text-sm font-medium">{t.reviewAndConfirm}</p>
           <div className="w-full">
             <ConfirmationButtons onConfirm={onConfirm} onReject={onReject} mobile={true} />
           </div>
@@ -259,8 +289,8 @@ const InfoBox: React.FC<InfoBoxProps> = ({
     if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
       return (
         <div className="text-center text-cyan-200">
-          <p className="text-base font-medium">Open the chat to select your favorite onsen concept</p>
-          <p className="text-sm mt-1 opacity-70">💬 Tap the chat button below</p>
+          <p className="text-base font-medium">{t.openChatToSelect}</p>
+          <p className="text-sm mt-1 opacity-70">{t.tapChatButton}</p>
         </div>
       );
     }
@@ -270,7 +300,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({
       return (
         <div className="text-center text-cyan-200">
           <p className="text-lg font-medium">{t.experienceReady}</p>
-          <p className="text-sm mt-1 opacity-70">Enjoy your personalized onsen experience</p>
+          <p className="text-sm mt-1 opacity-70">{t.enjoyExperience}</p>
         </div>
       );
     }
@@ -305,6 +335,20 @@ const InfoBox: React.FC<InfoBoxProps> = ({
 
     // Priority 3: Show image selection (FULL HEIGHT - no three-row structure)
     if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
+      // On mobile (portrait), show message instead of images
+      const isMobilePortrait = typeof window !== 'undefined' && window.innerWidth < 768 && window.innerHeight > window.innerWidth;
+
+      if (isMobilePortrait) {
+        return (
+          <div className="flex-1 flex items-center justify-center text-white">
+            <div className="text-center text-cyan-200">
+              <p className="text-lg font-medium">{t.selectFavoriteInChat}</p>
+              <p className="text-sm mt-2 opacity-70">{t.tapChatButton}</p>
+            </div>
+          </div>
+        );
+      }
+
       return (
         <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-hidden w-full max-h-full">
           {generatedImageUrls.map((url, index) => (
@@ -379,7 +423,10 @@ const InfoBox: React.FC<InfoBoxProps> = ({
 
 
   // Special case: Image selection takes full height (no three-row structure)
-  if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected) {
+  // But on mobile portrait, use normal layout with message
+  const isMobilePortrait = typeof window !== 'undefined' && window.innerWidth < 768 && window.innerHeight > window.innerWidth;
+
+  if (generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected && !isMobilePortrait) {
     return (
       <div className="bg-slate-900/30 backdrop-blur-sm rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 p-2 sm:p-2 md:p-3 flex flex-col text-white h-full w-full overflow-hidden transition-all duration-500">
         <style>{`

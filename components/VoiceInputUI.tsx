@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
+import type { SupportedLanguage } from '../contexts/LanguageContext';
 
 // Icons
 const SendIcon: React.FC = () => (
@@ -22,10 +24,39 @@ interface VoiceInputUIProps {
   onTranscriptChange?: (transcript: string) => void;
 }
 
+// Translations for VoiceInputUI
+const translations: Record<SupportedLanguage, {
+  listening: string;
+  pressCtrlToRecord: string;
+}> = {
+  en: {
+    listening: 'Listening...',
+    pressCtrlToRecord: 'Press Ctrl to record, or type here...',
+  },
+  es: {
+    listening: 'Escuchando...',
+    pressCtrlToRecord: 'Presiona Ctrl para grabar, o escribe aquí...',
+  },
+  ja: {
+    listening: '聞いています...',
+    pressCtrlToRecord: 'Ctrlキーを押して録音するか、ここに入力してください...',
+  },
+  ko: {
+    listening: '듣는 중...',
+    pressCtrlToRecord: 'Ctrl을 눌러 녹음하거나 여기에 입력하세요...',
+  },
+  zh: {
+    listening: '正在听...',
+    pressCtrlToRecord: '按 Ctrl 录音，或在此输入...',
+  },
+};
+
 const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, onSend, onCancel, onTranscriptChange }) => {
   const [editedTranscript, setEditedTranscript] = useState(transcript);
   const [isEditing, setIsEditing] = useState(false);
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const { selectedLanguage } = useLanguage();
+  const t = translations[selectedLanguage || 'en'];
 
   useEffect(() => {
     // Always update the edited transcript when the transcript prop changes
@@ -98,7 +129,7 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
                 value={editedTranscript}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                placeholder={isRecording ? "Listening..." : "Press Ctrl to record, or type here..."}
+                placeholder={isRecording ? t.listening : t.pressCtrlToRecord}
                 className="w-full bg-slate-800/50 border-0 focus:ring-1 focus:ring-cyan-400 rounded-md p-2 sm:p-3 resize-none text-white placeholder-white/50 text-base sm:text-lg"
                 rows={3}
             />

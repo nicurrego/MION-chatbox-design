@@ -3,6 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { ChatMessage } from '../types';
 import { parseMarkdown } from '../utils/markdownParser';
 import ConfirmationButtons from './ConfirmationButtons';
+import { useLanguage } from '../contexts/LanguageContext';
+import type { SupportedLanguage } from '../contexts/LanguageContext';
 
 interface ChatBoxProps {
   characterName: string;
@@ -25,6 +27,87 @@ interface ChatBoxProps {
 const TypingIndicator: React.FC = () => (
   <span className="inline-block w-2 h-6 ml-1 bg-white animate-ping"></span>
 );
+
+// Translations for ChatBox UI
+const translations: Record<SupportedLanguage, {
+  conceptsCreated: string;
+  whichSpeaksToYourSoul: string;
+  tapButtonBelow: string;
+  concept: string;
+  selectConcept: string;
+  mute: string;
+  unmute: string;
+  closeChat: string;
+  mionIsThinking: string;
+  typingPlaceholder: string;
+  messageInputPlaceholder: string;
+}> = {
+  en: {
+    conceptsCreated: "I've created two onsen concepts for you! Which one speaks to your soul?",
+    whichSpeaksToYourSoul: "Which one speaks to your soul?",
+    tapButtonBelow: "Tap a button below to select your favorite:",
+    concept: "Concept",
+    selectConcept: "Select Concept",
+    mute: "Mute",
+    unmute: "Unmute",
+    closeChat: "Close chat",
+    mionIsThinking: "Mion is thinking...",
+    typingPlaceholder: "...",
+    messageInputPlaceholder: "Type your message here...",
+  },
+  es: {
+    conceptsCreated: "¡He creado dos conceptos de onsen para ti! ¿Cuál te habla al alma?",
+    whichSpeaksToYourSoul: "¿Cuál te habla al alma?",
+    tapButtonBelow: "Toca un botón a continuación para seleccionar tu favorito:",
+    concept: "Concepto",
+    selectConcept: "Seleccionar Concepto",
+    mute: "Silenciar",
+    unmute: "Activar sonido",
+    closeChat: "Cerrar chat",
+    mionIsThinking: "Mion está pensando...",
+    typingPlaceholder: "...",
+    messageInputPlaceholder: "Escribe tu mensaje aquí...",
+  },
+  ja: {
+    conceptsCreated: "あなたのために2つの温泉コンセプトを作成しました！どれがあなたの心に響きますか？",
+    whichSpeaksToYourSoul: "どれがあなたの心に響きますか？",
+    tapButtonBelow: "下のボタンをタップしてお気に入りを選択してください：",
+    concept: "コンセプト",
+    selectConcept: "コンセプトを選択",
+    mute: "ミュート",
+    unmute: "ミュート解除",
+    closeChat: "チャットを閉じる",
+    mionIsThinking: "ミオンが考え中...",
+    typingPlaceholder: "...",
+    messageInputPlaceholder: "ここにメッセージを入力してください...",
+  },
+  ko: {
+    conceptsCreated: "당신을 위해 두 가지 온천 컨셉을 만들었습니다! 어느 것이 당신의 마음에 와닿나요?",
+    whichSpeaksToYourSoul: "어느 것이 당신의 마음에 와닿나요?",
+    tapButtonBelow: "아래 버튼을 탭하여 선호하는 것을 선택하세요:",
+    concept: "컨셉",
+    selectConcept: "컨셉 선택",
+    mute: "음소거",
+    unmute: "음소거 해제",
+    closeChat: "채팅 닫기",
+    mionIsThinking: "미온이 생각 중입니다...",
+    typingPlaceholder: "...",
+    messageInputPlaceholder: "여기에 메시지를 입력하세요...",
+  },
+  zh: {
+    conceptsCreated: "我为您创建了两个温泉概念！哪一个打动了您的心？",
+    whichSpeaksToYourSoul: "哪一个打动了您的心？",
+    tapButtonBelow: "点击下面的按钮选择您最喜欢的：",
+    concept: "概念",
+    selectConcept: "选择概念",
+    mute: "静音",
+    unmute: "取消静音",
+    closeChat: "关闭聊天",
+    mionIsThinking: "米翁在思考...",
+    typingPlaceholder: "...",
+    messageInputPlaceholder: "在此输入您的消息...",
+  },
+};
 
 // --- Icon Components ---
 
@@ -59,6 +142,8 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const messageAreaRef = useRef<HTMLDivElement>(null);
+  const { selectedLanguage } = useLanguage();
+  const t = translations[selectedLanguage || 'en'];
 
   useEffect(() => {
     if (messageAreaRef.current) {
@@ -110,12 +195,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                   <button
                       onClick={onToggleMute}
                       className="text-white/70 hover:text-white transition-colors duration-300 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
-                      aria-label={isMuted ? 'Unmute' : 'Mute'}
+                      aria-label={isMuted ? t.unmute : t.mute}
                   >
                       <SoundIcon isMuted={isMuted} />
                   </button>
                   <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-xs sm:text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                    {isMuted ? 'Unmute' : 'Mute'}
+                    {isMuted ? t.unmute : t.mute}
                   </div>
               </div>
 
@@ -124,12 +209,12 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                 <button
                   onClick={onClose}
                   className="text-white/70 hover:text-white transition-colors duration-300 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
-                  aria-label="Close chat"
+                  aria-label={t.closeChat}
                 >
                   <CloseIcon />
                 </button>
                 <div className="absolute top-full mt-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-xs sm:text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                  Close chat
+                  {t.closeChat}
                 </div>
               </div>
           </div>
@@ -172,24 +257,25 @@ const ChatBox: React.FC<ChatBoxProps> = ({
 
           {/* Show image selection if images are available */}
           {generatedImageUrls && generatedImageUrls.length > 0 && !isConceptSelected && !isTyping && !isLoading && (
-              <div className="w-full flex flex-col items-start">
-                  <div className="px-3 sm:px-4 py-2 rounded-xl bg-cyan-900/80 max-w-[90%] sm:max-w-[85%] mb-3">
-                      <p className="text-base sm:text-lg mb-2">I've created two onsen concepts for you! Which one speaks to your soul?</p>
-                      <p className="text-sm opacity-70">Tap a button below to select your favorite:</p>
+              <div className="w-full flex flex-col items-start gap-3">
+                  <div className="px-3 sm:px-4 py-2 rounded-xl bg-cyan-900/80 max-w-[90%] sm:max-w-[85%]">
+                      <p className="text-base sm:text-lg mb-2">{t.conceptsCreated}</p>
+                      <p className="text-sm opacity-70">{t.tapButtonBelow}</p>
                   </div>
 
-                  {/* Image Grid */}
-                  <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3">
+                  {/* Image Grid - Responsive for portrait mode */}
+                  <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       {generatedImageUrls.map((url, index) => (
-                          <div key={index} className="flex flex-col gap-2">
-                              <div className="relative w-full aspect-video rounded-lg overflow-hidden border-2 border-cyan-400/30">
+                          <div key={index} className="flex flex-col gap-2 w-full">
+                              {/* Portrait-optimized image container */}
+                              <div className="relative w-full rounded-lg overflow-hidden border-2 border-cyan-400/30 bg-black/30">
                                   <img
                                       src={url}
-                                      alt={`Onsen concept ${index + 1}`}
-                                      className="w-full h-full object-cover"
+                                      alt={`${t.concept} ${index + 1}`}
+                                      className="w-full h-auto object-contain max-h-[300px] sm:max-h-[400px]"
                                   />
                                   <div className="absolute top-2 left-2 bg-black/70 text-white text-sm font-bold px-2 py-1 rounded">
-                                      Concept {index + 1}
+                                      {t.concept} {index + 1}
                                   </div>
                               </div>
                               <button
@@ -198,10 +284,10 @@ const ChatBox: React.FC<ChatBoxProps> = ({
                                           onConceptSelect(url);
                                       }
                                   }}
-                                  className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:from-cyan-700 active:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 min-h-[48px] flex items-center justify-center gap-2"
+                                  className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 active:from-cyan-700 active:to-blue-700 text-white font-bold py-2 sm:py-3 px-3 sm:px-4 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 min-h-[44px] sm:min-h-[48px] flex items-center justify-center gap-2 text-sm sm:text-base"
                               >
-                                  <span className="text-2xl">{index + 1}</span>
-                                  <span className="text-base">Select Concept {index + 1}</span>
+                                  <span className="text-xl sm:text-2xl">{index + 1}</span>
+                                  <span>{t.selectConcept} {index + 1}</span>
                               </button>
                           </div>
                       ))}
@@ -214,7 +300,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={isLoading ? "Mion is thinking..." : (isTyping ? "..." : "Type your message here...")}
+            placeholder={isLoading ? t.mionIsThinking : (isTyping ? t.typingPlaceholder : t.messageInputPlaceholder)}
             disabled={isLoading || isTyping}
             className="flex-1 bg-transparent text-white text-base sm:text-lg lg:text-xl placeholder-cyan-300/70 border-0 focus:ring-0 px-3 sm:px-4 lg:px-5 py-2 sm:py-3 lg:py-3"
             autoComplete="off"

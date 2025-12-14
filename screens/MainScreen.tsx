@@ -63,8 +63,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const chat = useChatSession();
 
   // --- Local State for Visuals (Onsen/Video) ---
-  const [areSubtitlesVisible, setAreSubtitlesVisible] = useState(true);
+  const [areSubtitlesVisible, setAreSubtitlesVisible] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const chatInputRef = useRef<HTMLInputElement>(null);
   const [backgroundMusicTrack, setBackgroundMusicTrack] = useState<BackgroundMusicTrack>('whirlwind');
 
   const [onsenState, setOnsenState] = useState({
@@ -129,24 +130,57 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     // For real TTS audio, let it play completely without interruption
   }, [chat.isTyping, audioCtrl, chat.lastBotAudio, initialAudio]);
 
-  // Keyboard event listener for Ctrl key to toggle voice recording
+  // Keyboard event listener for keyboard shortcuts
+  // 'c' - toggle subtitles, 't' - open chat, 'm' - mute/unmute, 'v' - voice input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Check if Ctrl key is pressed (both left and right)
-      if (e.key === 'Control' && !e.repeat) {
-        // Don't trigger if chat is open or user is typing in an input field
-        const target = e.target as HTMLElement;
-        if (isChatOpen || target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+      const target = e.target as HTMLElement;
+      const isInputField = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
+
+      // 'c' key - toggle subtitles
+      if ((e.key === 'c' || e.key === 'C') && !isInputField) {
+        e.preventDefault();
+        setAreSubtitlesVisible(prev => !prev);
+        return;
+      }
+
+      // 't' key - open chat and focus input
+      if ((e.key === 't' || e.key === 'T') && !isInputField) {
+        e.preventDefault();
+        setIsChatOpen(true);
+        // Focus the input after a short delay to ensure the chat is rendered
+        setTimeout(() => {
+          const inputElement = document.querySelector('input[placeholder*="message"]') as HTMLInputElement;
+          if (inputElement) {
+            inputElement.focus();
+            inputElement.select();
+          }
+        }, 0);
+        return;
+      }
+
+      // 'm' key - toggle mute/unmute
+      if ((e.key === 'm' || e.key === 'M') && !isInputField) {
+        e.preventDefault();
+        onToggleMute();
+        return;
+      }
+
+      // 'v' key - start voice input
+      if ((e.key === 'v' || e.key === 'V') && !isInputField) {
+        e.preventDefault();
+        // Don't trigger if chat is open
+        if (isChatOpen) {
           return;
         }
-
         voiceInput.startListening();
+        return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [voiceInput, isChatOpen]);
+  }, [voiceInput, isChatOpen, onToggleMute]);
 
   // --- Handlers ---
 

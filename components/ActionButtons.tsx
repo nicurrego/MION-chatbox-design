@@ -1,6 +1,8 @@
 
 import React from 'react';
 import MenuButton from './MenuButton';
+import { useLanguage } from '../contexts/LanguageContext';
+import type { SupportedLanguage } from '../contexts/LanguageContext';
 
 // --- Icon Components ---
 
@@ -21,6 +23,57 @@ const SubtitlesIcon: React.FC<{ isVisible: boolean }> = ({ isVisible }) => (
         {!isVisible && <path strokeLinecap="round" strokeLinejoin="round" d="M4 4l16 16" />}
     </svg>
 );
+
+// Translations for ActionButtons
+const translations: Record<SupportedLanguage, {
+  hideSubtitles: string;
+  showSubtitles: string;
+  mute: string;
+  unmute: string;
+  stopRecording: string;
+  voiceInput: string;
+}> = {
+  en: {
+    hideSubtitles: 'Hide subtitles',
+    showSubtitles: 'Show subtitles',
+    mute: 'Mute',
+    unmute: 'Unmute',
+    stopRecording: 'Stop recording (Ctrl)',
+    voiceInput: 'Voice input (Ctrl)',
+  },
+  es: {
+    hideSubtitles: 'Ocultar subtítulos',
+    showSubtitles: 'Mostrar subtítulos',
+    mute: 'Silenciar',
+    unmute: 'Activar sonido',
+    stopRecording: 'Detener grabación (Ctrl)',
+    voiceInput: 'Entrada de voz (Ctrl)',
+  },
+  ja: {
+    hideSubtitles: '字幕を非表示',
+    showSubtitles: '字幕を表示',
+    mute: 'ミュート',
+    unmute: 'ミュート解除',
+    stopRecording: '録音を停止 (Ctrl)',
+    voiceInput: '音声入力 (Ctrl)',
+  },
+  ko: {
+    hideSubtitles: '자막 숨기기',
+    showSubtitles: '자막 표시',
+    mute: '음소거',
+    unmute: '음소거 해제',
+    stopRecording: '녹음 중지 (Ctrl)',
+    voiceInput: '음성 입력 (Ctrl)',
+  },
+  zh: {
+    hideSubtitles: '隐藏字幕',
+    showSubtitles: '显示字幕',
+    mute: '静音',
+    unmute: '取消静音',
+    stopRecording: '停止录音 (Ctrl)',
+    voiceInput: '语音输入 (Ctrl)',
+  },
+};
 
 const MicrophoneIcon: React.FC<{ isRecording: boolean }> = ({ isRecording }) => (
     <svg 
@@ -77,6 +130,9 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
     onCloseMenu = () => {},
     hasVideoGenerated = false
 }) => {
+    const { selectedLanguage } = useLanguage();
+    const t = translations[selectedLanguage || 'en'];
+
     return (
         <div className="flex items-center justify-end space-x-2 sm:space-x-3 z-30">
             {/* Subtitles Button */}
@@ -84,7 +140,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
                 <button
                     onClick={onToggleSubtitles}
                     className="bg-black/50 text-white/70 p-3 sm:p-3 rounded-full hover:bg-white hover:text-black transition-colors duration-300 min-w-[48px] min-h-[48px] flex items-center justify-center active:scale-95"
-                    aria-label={areSubtitlesVisible ? 'Hide subtitles' : 'Show subtitles'}
+                    aria-label={areSubtitlesVisible ? t.hideSubtitles : t.showSubtitles}
                 >
                     <SubtitlesIcon isVisible={areSubtitlesVisible} />
                 </button>
@@ -102,7 +158,7 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
                     <SoundIcon isMuted={isMuted} />
                 </button>
                 <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-xs sm:text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                    {isMuted ? 'Unmute' : 'Mute'}
+                    {isMuted ? t.unmute : t.mute}
                 </div>
             </div>
             {/* Voice Input Button */}
@@ -114,12 +170,12 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
                             ? 'bg-red-600 text-white hover:bg-red-500 animate-pulse'
                             : 'bg-black/50 text-white/70 hover:bg-white hover:text-black'
                     }`}
-                    aria-label={isVoiceRecording ? 'Stop recording' : 'Start voice input'}
+                    aria-label={isVoiceRecording ? t.stopRecording : t.voiceInput}
                 >
                     <MicrophoneIcon isRecording={isVoiceRecording} />
                 </button>
                 <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 w-max bg-black/80 text-white text-xs sm:text-sm rounded-md px-2 py-1 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap z-50">
-                    {isVoiceRecording ? 'Stop recording (Ctrl)' : 'Voice input (Ctrl)'}
+                    {isVoiceRecording ? t.stopRecording : t.voiceInput}
                 </div>
             </div>
             {/* Menu Button */}

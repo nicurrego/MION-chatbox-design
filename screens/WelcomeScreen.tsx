@@ -1,5 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
+import type { SupportedLanguage } from '../contexts/LanguageContext';
 
 interface WelcomeScreenProps {
   onContinue: () => void;
@@ -34,6 +36,45 @@ const getBackgroundVideos = () => {
   };
 };
 
+// Translations for WelcomeScreen
+const translations: Record<SupportedLanguage, {
+  tapToStart: string;
+  skipIntro: string;
+  muteSound: string;
+  unmuteSound: string;
+}> = {
+  en: {
+    tapToStart: '- tap to start -',
+    skipIntro: 'Skip intro video',
+    muteSound: 'Mute sound',
+    unmuteSound: 'Unmute sound',
+  },
+  es: {
+    tapToStart: '- toca para comenzar -',
+    skipIntro: 'Saltar video de introducción',
+    muteSound: 'Silenciar sonido',
+    unmuteSound: 'Activar sonido',
+  },
+  ja: {
+    tapToStart: '- タップして開始 -',
+    skipIntro: 'イントロビデオをスキップ',
+    muteSound: '音声をミュート',
+    unmuteSound: '音声をミュート解除',
+  },
+  ko: {
+    tapToStart: '- 탭하여 시작 -',
+    skipIntro: '인트로 비디오 건너뛰기',
+    muteSound: '음소거',
+    unmuteSound: '음소거 해제',
+  },
+  zh: {
+    tapToStart: '- 点击开始 -',
+    skipIntro: '跳过介绍视频',
+    muteSound: '静音',
+    unmuteSound: '取消静音',
+  },
+};
+
 const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
     {isMuted ? (
@@ -48,6 +89,8 @@ const SoundIcon: React.FC<{ isMuted: boolean }> = ({ isMuted }) => (
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, isMuted, onToggleMute }) => {
   const [screen, setScreen] = useState<'loop' | 'intro'>('loop');
   const introVideoRef = useRef<HTMLVideoElement>(null);
+  const { selectedLanguage } = useLanguage();
+  const t = translations[selectedLanguage || 'en'];
   const loopVideoRef = useRef<HTMLVideoElement>(null);
 
   // Get appropriate background videos based on device type
@@ -129,12 +172,12 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
                     <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl animate-title-bob font-bold" style={{ color: '#FFF8E1', textShadow: '0 0 20px rgba(255, 165, 0, 0.7)' }}>TALK TO MION</h1>
                     <h2 className="text-lg sm:text-xl md:text-2xl tracking-widest uppercase animate-subtitle-bob mt-2" style={{ color: '#FFDAB9', textShadow: '0 0 10px rgba(239, 137, 61, 0.5)' }}>a MION experience</h2>
                     </div>
-                    <p className="mt-16 sm:mt-24 text-white/70 text-lg sm:text-xl tracking-widest animate-pulse">- tap to start -</p>
+                    <p className="mt-16 sm:mt-24 text-white/70 text-lg sm:text-xl tracking-widest animate-pulse">{t.tapToStart}</p>
                 </div>
                 <button
                     onClick={toggleSound}
                     className="absolute bottom-4 right-4 z-20 bg-black/40 rounded-full p-4 sm:p-3 text-white/70 hover:text-white hover:bg-black/60 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-white/50 min-w-[48px] min-h-[48px] flex items-center justify-center"
-                    aria-label={isMuted ? 'Unmute sound' : 'Mute sound'}
+                    aria-label={isMuted ? t.unmuteSound : t.muteSound}
                 >
                     <SoundIcon isMuted={isMuted} />
                 </button>
@@ -154,9 +197,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onContinue, isExiting, is
             <button
               onClick={onContinue}
               className="absolute bottom-5 right-5 z-20 bg-black/50 text-white/70 px-6 py-3 sm:px-4 sm:py-2 rounded-md text-lg tracking-wider hover:bg-white hover:text-black transition-colors duration-300 animate-fadeIn min-h-[48px] flex items-center justify-center"
-              aria-label="Skip intro video"
+              aria-label={t.skipIntro}
             >
-              SKIP
+              {t.skipIntro.toUpperCase()}
             </button>
         </>
       )}
