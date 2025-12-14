@@ -75,7 +75,7 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 p-2 sm:p-4 pb-safe flex justify-center items-end animate-slideUp">
+    <div className="fixed inset-x-0 bottom-0 z-40 p-2 sm:p-4 pb-[80px] sm:pb-[60px] landscape:pb-safe flex justify-center items-end animate-slideUp">
       <style>{`
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes pulse-ring {

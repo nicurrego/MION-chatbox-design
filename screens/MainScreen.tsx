@@ -300,7 +300,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
       )}
 
       {/* Main Grid Layout */}
-      <div className="relative w-full h-full p-2 sm:p-4 landscape:p-4 landscape:md:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-4 landscape:md:gap-8 flex flex-col portrait:flex-col">
+      <div className="relative w-full h-full p-2 sm:p-4 landscape:p-4 landscape:md:p-8 landscape:grid landscape:grid-cols-[minmax(0,_2fr)_minmax(0,_3fr)] landscape:gap-4 landscape:md:gap-8 flex flex-col portrait:flex-col portrait:pb-[140px] sm:portrait:pb-[100px]">
 
         {/* Top: Info Box (Portrait) / Right (Landscape) */}
         <div className="w-full flex-shrink-0 h-[20dvh] h-[20vh] portrait:h-[20dvh] portrait:h-[20vh] landscape:h-full landscape:col-start-2 landscape:row-start-1 mb-2 landscape:mb-0 z-10 overflow-hidden">
@@ -330,7 +330,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
         </div>
 
         {/* Subtitles - Overlay on top of character */}
-        <div className="absolute bottom-[72px] sm:bottom-[80px] left-0 right-0 z-40 pointer-events-none landscape:bottom-[72px] landscape:sm:bottom-[80px]">
+        <div className="absolute bottom-[100px] sm:bottom-[90px] left-0 right-0 z-40 pointer-events-none landscape:bottom-[72px] landscape:sm:bottom-[80px] portrait:bottom-[120px]">
           <Subtitles
             currentSentence={chat.currentSubtitle}
             isVisible={areSubtitlesVisible}
@@ -343,8 +343,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             2. Added 'mb-[env(...)]' for iPhone Home Bar safety
             3. Increased z-index to 50 just to be safe
         */}
-        <div className="fixed bottom-2 sm:bottom-4 right-2 sm:right-4 z-50 
-                        mb-[env(safe-area-inset-bottom)] 
+        <div className="fixed bottom-2 sm:bottom-4 right-2 sm:right-4 z-50
+                        mb-[env(safe-area-inset-bottom)]
                         landscape:bottom-2 landscape:sm:bottom-4 landscape:right-2 landscape:sm:right-4">
           <ActionButtons
             onToggleChat={() => setIsChatOpen(prev => !prev)}
@@ -352,6 +352,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
             onToggleMute={onToggleMute}
             areSubtitlesVisible={areSubtitlesVisible}
             onToggleSubtitles={() => setAreSubtitlesVisible(prev => !prev)}
+            onStartVoiceInput={() => voiceInput.startListening()}
+            isVoiceRecording={voiceInput.isRecording}
           />
         </div>
       </div>
