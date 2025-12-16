@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import WelcomeScreen from './screens/WelcomeScreen';
 import MainScreen from './screens/MainScreen';
 import LanguageSelectionScreen from './screens/LanguageSelectionScreen';
-import LeaveConfirmationDialog from './components/LeaveConfirmationDialog';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { ServiceModeProvider, useServiceMode } from './contexts/ServiceModeContext';
 import type { SupportedLanguage } from './contexts/LanguageContext';
@@ -19,7 +18,6 @@ const AppContent: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState(true);
   const [isExitingWelcome, setIsExitingWelcome] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Mute state for the whole app
-  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
   const [hasProgress, setHasProgress] = useState(false); // Track if user has made progress
 
   // Set up the service mode getter
@@ -50,14 +48,13 @@ const AppContent: React.FC = () => {
     setIsMuted(prev => !prev);
   };
 
-  // Handle browser beforeunload event
+  // Handle browser beforeunload event - show browser's native alert
   useEffect(() => {
     if (!hasProgress || showWelcome) return;
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      setShowLeaveConfirmation(true);
-      return '';
+      return 'Are you sure you want to leave? Your progress will be lost.';
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
@@ -71,7 +68,6 @@ const AppContent: React.FC = () => {
     const handlePopState = () => {
       // Push state back to prevent navigation
       window.history.pushState(null, '', window.location.href);
-      setShowLeaveConfirmation(true);
     };
 
     window.history.pushState(null, '', window.location.href);
@@ -80,16 +76,7 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [hasProgress, showWelcome]);
 
-  const handleConfirmLeave = () => {
-    setShowLeaveConfirmation(false);
-    // Allow the page to unload
-    window.removeEventListener('beforeunload', () => {});
-    window.location.href = '/';
-  };
 
-  const handleCancelLeave = () => {
-    setShowLeaveConfirmation(false);
-  };
 
   // Show language selection screen first
   if (!selectedLanguage) {
@@ -115,11 +102,6 @@ const AppContent: React.FC = () => {
           onProgressChange={setHasProgress}
         />
       )}
-      <LeaveConfirmationDialog
-        isOpen={showLeaveConfirmation}
-        onConfirm={handleConfirmLeave}
-        onCancel={handleCancelLeave}
-      />
     </>
   );
 };
