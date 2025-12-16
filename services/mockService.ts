@@ -219,26 +219,14 @@ export const generateLoopingVideo = async (
 
   if (videoUrl) {
     console.log('🦆 [MOCK] Found mapped video:', videoUrl);
-    return videoUrl;
+  } else {
+    console.log('🦆 [MOCK] No mapping found, using default video');
   }
 
-  // Fallback: if not found in map, return a default video
-  console.log('🦆 [MOCK] No mapping found, using default video');
-  return '/videos/cp_sunlight_video.mp4';
-};
+  // Apply the background change delay for mock service
+  console.log(`🦆 [MOCK] Delaying background change by ${BACKGROUND_CHANGE_DELAY}ms before returning video URL`);
+  await new Promise(resolve => setTimeout(resolve, BACKGROUND_CHANGE_DELAY));
 
-// ============================================================================
-// 5. BACKGROUND CHANGE DELAY HELPER
-// ============================================================================
-
-/**
- * Applies a delay before background change for video playback
- * @param delayMs - Optional custom delay in milliseconds (defaults to BACKGROUND_CHANGE_DELAY)
- * @returns Promise that resolves after the specified delay
- */
-export const delayBackgroundChange = async (delayMs?: number): Promise<void> => {
-  const delay = delayMs ?? BACKGROUND_CHANGE_DELAY;
-  console.log(`🦆 [MOCK] Delaying background change by ${delay}ms`);
-  await new Promise(resolve => setTimeout(resolve, delay));
+  return videoUrl || '/videos/cp_sunlight_video.mp4';
 };
 
