@@ -4,9 +4,9 @@
  * ============================================================================
  *
  * This file exports either the real Gemini service or the mock service
- * based on the VITE_DEV_MODE environment variable.
+ * based on the ServiceModeContext (which can be toggled via UI).
  *
- * Set VITE_DEV_MODE=true in your .env file to use mock data for development.
+ * The service mode is controlled by the toggle switch on the language selection screen.
  */
 
 import * as geminiService from './geminiService';
@@ -15,39 +15,66 @@ import * as mockService from './mockService';
 // Re-export types from geminiService
 export type { OnsenPreferences, WellbeingProfile, AestheticProfile } from './geminiService';
 
-// Determine which service to use
-const isDevelopmentMode = import.meta.env.VITE_DEV_MODE === 'true';
+// Helper function to get the current service mode
+// This will be called dynamically to check the context value
+let getServiceMode = () => {
+  // Default to Real API (false)
+  return false;
+};
 
-if (isDevelopmentMode) {
-  console.log('🦆 [DEV MODE] Using mock service with static assets');
-}
+// Allow setting the service mode getter (called by App.tsx)
+export const setServiceModeGetter = (getter: () => boolean) => {
+  getServiceMode = getter;
+};
 
-// Export the appropriate service functions
-export const sendMessageToBot = isDevelopmentMode
-  ? mockService.sendMessageToBot
-  : geminiService.sendMessageToBot;
+// Wrapper functions that dynamically select the service
+export const sendMessageToBot = async (message: string): Promise<string> => {
+  const isDev = getServiceMode();
+  return isDev
+    ? mockService.sendMessageToBot(message)
+    : geminiService.sendMessageToBot(message);
+};
 
-export const generateSpeech = isDevelopmentMode
-  ? mockService.generateSpeech
-  : geminiService.generateSpeech;
+export const generateSpeech = async (text: string): Promise<string | null> => {
+  const isDev = getServiceMode();
+  return isDev
+    ? mockService.generateSpeech(text)
+    : geminiService.generateSpeech(text);
+};
 
-export const generateOnsenDescription = isDevelopmentMode
-  ? mockService.generateOnsenDescription
-  : geminiService.generateOnsenDescription;
+export const generateOnsenDescription = async (preferences: any): Promise<string | null> => {
+  const isDev = getServiceMode();
+  return isDev
+    ? mockService.generateOnsenDescription(preferences)
+    : geminiService.generateOnsenDescription(preferences);
+};
 
-export const generateOnsenImage = isDevelopmentMode
-  ? mockService.generateOnsenImage
-  : geminiService.generateOnsenImage;
+export const generateOnsenImage = async (preferences: any, isMobile?: boolean): Promise<string[] | null> => {
+  const isDev = getServiceMode();
+  return isDev
+    ? mockService.generateOnsenImage(preferences, isMobile)
+    : geminiService.generateOnsenImage(preferences, isMobile);
+};
 
-export const generateLoopingVideo = isDevelopmentMode
-  ? mockService.generateLoopingVideo
-  : geminiService.generateLoopingVideo;
+export const generateLoopingVideo = async (
+  base64Image: string,
+  mimeType: string,
+  aspectRatio?: '9:16' | '16:9'
+): Promise<string> => {
+  const isDev = getServiceMode();
+  return isDev
+    ? mockService.generateLoopingVideo(base64Image, mimeType, aspectRatio)
+    : geminiService.generateLoopingVideo(base64Image, mimeType, aspectRatio);
+};
 
 // Export language configuration
-export const setLanguageConfig = isDevelopmentMode
-  ? (languageCode: string, _voiceName: string) => {
-      console.log(`🦆 [DEV MODE] Setting mock language to ${languageCode}`);
-      mockService.setMockLanguage(languageCode);
-    }
-  : geminiService.setLanguageConfig;
+export const setLanguageConfig = (languageCode: string, voiceName: string) => {
+  const isDev = getServiceMode();
+  if (isDev) {
+    console.log(`🦆 [MOCK MODE] Setting mock language to ${languageCode}`);
+    mockService.setMockLanguage(languageCode);
+  } else {
+    geminiService.setLanguageConfig(languageCode, voiceName);
+  }
+};
 

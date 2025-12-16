@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { SUPPORTED_LANGUAGES, SupportedLanguage } from '../contexts/LanguageContext';
+import { useServiceMode } from '../contexts/ServiceModeContext';
 
 interface LanguageSelectionScreenProps {
   onLanguageSelect: (lang: SupportedLanguage) => void;
 }
 
 const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = ({ onLanguageSelect }) => {
+  const { useMockService, setUseMockService } = useServiceMode();
+
   return (
     <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-3 sm:p-4 md:p-6 overflow-y-auto">
       <div className="text-center w-full max-w-3xl my-auto">
@@ -38,6 +41,27 @@ const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = ({ onLan
               <div className="absolute inset-0 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-400/0 to-purple-400/0 group-hover:from-blue-400/10 group-hover:to-purple-400/10 transition-all duration-300"></div>
             </button>
           ))}
+        </div>
+
+        {/* Service Mode Toggle */}
+        <div className="mt-8 sm:mt-10 md:mt-12 flex items-center justify-center gap-3 px-2">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <span className="text-xs sm:text-sm text-gray-400">
+              {useMockService ? '🦆 Mock Mode' : '🤖 Real API'}
+            </span>
+            <div
+              onClick={() => setUseMockService(!useMockService)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                useMockService ? 'bg-purple-600' : 'bg-gray-600'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  useMockService ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </div>
+          </label>
         </div>
 
         {/* Footer note */}

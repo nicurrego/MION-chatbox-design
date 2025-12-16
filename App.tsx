@@ -5,19 +5,27 @@ import MainScreen from './screens/MainScreen';
 import LanguageSelectionScreen from './screens/LanguageSelectionScreen';
 import LeaveConfirmationDialog from './components/LeaveConfirmationDialog';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { ServiceModeProvider, useServiceMode } from './contexts/ServiceModeContext';
 import type { SupportedLanguage } from './contexts/LanguageContext';
 import { useInitialBotMessage } from './hooks/useInitialBotMessage';
+import { setServiceModeGetter } from './services';
 
 // Constants
 const WELCOME_TRANSITION_DURATION_MS = 1000; // Matches WelcomeScreen.tsx animation duration
 
 const AppContent: React.FC = () => {
   const { selectedLanguage, languageConfig, setLanguage } = useLanguage();
+  const { useMockService } = useServiceMode();
   const [showWelcome, setShowWelcome] = useState(true);
   const [isExitingWelcome, setIsExitingWelcome] = useState(false);
   const [isMuted, setIsMuted] = useState(true); // Mute state for the whole app
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false);
   const [hasProgress, setHasProgress] = useState(false); // Track if user has made progress
+
+  // Set up the service mode getter
+  useEffect(() => {
+    setServiceModeGetter(() => useMockService);
+  }, [useMockService]);
 
   // Preload initial bot message and audio when language is selected
   const { initialMessage, initialAudio } = useInitialBotMessage(languageConfig);
@@ -118,9 +126,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <LanguageProvider>
-      <AppContent />
-    </LanguageProvider>
+    <ServiceModeProvider>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </ServiceModeProvider>
   );
 };
 

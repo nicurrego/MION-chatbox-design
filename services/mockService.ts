@@ -36,9 +36,10 @@ const MOCK_RESPONSES_BY_LANGUAGE: Record<string, string[]> = {
     "¡Perfecto! Déjame preparar tu experiencia personalizada de onsen. Esto solo tomará un momento..."
   ],
   'ja-JP': [
-    "やあ、ニコラス！ 君がこの2か月間、準備してきたプレゼンテーションの真っ最中だね！ もしよかったら、君にぴったりの温泉を準備しておくよ！ プレゼンが終わるころには、あなたが入れるようにね！",
-    "了解です！ あなたの温泉プロフィールはこちら：\n\nウェルビーイングプロフィール：\n- 肌タイプ：乾燥肌\n- 筋肉の痛み：足筋肉痛\n- ストレスレベル：ちょっとやばいね\n- 水温：熱め\n- 健康目標：リカバリーとストレス解消\n\n美的プロフィール：\n- 雰囲気：コロンビアの山の中\n- カラーパレット：緑\n- 時間帯： 夕暮れ時\n\n[PREFERENCES_START]\nskinType: dry\nmuscleSoreness: legs muscle pain\nstressLevel: very high\nwaterTemperature: hot\nhealthGoals: recovery and stress relief\natmosphere: colombian mountain view\ncolorPalette: very greeny\ntimeOfDay: sunset\n[PREFERENCES_END]\n\nこの設定で温泉体験を作ってもいいですか？",
-    "スキャン完了！ それじゃあ、極上リラックスバスを秒速で準備しますね！ もう少しだけ待っててね〜！"
+    "やあ、ニコラス！ あなたがこの2か月間、準備してきたプレゼンテーションの真っ最中ですね！ 順調ですか？",
+    "もしよろしければ、あなたにぴったりの温泉をご用意させてください！",
+    "スキャンをする間、簡単にアプリの説明をさせてください。",
+    "それでは説明します。画面の中には4つの要素があって、MION、理想的な温泉を作り出し、どこへでも連れて行ってくれるような環境を生み出すことができるデバイスの提案です。インフォボックス、MIONのテクノロジーにより、画面なしであなたの浴室内に情報が表示されます。ここでは、関連情報が視覚的に提示されます。操作ボタン、字幕、テキスト読み上げ技術、MIONに声を与える技術によりインタラクティブに生成されます、ミュートボタン、そして...　会話をするためのチャットです。おっと！　お待たせしました。この設定が良かったら、皮膚炎の症状も以前より緩和傾向にあります。また、現在のあなたの状態に合わせて抗酸化作用を高めたり、皮膚の免疫バランスを整える硫化水素を含んだ温泉を準備します。スキャンしたあなたのプロフィールはこちらです：\n\nウェルビーイングプロフィール：\n- 肌タイプ：乾燥肌\n- 筋肉の痛み：足筋肉痛\n- ストレスレベル：高い\n- 水温：熱め\n- 健康目標：リカバリーとストレス解消\n\n美的プロフィール：\n- 雰囲気：コロンビアの山の中\n- カラーパレット：緑\n- 時間帯： 夕暮れ時\n\n[PREFERENCES_START]\nskinType: 乾燥肌\nmuscleSoreness: 足筋肉痛\nstressLevel: 高い\nwaterTemperature: 熱め\nhealthGoals: 疲労回復\natmosphere: コロンビアの山\ncolorPalette: 緑\ntimeOfDay: 夕暮れ時\n[PREFERENCES_END]\n\nこの設定で良かったら、温泉のイメージを用意しますのでご確認ください。",
   ],
   'ko-KR': [
     "안녕하세요, 환영합니다. 저는 MION, 당신의 개인 온천 컨시어지입니다. 몸과 마음을 달래는 완벽한 온천 경험을 만들어 드리는 것이 제 목적입니다. 먼저 몇 가지 질문을 드려 당신의 필요를 더 잘 이해하고 싶습니다. 먼저 피부 타입과 근육통이 있는지 말씀해 주시겠어요?",
@@ -150,13 +151,7 @@ Este santuario está diseñado pensando en ${preferences.wellbeingProfile.health
 Respira profundo. Tu viaje hacia el bienestar comienza ahora.`,
 
     // 'ja-JP': `あなた専用の温泉の聖域がお待ちしています。${preferences.aestheticProfile.atmosphere}の環境に佇み、${preferences.aestheticProfile.colorPalette}の色合いで輝く水面に${preferences.aestheticProfile.timeOfDay}の光が踊ります。
-    'ja-JP': `あなたのための温泉の聖域が用意されました。雰囲気：コロンビアの山の中の環境に佇む、緑の色合いの水面に夕暮れ時の光が舞い回っています。
-
-${preferences.wellbeingProfile.waterTemperature}に完璧に温められたミネラル豊富な湯は、${preferences.wellbeingProfile.skinType}肌のために特別に調合されています。身を浸すと、治療効果のあるミネラルが${preferences.wellbeingProfile.muscleSoreness}を和らげ、静かな環境が${preferences.wellbeingProfile.stressLevel}ストレスを溶かしていきます。
-
-この聖域は、あなたの${preferences.wellbeingProfile.healthGoals}を念頭に設計されています。優しい湯気は杉と鉱物の香りを運び、水の柔らかな音が瞑想的な雰囲気を作り出します。すべての要素が、あなたの体を回復させ、心を落ち着かせるために慎重に選ばれています。
-
-深呼吸してください。あなたのウェルネスへの旅が今始まります。`,
+    'ja-JP': `深呼吸してください。あなたのウェルネスへの旅が今始まります。`,
 
     'ko-KR': `당신만을 위한 온천 성역이 기다리고 있습니다. ${preferences.aestheticProfile.atmosphere} 환경에 자리잡고 있으며, ${preferences.aestheticProfile.timeOfDay} 빛이 수면 위에서 춤추면서 ${preferences.aestheticProfile.colorPalette} 색조로 물이 반짝입니다.
 
@@ -206,6 +201,9 @@ export const generateOnsenImage = async (preferences: OnsenPreferences, isMobile
 // 4. MOCK VIDEO GENERATION
 // ============================================================================
 
+// Configurable delay for background change (in milliseconds)
+const BACKGROUND_CHANGE_DELAY = 20000; // 20 seconds delay before background changes
+
 export const generateLoopingVideo = async (
   base64Image: string,
   mimeType: string,
@@ -227,5 +225,20 @@ export const generateLoopingVideo = async (
   // Fallback: if not found in map, return a default video
   console.log('🦆 [MOCK] No mapping found, using default video');
   return '/videos/cp_sunlight_video.mp4';
+};
+
+// ============================================================================
+// 5. BACKGROUND CHANGE DELAY HELPER
+// ============================================================================
+
+/**
+ * Applies a delay before background change for video playback
+ * @param delayMs - Optional custom delay in milliseconds (defaults to BACKGROUND_CHANGE_DELAY)
+ * @returns Promise that resolves after the specified delay
+ */
+export const delayBackgroundChange = async (delayMs?: number): Promise<void> => {
+  const delay = delayMs ?? BACKGROUND_CHANGE_DELAY;
+  console.log(`🦆 [MOCK] Delaying background change by ${delay}ms`);
+  await new Promise(resolve => setTimeout(resolve, delay));
 };
 
