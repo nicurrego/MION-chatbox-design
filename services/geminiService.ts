@@ -11,25 +11,23 @@
  */
 
 import { GoogleGenAI, Chat, Modality } from "@google/genai";
-import { apiKeyManager } from "./apiKeyManager";
 
 // ============================================================================
 // CONFIGURATION
 // ============================================================================
 
+const API_KEY = process.env.API_KEY;
+
 // Lazy initialization to avoid errors when in dev mode
 let ai: GoogleGenAI | null = null;
 
 const getAI = (): GoogleGenAI => {
-  const API_KEY = apiKeyManager.getCurrentKey();
-
   if (!API_KEY) {
-    throw new Error("No API keys available");
+    throw new Error("API_KEY environment variable not set");
   }
-
-  // Reinitialize AI with current key (allows key rotation)
-  ai = new GoogleGenAI({ apiKey: API_KEY });
-
+  if (!ai) {
+    ai = new GoogleGenAI({ apiKey: API_KEY });
+  }
   return ai;
 };
 
@@ -136,12 +134,7 @@ export const sendMessageToBot = async (message: string): Promise<string> => {
     const response = await getChat().sendMessage({ message });
     return response.text ?? "";
   } catch (error: any) {
-    // Report error to API key manager for rate limit detection
-    apiKeyManager.reportError(error);
-
     if (error?.message?.includes('429') || error?.message?.includes('quota')) {
-      console.log(`🔄 [GEMINI] Rate limit detected, rotating API key...`);
-      console.log(`📊 ${apiKeyManager.getStatus().status}`);
       return "I apologize, but I've reached my daily conversation limit. Please try again in 24 hours.";
     }
 
@@ -179,10 +172,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
 
     const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
     return base64Audio ?? null;
-  } catch (error: any) {
-    // Report error to API key manager for rate limit detection
-    apiKeyManager.reportError(error);
-    console.error('❌ [GEMINI] Speech generation failed:', error?.message);
+  } catch (error) {
     return null;
   }
 };
@@ -228,10 +218,7 @@ Write in the current language (${currentLanguage}). Be poetic but grounded, warm
 
     const description = response.candidates?.[0]?.content?.parts?.[0]?.text;
     return description ?? null;
-  } catch (error: any) {
-    // Report error to API key manager for rate limit detection
-    apiKeyManager.reportError(error);
-    console.error("❌ [GEMINI] Error generating onsen description:", error?.message);
+  } catch (error) {
     return null;
   }
 };
@@ -284,19 +271,15 @@ export const generateOnsenImage = async (preferences: OnsenPreferences, isMobile
             break;
           }
         }
-      } catch (error: any) {
-        // Report error to API key manager for rate limit detection
-        apiKeyManager.reportError(error);
-        console.error(`❌ [GEMINI] Error generating image variation ${i + 1}:`, error?.message || error);
+      } catch (error) {
+        console.error(`Error generating image variation ${i + 1}:`, error);
         // Continue with other variations even if one fails
       }
     }
 
     return imageDatas.length > 0 ? imageDatas : null;
-  } catch (error: any) {
-    // Report error to API key manager for rate limit detection
-    apiKeyManager.reportError(error);
-    console.error('❌ [GEMINI] Error in generateOnsenImage:', error?.message || error);
+  } catch (error) {
+    console.error('Error in generateOnsenImage:', error);
     return null;
   }
 };
@@ -332,59 +315,50 @@ export async function generateLoopingVideo(
   mimeType: string,
   aspectRatio: '9:16' | '16:9' = '9:16'
 ): Promise<string> {
-  try {
-    const API_KEY = apiKeyManager.getCurrentKey();
-
-    if (!API_KEY) {
-      throw new Error("No API keys available");
-    }
-
-    const veoAI = new GoogleGenAI({ apiKey: API_KEY });
-
-    const videoPrompt = 'The camera moves gently left and right like is admiring the scene trying to catch all the details from it. The sound has to represent the ambient sounds of the reference and have present the water of the onsen.';
-
-    const imagePayload = {
-      imageBytes: base64Image,
-      mimeType: mimeType,
-    };
-
-    let operation = await veoAI.models.generateVideos({
-      model: 'veo-3.1-fast-generate-preview',
-      prompt: videoPrompt,
-      image: imagePayload,
-      config: {
-        numberOfVideos: 1,
-        resolution: '720p',
-        lastFrame: imagePayload,
-        aspectRatio: aspectRatio
-      }
-    });
-
-    // Poll for completion (checks every 10 seconds)
-    while (!operation.done) {
-      await new Promise(resolve => setTimeout(resolve, 10000));
-      operation = await veoAI.operations.getVideosOperation({ operation });
-    }
-
-    const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-
-    if (!downloadLink) {
-      throw new Error("Video generation succeeded, but no download link was found.");
-    }
-
-    const videoResponse = await fetch(`${downloadLink}&key=${API_KEY}`);
-
-    if (!videoResponse.ok) {
-      throw new Error(`Failed to download the generated video: ${videoResponse.statusText}`);
-    }
-
-    const videoBlob = await videoResponse.blob();
-    return URL.createObjectURL(videoBlob);
-  } catch (error: any) {
-    // Report error to API key manager for rate limit detection
-    apiKeyManager.reportError(error);
-    console.error('❌ [GEMINI] Error in generateLoopingVideo:', error?.message || error);
-    throw error;
+  if (!API_KEY) {
+    throw new Error("API_KEY environment variable not set");
   }
+
+  const veoAI = new GoogleGenAI({ apiKey: API_KEY });
+
+  const videoPrompt = 'The camera moves gently left and right like is admiring the scene trying to catch all the details from it. The sound has to represent the ambient sounds of the reference and have present the water of the onsen.';
+
+  const imagePayload = {
+    imageBytes: base64Image,
+    mimeType: mimeType,
+  };
+
+  let operation = await veoAI.models.generateVideos({
+    model: 'veo-3.1-fast-generate-preview',
+    prompt: videoPrompt,
+    image: imagePayload,
+    config: {
+      numberOfVideos: 1,
+      resolution: '720p',
+      lastFrame: imagePayload,
+      aspectRatio: aspectRatio
+    }
+  });
+
+  // Poll for completion (checks every 10 seconds)
+  while (!operation.done) {
+    await new Promise(resolve => setTimeout(resolve, 10000));
+    operation = await veoAI.operations.getVideosOperation({ operation });
+  }
+
+  const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
+
+  if (!downloadLink) {
+    throw new Error("Video generation succeeded, but no download link was found.");
+  }
+
+  const videoResponse = await fetch(`${downloadLink}&key=${API_KEY}`);
+
+  if (!videoResponse.ok) {
+    throw new Error(`Failed to download the generated video: ${videoResponse.statusText}`);
+  }
+
+  const videoBlob = await videoResponse.blob();
+  return URL.createObjectURL(videoBlob);
 }
 
