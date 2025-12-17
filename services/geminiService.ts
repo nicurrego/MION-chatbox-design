@@ -197,13 +197,13 @@ Aesthetic Profile:
 - Color Palette: ${preferences.aestheticProfile.colorPalette}
 - Time of Day: ${preferences.aestheticProfile.timeOfDay}
 
-Write a comprehensive 4-5 paragraph description that includes:
+Write a comprehensive 3-4 paragraph description that includes:
 
 1. **Visual & Atmospheric Description**: Describe the scene in detail - the colors, lighting, time of day, surrounding nature, and overall ambiance that matches their aesthetic preferences.
 
 2. **Therapeutic Benefits**: Explain the health benefits based on their well-being profile. Be specific about how the water temperature, minerals, and environment address their needs.
 
-3. **Recommended Minerals & Their Benefits**: Based on their diagnostic (skin type, muscle soreness, stress level, health goals), recommend specific minerals that should be in the onsen water and explain why each mineral is beneficial for their specific condition. Examples: sulfur for skin conditions, magnesium for muscle relaxation, calcium for stress relief, iron for circulation, etc.
+3. **Recommended Minerals & Their Benefits**: Based on their diagnostic (skin type, muscle soreness, stress level, health goals), recommend specific minerals that should be in the onsen water and explain why each mineral is beneficial for their specific condition. add a refference of the efects of the onsen Examples: this minerals are similar to the Hakone onsen which results on (benefits of the onsen); sulfur for skin conditions, magnesium for muscle relaxation, calcium for stress relief, iron for circulation, etc.
 
 4. **Sensory Experience**: Evoke the complete sensory experience - the sounds of water and nature, the scents in the air, the texture of the water, the feeling of warmth, the visual beauty.
 
