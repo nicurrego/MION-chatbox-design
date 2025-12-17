@@ -3,6 +3,7 @@ import ConfirmationButtons from './ConfirmationButtons';
 import type { OnsenPreferences } from '../services';
 import { useLanguage } from '../contexts/LanguageContext';
 import type { SupportedLanguage } from '../contexts/LanguageContext';
+import { getCachedTemperature } from '../services/weatherService';
 
 interface InfoBoxProps {
   isGeneratingImage: boolean;
@@ -197,10 +198,26 @@ const InfoBox: React.FC<InfoBoxProps> = ({
   userPreferences
 }) => {
   const [time, setTime] = useState(new Date());
+  const [temperatureDisplay, setTemperatureDisplay] = useState('☀️ 27°');
   const { selectedLanguage } = useLanguage();
 
   // Get translations for current language, fallback to English
   const t = translations[selectedLanguage || 'en'];
+
+  // Fetch real temperature on component mount
+  useEffect(() => {
+    const fetchTemperature = async () => {
+      try {
+        const weatherData = await getCachedTemperature();
+        setTemperatureDisplay(weatherData.displayText);
+      } catch (error) {
+        console.error('Failed to fetch temperature:', error);
+        // Keep default temperature if fetch fails
+      }
+    };
+
+    fetchTemperature();
+  }, []);
 
   useEffect(() => {
     const timerId = setInterval(() => setTime(new Date()), 1000);
@@ -244,7 +261,7 @@ const InfoBox: React.FC<InfoBoxProps> = ({
             {formattedTime}
           </div>
           <div className="text-lg sm:text-xl md:text-2xl lg:text-3xl text-cyan-200">
-            ☀️ 27°
+            {temperatureDisplay}
           </div>
         </div>
       </div>
