@@ -178,11 +178,11 @@ const ChatBox: React.FC<ChatBoxProps> = ({
       <div
         /* CHANGED:
            1. rounded-lg -> rounded-t-lg sm:rounded-lg (Looks better attached to bottom)
-           2. h-1/2 sm:h-3/4 md:h-5/6 lg:h-[85vh] (Responsive height: 50% mobile, 75% tablet, 85% desktop)
+           2. h-[90vh] sm:h-3/4 md:h-5/6 lg:h-[85vh] (Responsive height: 90% mobile, 75% tablet, 85% desktop)
            3. w-full sm:w-11/12 -> w-full sm:w-11/12 (Responsive width with padding)
            4. max-w-4xl -> max-w-6xl (Larger max width for desktop)
         */
-        className="w-full sm:w-11/12 max-w-6xl h-1/2 sm:h-3/4 md:h-5/6 lg:h-[85vh] flex flex-col bg-slate-900/90 rounded-t-lg sm:rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
+        className="w-full sm:w-11/12 max-w-6xl h-[90vh] sm:h-3/4 md:h-5/6 lg:h-[85vh] flex flex-col bg-slate-900/90 rounded-t-lg sm:rounded-lg border-2 border-cyan-400/50 shadow-2xl shadow-cyan-400/20 overflow-hidden animate-slideUp"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-3 sm:px-6 pt-2 sm:pt-3 pb-2 sm:pb-3 flex justify-between items-center border-b-2 border-cyan-400/50">
