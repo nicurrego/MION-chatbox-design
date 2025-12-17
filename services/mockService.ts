@@ -43,7 +43,7 @@ const MOCK_RESPONSES_BY_LANGUAGE: Record<string, string[]> = {
 
 🎭 **私、「ミオン」** - あなたの頼もしい仲間です HAHA～
 
-📊 **情報ボックス** - 重要な情報やグラフを表示します
+📊 **インフォボックス** - 重要な情報やグラフを表示します
 
 🎛️ **操作ボタン** - 音声ON/OFF、字幕、言語変更や生成画像、動画のダウンロードメニュー、音声入力
 
@@ -104,10 +104,12 @@ timeOfDay: 夕暮れ時
 // Current language for mock responses
 let currentMockLanguage = 'en-US';
 let responseIndex = 0;
+let lastAudioIndex = -1; // Track which audio was last used
 
 export const setMockLanguage = (languageCode: string) => {
   currentMockLanguage = languageCode;
   responseIndex = 0; // Reset response index when language changes
+  lastAudioIndex = -1; // Reset audio index
 };
 
 // ============================================================================
@@ -145,6 +147,10 @@ export const sendMessageToBot = async (message: string): Promise<string> => {
 
   const responses = MOCK_RESPONSES_BY_LANGUAGE[currentMockLanguage] || MOCK_RESPONSES_BY_LANGUAGE['en-US'];
   const response = responses[responseIndex];
+
+  // Track the audio index BEFORE incrementing responseIndex
+  lastAudioIndex = responseIndex;
+  console.log(`📝 [MOCK] Message ${responseIndex}: Setting lastAudioIndex to ${lastAudioIndex}`);
   responseIndex = Math.min(responseIndex + 1, responses.length - 1);
 
   return response;
@@ -162,8 +168,26 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 300));
 
-  // Return a special marker to indicate this is a mock MP3 file
-  // The audio player will detect this and handle it differently
+  // For Japanese language, use audio0-audio4 based on the last message index
+  if (currentMockLanguage === 'ja-JP') {
+    // Check if this is the description audio (contains the description text from line 211)
+    const isDescriptionAudio = text.includes('天然の油分') || text.includes('豊富温泉');
+
+    let audioIndex = lastAudioIndex;
+
+    // If this is the description audio and we haven't reached audio4 yet, increment to audio4
+    if (isDescriptionAudio && lastAudioIndex < 4) {
+      audioIndex = 4; // Use audio4 for description
+    } else {
+      // Otherwise use the current lastAudioIndex, capped at 4
+      audioIndex = Math.min(Math.max(lastAudioIndex, 0), 4);
+    }
+
+    console.log(`🎙️ [MOCK] Playing audio${audioIndex}.mp3 for Japanese response (lastAudioIndex: ${lastAudioIndex}, isDescription: ${isDescriptionAudio})`);
+    return `MOCK_MP3:/audio/audio${audioIndex}.mp3`;
+  }
+
+  // For other languages, use duck_sound as fallback
   return 'MOCK_MP3:/audio/duck_sound.mp3';
 };
 
@@ -251,7 +275,7 @@ export const generateOnsenImage = async (preferences: OnsenPreferences, isMobile
 // ============================================================================
 
 // Configurable delay for background change (in milliseconds)
-const BACKGROUND_CHANGE_DELAY = 20000; // 20 seconds delay before background changes
+const BACKGROUND_CHANGE_DELAY = 27000; // 20 seconds delay before background changes
 
 export const generateLoopingVideo = async (
   base64Image: string,

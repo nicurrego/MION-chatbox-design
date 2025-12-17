@@ -73,7 +73,10 @@ const VoiceInputUI: React.FC<VoiceInputUIProps> = ({ transcript, isRecording, on
 
   const handleSend = () => {
     if (editedTranscript.trim()) {
-      onSend(editedTranscript);
+      const messageToSend = editedTranscript;
+      // Clear the input field BEFORE sending to prevent stale state
+      setEditedTranscript('');
+      onSend(messageToSend);
     }
   };
 

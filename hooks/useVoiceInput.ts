@@ -16,12 +16,10 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
             return;
         }
 
-        // If already recording, stop and save the current session
+        // If already recording, stop it
         if (recognitionRef.current && isRecording) {
             recognitionRef.current.stop();
-            // Save the session transcript to base
-            baseTranscriptRef.current = transcript;
-            sessionTranscriptRef.current = '';
+            // Don't save here - let stopListening() handle cleanup
             return;
         }
 
@@ -42,9 +40,8 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
 
         recognition.onend = () => {
             setIsRecording(false);
-            // Save session to base when recording ends
-            baseTranscriptRef.current = transcript;
-            sessionTranscriptRef.current = '';
+            // Don't save to base here - let stopListening() handle cleanup
+            // This prevents transcript accumulation on subsequent recordings
         };
 
         recognition.onerror = (event: any) => {
@@ -93,8 +90,10 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
         setIsActive(false);
         setIsRecording(false);
         setTranscript('');
+        // Clear all transcript refs to prevent accumulation
         baseTranscriptRef.current = '';
         sessionTranscriptRef.current = '';
+        console.log('🎤 [VOICE] Stopped listening - all transcripts cleared');
     }, []);
 
     const updateTranscript = useCallback((newTranscript: string) => {

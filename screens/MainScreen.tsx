@@ -92,9 +92,8 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     hasStartedConversation.current = true;
 
     if (initialAudio) {
-      // Check if this is mock audio (should loop)
-      const shouldLoop = initialAudio.startsWith('MOCK_MP3:');
-      audioCtrl.play(initialAudio, shouldLoop);
+      // Play initial audio once (don't loop)
+      audioCtrl.play(initialAudio, false);
     }
     chat.runTypingEffect(initialMessage.text);
     setIsInitialLoading(false);
@@ -106,19 +105,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     onProgressChange?.(hasProgress);
   }, [chat.messages.length, imageState.urls, videoState.url, onProgressChange]);
 
-  // Stop audio when typing finishes (only for mock audio that loops)
-  useEffect(() => {
-    // When typing finishes and audio is playing, check if it's mock audio
-    if (!chat.isTyping && audioCtrl.isPlaying) {
-      // Check if the currently playing audio is mock audio (from lastBotAudio or initialAudio)
-      const currentAudio = chat.lastBotAudio || initialAudio;
-      if (currentAudio?.startsWith('MOCK_MP3:')) {
-        // Stop looping audio immediately when typing finishes
-        audioCtrl.stop();
-      }
-    }
-    // For real TTS audio, let it play completely without interruption
-  }, [chat.isTyping, audioCtrl, chat.lastBotAudio, initialAudio]);
+  // Don't stop audio when typing finishes - let it play to completion
+  // This applies to both real TTS and mock audio files
+  // (removed the old logic that was stopping audio)
 
   // Keyboard event listener for keyboard shortcuts
   // 'c' - toggle subtitles, 't' - open chat, 'm' - mute/unmute, 'v' - voice input
@@ -219,10 +208,9 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     const result = await chat.processUserMessage(userInput);
     if (!result) return;
 
-    // 1. Play Audio (with looping for mock audio)
+    // 1. Play Audio (play once, don't loop)
     if (result.audio) {
-      const shouldLoop = result.audio.startsWith('MOCK_MP3:');
-      audioCtrl.play(result.audio, shouldLoop);
+      audioCtrl.play(result.audio, false); // Don't loop - play once
     }
 
     // 2. Trigger Visual Typing
@@ -244,8 +232,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
     // Play audio and show typing effect for rejection message
     if (result.audio) {
-      const shouldLoop = result.audio.startsWith('MOCK_MP3:');
-      audioCtrl.play(result.audio, shouldLoop);
+      audioCtrl.play(result.audio, false); // Don't loop - play once
     }
     chat.runTypingEffect(result.text);
   }, [chat, audioCtrl]);
@@ -272,8 +259,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
       if (descriptionAudio) {
         console.log("✅ [TTS] Description audio generated successfully");
-        const shouldLoop = descriptionAudio.startsWith('MOCK_MP3:');
-        audioCtrl.play(descriptionAudio, shouldLoop);
+        audioCtrl.play(descriptionAudio, false); // Don't loop - play once
       }
 
       chat.runTypingEffect(imageState.description);
