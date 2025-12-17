@@ -43,21 +43,21 @@ const LanguageSelectionScreen: React.FC<LanguageSelectionScreenProps> = ({ onLan
           ))}
         </div>
 
-        {/* Service Mode Toggle */}
-        <div className="mt-8 sm:mt-10 md:mt-12 flex items-center justify-center gap-3 px-2">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <span className="text-xs sm:text-sm text-gray-400">
-              {useMockService ? '🦆 Mock Mode' : '🤖 Real API'}
+        {/* Service Mode Toggle - Hidden in corner */}
+        <div className="fixed bottom-2 right-2 sm:bottom-3 sm:right-3 md:bottom-4 md:right-4 z-40">
+          <label className="flex items-center gap-2 cursor-pointer opacity-30 hover:opacity-100 transition-opacity duration-300">
+            <span className="text-xs text-gray-500 hover:text-gray-300">
+              {useMockService ? '🦆' : '🤖'}
             </span>
             <div
               onClick={() => setUseMockService(!useMockService)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
                 useMockService ? 'bg-purple-600' : 'bg-gray-600'
               }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  useMockService ? 'translate-x-6' : 'translate-x-1'
+                className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                  useMockService ? 'translate-x-5' : 'translate-x-0.5'
                 }`}
               />
             </div>
