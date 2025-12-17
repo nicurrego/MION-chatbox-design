@@ -186,8 +186,7 @@ Respira profundo. Tu viaje hacia el bienestar comienza ahora.`,
 
     // 'ja-JP': `あなた専用の温泉の聖域がお待ちしています。${preferences.aestheticProfile.atmosphere}の環境に佇み、${preferences.aestheticProfile.colorPalette}の色合いで輝く水面に${preferences.aestheticProfile.timeOfDay}の光が踊ります。
    'ja-JP': `承知いたしました。
-それでは、お仕度が整うまでの間、本日のお湯についてご説明させていただきます。
-世界的に見ても珍しい「天然の油分」を含んだお湯を再現しており、北海道の名湯・豊富温泉と同じ成分で、お肌にとても良いのが特徴です。
+それでは、お仕度が整うまでの間、本日のお湯についてご説明させていただきます。\n世界的に見ても珍しい「天然の油分」を含んだお湯を再現しており、北海道の名湯・豊富温泉と同じ成分で、お肌にとても良いのが特徴です。
 最新の研究ではアトピーの治療薬に似た効果も期待されており、天然の油分がお肌をやさしくコーティング、バリア機能を高めて気になる炎症を鎮めてしっとりなめらかな肌に整えてくれます。`,
 
     'ko-KR': `당신만을 위한 온천 성역이 기다리고 있습니다. ${preferences.aestheticProfile.atmosphere} 환경에 자리잡고 있으며, ${preferences.aestheticProfile.timeOfDay} 빛이 수면 위에서 춤추면서 ${preferences.aestheticProfile.colorPalette} 색조로 물이 반짝입니다.
