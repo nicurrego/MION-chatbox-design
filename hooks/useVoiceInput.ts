@@ -45,7 +45,6 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
         };
 
         recognition.onerror = (event: any) => {
-            console.error('Speech recognition error', event.error);
             setIsRecording(false);
         };
 
@@ -93,7 +92,6 @@ export const useVoiceInput = (languageCode: string = 'en-US') => {
         // Clear all transcript refs to prevent accumulation
         baseTranscriptRef.current = '';
         sessionTranscriptRef.current = '';
-        console.log('🎤 [VOICE] Stopped listening - all transcripts cleared');
     }, []);
 
     const updateTranscript = useCallback((newTranscript: string) => {

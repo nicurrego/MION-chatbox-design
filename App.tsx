@@ -33,12 +33,8 @@ const AppContent: React.FC = () => {
   };
 
   const handleContinue = () => {
-    // Prevent multiple calls
     if (isExitingWelcome) return;
-
     setIsExitingWelcome(true);
-
-    // This timeout should match the transition duration in WelcomeScreen.tsx
     setTimeout(() => {
       setShowWelcome(false);
     }, WELCOME_TRANSITION_DURATION_MS);
@@ -66,7 +62,6 @@ const AppContent: React.FC = () => {
     if (!hasProgress || showWelcome) return;
 
     const handlePopState = () => {
-      // Push state back to prevent navigation
       window.history.pushState(null, '', window.location.href);
     };
 
@@ -76,9 +71,6 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [hasProgress, showWelcome]);
 
-
-
-  // Show language selection screen first
   if (!selectedLanguage) {
     return <LanguageSelectionScreen onLanguageSelect={handleLanguageSelect} />;
   }

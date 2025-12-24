@@ -159,7 +159,6 @@ export const playAudio = async (
       }
     };
   } catch (error) {
-    console.error("Error playing audio:", error);
     onEnded(); // Ensure state is reset even on error
   }
 };

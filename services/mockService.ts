@@ -150,7 +150,6 @@ export const sendMessageToBot = async (message: string): Promise<string> => {
 
   // Track the audio index BEFORE incrementing responseIndex
   lastAudioIndex = responseIndex;
-  console.log(`📝 [MOCK] Message ${responseIndex}: Setting lastAudioIndex to ${lastAudioIndex}`);
   responseIndex = Math.min(responseIndex + 1, responses.length - 1);
 
   return response;
@@ -183,7 +182,6 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
       audioIndex = Math.min(Math.max(lastAudioIndex, 0), 4);
     }
 
-    console.log(`🎙️ [MOCK] Playing audio${audioIndex}.mp3 for Japanese response (lastAudioIndex: ${lastAudioIndex}, isDescription: ${isDescriptionAudio})`);
     return `MOCK_MP3:/audio/audio${audioIndex}.mp3`;
   }
 

@@ -168,8 +168,6 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     setError(null);
     try {
       const isMobile = isMobileDevice();
-      console.log("🖼️ [IMAGE] Starting image generation...");
-      console.log(`📝 [DESCRIPTION] Starting description generation in parallel... (isMobile: ${isMobile})`);
 
       // Generate images and description in parallel
       const [base64Array, description] = await Promise.all([
@@ -178,27 +176,19 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
       ]);
 
       if (base64Array?.length) {
-        console.log(`✅ [IMAGE] Generated ${base64Array.length} images successfully`);
         const urls = base64Array.map(b64 => `data:image/png;base64,${b64}`);
-
-        if (description) {
-          console.log("✅ [DESCRIPTION] Onsen description generated successfully");
-        }
 
         setImageState(prev => ({
           ...prev,
           urls,
           description
         }));
-      } else {
-        console.warn("⚠️ [IMAGE] No images were generated");
       }
     } catch (e) {
-      console.error("❌ [IMAGE] Failed to generate images:", e);
+      console.error("Failed to generate images:", e);
       setError("Failed to generate images.");
     } finally {
       setImageState(prev => ({ ...prev, isGenerating: false }));
-      console.log("🏁 [IMAGE] Image generation process ended");
     }
   }, []);
 
@@ -251,14 +241,10 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
 
     // Display the description in chat with TTS immediately after selection
     if (imageState.description) {
-      console.log("📝 [DESCRIPTION] Displaying onsen description in chat...");
-      console.log("🔊 [TTS] Generating speech for description...");
-
       const { generateSpeech: genSpeech } = await import('../services');
       const descriptionAudio = await genSpeech(imageState.description);
 
       if (descriptionAudio) {
-        console.log("✅ [TTS] Description audio generated successfully");
         audioCtrl.play(descriptionAudio, false); // Don't loop - play once
       }
 
@@ -269,17 +255,13 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
       // Start video generation
       const { base64, mimeType } = await urlToBase64(url);
       const aspectRatio = getVideoAspectRatio();
-      console.log(`🎬 [VIDEO] Generating video with aspect ratio: ${aspectRatio}`);
       const videoUrl = await generateLoopingVideo(base64, mimeType, aspectRatio);
-
-      console.log("✅ [VIDEO] Video generated successfully");
 
       setVideoState(prev => ({
         ...prev,
         url: videoUrl
       }));
     } catch (error: any) {
-      console.error("Video generation process failed:", error);
       const msg = error.message?.includes("API_KEY")
         ? "API configuration error."
         : "Could not create video.";
@@ -298,18 +280,16 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
     try {
       await downloadAllContent(imageState.urls, videoState.url);
     } catch (error) {
-      console.error('Download failed:', error);
       setError('Failed to download content. Please try again.');
     }
   }, [imageState.urls, videoState.url]);
 
   const handleReturnToLanguageSelection = useCallback(() => {
-    // Reload the page to return to language selection
     window.location.reload();
   }, []);
 
   const handleCloseMenu = useCallback(() => {
-    // Menu closes automatically, but this can be used for additional cleanup if needed
+    // Menu closes automatically
   }, []);
 
   // --- Render Helpers ---

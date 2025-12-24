@@ -18,7 +18,6 @@ export const ServiceModeProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const setUseMockService = (value: boolean) => {
     setUseMockServiceState(value);
     localStorage.setItem('useMockService', String(value));
-    console.log(`🔄 [SERVICE MODE] Switched to ${value ? 'MOCK' : 'REAL'} service`);
   };
 
   return (

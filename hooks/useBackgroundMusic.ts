@@ -19,13 +19,10 @@ export const useBackgroundMusic = ({ track, isMuted, isTTSPlaying }: UseBackgrou
       audioRef.current = new Audio();
       audioRef.current.loop = true;
       audioRef.current.volume = 0.3; // Background music at 30% volume (default)
-      console.log('🎵 [BACKGROUND MUSIC] Audio element initialized');
     }
 
     // Enable audio playback after 2 seconds
-    console.log('⏱️ [BACKGROUND MUSIC] Starting 2-second delay...');
     const timer = setTimeout(() => {
-      console.log('✅ [BACKGROUND MUSIC] 2 seconds elapsed - audio enabled');
       setUserInteracted(true);
     }, 2000);
 
@@ -44,7 +41,6 @@ export const useBackgroundMusic = ({ track, isMuted, isTTSPlaying }: UseBackgrou
   useEffect(() => {
     if (!audioRef.current || !userInteracted) {
       if (!userInteracted) {
-        console.log('🎵 [BACKGROUND MUSIC] Waiting for 2-second delay...');
       }
       return;
     }
@@ -58,7 +54,6 @@ export const useBackgroundMusic = ({ track, isMuted, isTTSPlaying }: UseBackgrou
 
       // Stop current playback
       if (previousTrack !== 'none') {
-        console.log(`🎵 [BACKGROUND MUSIC] Stopping: ${previousTrack}`);
       }
       audio.pause();
       audio.currentTime = 0;
@@ -68,39 +63,28 @@ export const useBackgroundMusic = ({ track, isMuted, isTTSPlaying }: UseBackgrou
         previousTrack === 'whirlwind' && track === 'rivulet';
 
       if (needsSilenceTransition) {
-        console.log('⏸️ [BACKGROUND MUSIC] 2-second silence transition...');
         audio.src = '';
 
         // Wait 2 seconds before starting new track
         setTimeout(() => {
           if (currentTrackRef.current === 'rivulet') {
-            console.log('🎵 [BACKGROUND MUSIC] Starting: Rivulet (30% volume)');
             audio.src = '/audio/Romeo - Rivulet.mp3';
             audio.load();
             audio.play()
-              .then(() => console.log('✅ [BACKGROUND MUSIC] Successfully playing: Rivulet'))
-              .catch(err => console.error('❌ [BACKGROUND MUSIC] Failed to play Rivulet:', err));
           }
         }, 2000);
       } else {
         // No transition needed - play immediately
         if (track === 'whirlwind') {
-          console.log('🎵 [BACKGROUND MUSIC] Starting: Whirlwind of Joy (30% volume)');
           audio.src = '/audio/Gil Kita - Whirlwind of Joy.mp3';
           audio.load();
           audio.play()
-            .then(() => console.log('✅ [BACKGROUND MUSIC] Successfully playing: Whirlwind of Joy'))
-            .catch(err => console.error('❌ [BACKGROUND MUSIC] Failed to play Whirlwind of Joy:', err));
         } else if (track === 'rivulet') {
-          console.log('🎵 [BACKGROUND MUSIC] Starting: Rivulet (30% volume)');
           audio.src = '/audio/Romeo - Rivulet.mp3';
           audio.load();
           audio.play()
-            .then(() => console.log('✅ [BACKGROUND MUSIC] Successfully playing: Rivulet'))
-            .catch(err => console.error('❌ [BACKGROUND MUSIC] Failed to play Rivulet:', err));
         } else {
           // track === 'none'
-          console.log('🎵 [BACKGROUND MUSIC] Stopped (track set to none)');
           audio.src = '';
         }
       }
@@ -111,18 +95,16 @@ export const useBackgroundMusic = ({ track, isMuted, isTTSPlaying }: UseBackgrou
   useEffect(() => {
     if (!audioRef.current) return;
     audioRef.current.muted = isMuted;
-    console.log(`🔇 [BACKGROUND MUSIC] Mute state: ${isMuted ? 'MUTED' : 'UNMUTED'}`);
   }, [isMuted]);
 
   // Handle volume changes based on TTS playback
   useEffect(() => {
     if (!audioRef.current) return;
 
-    // When TTS is playing, reduce background music to 20%
+    // When TTS is playing, reduce background music to 10%
     // When TTS is not playing, restore to 30%
     const newVolume = isTTSPlaying ? 0.1 : 0.3;
     audioRef.current.volume = newVolume;
-    console.log(`🔊 [BACKGROUND MUSIC] Volume adjusted: ${newVolume * 100}% (TTS playing: ${isTTSPlaying})`);
   }, [isTTSPlaying]);
 
   return null;

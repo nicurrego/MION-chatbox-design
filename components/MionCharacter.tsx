@@ -131,13 +131,12 @@ export const MionCharacter: React.FC<MionCharacterProps> = ({
       </div>
 
       <div className="relative z-20 w-full h-full flex items-center justify-center pointer-events-none">
-        <img 
+        <img
           ref={imageRef}
-          src={imageUrl} 
-          alt="Mion Character" 
+          src={imageUrl}
+          alt="Mion Character"
           className="object-contain w-full h-full drop-shadow-2xl transition-transform duration-75 will-change-transform"
           onError={(e) => {
-            console.warn("Image failed to load, checking path...");
             e.currentTarget.style.opacity = "0.5";
           }}
         />

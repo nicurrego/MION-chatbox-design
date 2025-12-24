@@ -17,8 +17,6 @@ export const useInitialBotMessage = (languageConfig: LanguageConfig | null) => {
     if (!languageConfig) return;
 
     const preloadContent = async () => {
-      console.log(`🌍 [LANGUAGE] Setting language to ${languageConfig.nativeName} (${languageConfig.geminiLanguageCode})`);
-
       // Configure the language for Gemini service
       setLanguageConfig(languageConfig.geminiLanguageCode, languageConfig.geminiVoice);
 

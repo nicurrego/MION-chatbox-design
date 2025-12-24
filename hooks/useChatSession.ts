@@ -109,22 +109,18 @@ export const useChatSession = () => {
         setCurrentSubtitle('');
         setLastBotAudio(null);
 
-        console.log("💬 [CHAT] User sent message:", userInput);
         setMessages(prev => [...prev, { sender: 'user', text: userInput }]);
         setIsLoading(true);
         setCurrentBotMessage('');
 
         try {
-            console.log("🤖 [CHAT] Sending message to bot...");
             const botResponseText = await sendMessageToBot(userInput);
-            console.log("✅ [CHAT] Bot response received:", botResponseText.substring(0, 100) + "...");
 
             // Parse preferences from bot response (hidden format)
             const prefsRegex = /\[PREFERENCES_START\]([\s\S]*?)\[PREFERENCES_END\]/;
             const match = botResponseText.match(prefsRegex);
 
             if (match && match[1]) {
-                console.log("📋 [PREFS] Found preferences in bot response, storing and waiting for confirmation...");
                 try {
                     const prefsText = match[1].trim();
                     const lines = prefsText.split('\n').map(line => line.trim()).filter(line => line);
@@ -153,22 +149,15 @@ export const useChatSession = () => {
 
                     setStoredPreferences(preferences);
                     setWaitingForConfirmation(true);
-                    console.log("✅ [PREFS] Preferences stored, waiting for user confirmation:", preferences);
                 } catch (e) {
-                    console.error("❌ [PREFS] Failed to parse preferences:", e);
+                    // Silently fail if preferences parsing fails
                 }
             }
 
             // Remove the hidden preferences block from the displayed text
             const displayText = botResponseText.replace(prefsRegex, '').trim();
 
-            console.log("🔊 [TTS] Generating speech for bot response...");
             const audioData = await generateSpeech(displayText);
-            if (audioData) {
-                console.log("✅ [TTS] Speech generated successfully");
-            } else {
-                console.log("ℹ️ [TTS] No speech generated (might be disabled or quota exceeded)");
-            }
 
             setLastBotAudio(audioData);
             setIsLoading(false);
@@ -181,19 +170,16 @@ export const useChatSession = () => {
             };
         } catch (error) {
             setIsLoading(false);
-            console.error("❌ [CHAT] Error processing message:", error);
             return null;
         }
     }, [isTyping, isLoading, clearTimeouts, waitingForConfirmation]);
 
     const confirmPreferences = useCallback(() => {
-        console.log("✅ [CONFIRM] User confirmed preferences via button");
         setWaitingForConfirmation(false);
         return storedPreferences;
     }, [storedPreferences]);
 
     const rejectPreferences = useCallback(async () => {
-        console.log("❌ [REJECT] User wants to change preferences");
         setWaitingForConfirmation(false);
         setStoredPreferences(null);
 

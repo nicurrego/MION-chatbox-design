@@ -71,7 +71,6 @@ export const generateLoopingVideo = async (
 export const setLanguageConfig = (languageCode: string, voiceName: string) => {
   const isDev = getServiceMode();
   if (isDev) {
-    console.log(`🦆 [MOCK MODE] Setting mock language to ${languageCode}`);
     mockService.setMockLanguage(languageCode);
   } else {
     geminiService.setLanguageConfig(languageCode, voiceName);

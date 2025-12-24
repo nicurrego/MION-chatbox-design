@@ -20,7 +20,6 @@ export const downloadImage = async (url: string, filename: string): Promise<void
     
     URL.revokeObjectURL(blobUrl);
   } catch (error) {
-    console.error(`Error downloading image ${filename}:`, error);
     throw error;
   }
 };
@@ -43,7 +42,6 @@ export const downloadVideo = async (url: string, filename: string): Promise<void
     
     URL.revokeObjectURL(blobUrl);
   } catch (error) {
-    console.error(`Error downloading video ${filename}:`, error);
     throw error;
   }
 };
@@ -62,7 +60,6 @@ export const downloadImages = async (urls: string[]): Promise<void> => {
       }
     }
   } catch (error) {
-    console.error('Error downloading images:', error);
     throw error;
   }
 };
@@ -84,12 +81,7 @@ export const downloadAllContent = async (
     if (videoUrl) {
       await downloadVideo(videoUrl, 'onsen-experience.mp4');
     }
-
-    if (!imageUrls && !videoUrl) {
-      console.warn('No content to download');
-    }
   } catch (error) {
-    console.error('Error downloading content:', error);
     throw error;
   }
 };

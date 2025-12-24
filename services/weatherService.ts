@@ -37,7 +37,6 @@ const getUserLocation = (): Promise<LocationCoordinates> => {
         });
       },
       (error) => {
-        console.warn('⚠️ [WEATHER] Geolocation error:', error.message);
         // Fallback to default location (Tokyo)
         resolve({
           latitude: 35.6762,
@@ -74,7 +73,6 @@ const fetchWeatherData = async (
       isDay: current.is_day === 1,
     };
   } catch (error) {
-    console.error('❌ [WEATHER] Failed to fetch weather data:', error);
     // Return default temperature if API fails
     return {
       temperature: 27,
@@ -111,15 +109,9 @@ export const getRealTemperature = async (): Promise<{
   displayText: string;
 }> => {
   try {
-    console.log('🌍 [WEATHER] Fetching user location and weather...');
-
     const location = await getUserLocation();
     const weather = await fetchWeatherData(location.latitude, location.longitude);
     const emoji = getWeatherEmoji(weather.weatherCode, weather.isDay);
-
-    console.log(
-      `✅ [WEATHER] Temperature: ${weather.temperature}°C at (${location.latitude.toFixed(2)}, ${location.longitude.toFixed(2)})`
-    );
 
     return {
       temperature: weather.temperature,
@@ -127,7 +119,7 @@ export const getRealTemperature = async (): Promise<{
       displayText: `${emoji} ${weather.temperature}°`,
     };
   } catch (error) {
-    console.error('❌ [WEATHER] Error getting temperature:', error);
+    console.error('Error getting temperature:', error);
     return {
       temperature: 27,
       emoji: '☀️',
@@ -155,7 +147,6 @@ export const getCachedTemperature = async (): Promise<
   const now = Date.now();
 
   if (cachedWeather && now - cachedWeather.timestamp < CACHE_DURATION) {
-    console.log('📦 [WEATHER] Using cached temperature data');
     return cachedWeather.data;
   }
 
