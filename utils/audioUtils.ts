@@ -63,29 +63,36 @@ export const stopAudio = (
 
 /**
  * Plays a base64 encoded audio string using a GainNode for volume control.
- * @param base64Audio The base64 encoded audio data.
+ * Supports both raw PCM audio (from Gemini TTS) and MP3 files (for mock mode).
+ * @param base64Audio The base64 encoded audio data or a MOCK_MP3: URL.
  * @param audioCtxRef A React ref to store the AudioContext instance.
  * @param audioSourceRef A React ref to store the current AudioBufferSourceNode.
  * @param gainNodeRef A React ref to store the GainNode for volume control.
+ * @param analyserRef A React ref to store the AnalyserNode for visualization.
  * @param isMuted The current mute state to set initial volume.
  * @param onEnded A callback function to execute when audio playback finishes.
+ * @param shouldLoop Whether the audio should loop (for mock mode).
  */
 export const playAudio = async (
   base64Audio: string,
   audioCtxRef: MutableRefObject<AudioContext | null>,
   audioSourceRef: MutableRefObject<AudioBufferSourceNode | null>,
   gainNodeRef: MutableRefObject<GainNode | null>,
+  analyserRef: MutableRefObject<AnalyserNode | null>,
   isMuted: boolean,
   onEnded: () => void,
+  shouldLoop: boolean = false,
 ) => {
   // Ensure any previously playing audio is stopped before starting new audio.
   stopAudio(audioSourceRef);
 
+  // Check if this is a mock MP3 file
+  const isMockMP3 = base64Audio.startsWith('MOCK_MP3:');
+
   // Create an AudioContext if one doesn't exist.
-  // The sample rate must match the audio from the API.
   if (!audioCtxRef.current) {
     audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({
-      sampleRate: 24000,
+      sampleRate: isMockMP3 ? undefined : 24000, // Use default sample rate for MP3
     });
   }
   const ctx = audioCtxRef.current;
@@ -97,38 +104,61 @@ export const playAudio = async (
   }
   const gainNode = gainNodeRef.current;
 
+  // Create and configure the AnalyserNode if it doesn't exist.
+  if (!analyserRef.current) {
+    analyserRef.current = ctx.createAnalyser();
+    analyserRef.current.fftSize = 256;
+    // Connect analyser between gain node and destination
+    gainNode.disconnect();
+    gainNode.connect(analyserRef.current);
+    analyserRef.current.connect(ctx.destination);
+  }
+
   // Set the initial volume based on the mute state.
   gainNode.gain.setValueAtTime(isMuted ? 0 : 1, ctx.currentTime);
-  
 
   // Check if the AudioContext is suspended. If so, resume it.
   // This is crucial for browsers that auto-suspend audio contexts.
   if (ctx.state === 'suspended') {
     await ctx.resume();
   }
-  
+
   try {
-    const decodedData = decode(base64Audio);
-    const audioBuffer = await decodeAudioData(decodedData, ctx, 24000, 1);
-    
+    let audioBuffer: AudioBuffer;
+
+    if (isMockMP3) {
+      // Handle mock MP3 file
+      const audioUrl = base64Audio.replace('MOCK_MP3:', '');
+      const response = await fetch(audioUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+    } else {
+      // Handle raw PCM audio from Gemini TTS
+      const decodedData = decode(base64Audio);
+      audioBuffer = await decodeAudioData(decodedData, ctx, 24000, 1);
+    }
+
     const source = ctx.createBufferSource();
     source.buffer = audioBuffer;
-    // Connect the source to the GainNode, which is then connected to the destination.
+    source.loop = shouldLoop; // Enable looping if requested
+    // Connect the source to the GainNode, which is then connected to the analyser and destination.
     source.connect(gainNode);
     source.start();
 
     // Store the source so we can stop it later
     audioSourceRef.current = source;
-    
+
     source.onended = () => {
       // Check if this source is still the active one before clearing
       if (audioSourceRef.current === source) {
         audioSourceRef.current = null;
       }
-      onEnded();
+      // Only call onEnded if not looping (looping audio won't naturally end)
+      if (!shouldLoop) {
+        onEnded();
+      }
     };
   } catch (error) {
-    console.error("Error playing audio:", error);
     onEnded(); // Ensure state is reset even on error
   }
 };
