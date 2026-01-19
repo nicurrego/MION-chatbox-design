@@ -41,7 +41,7 @@ const MainScreen: React.FC<MainScreenProps> = ({ initialMessage, initialAudio, i
   const chat = useChatSession();
 
   // --- Local State for Visuals (Onsen/Video) ---
-  const [areSubtitlesVisible, setAreSubtitlesVisible] = useState(false);
+  const [areSubtitlesVisible, setAreSubtitlesVisible] = useState(true);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const chatInputRef = useRef<HTMLInputElement>(null);
   const [backgroundMusicTrack, setBackgroundMusicTrack] = useState<BackgroundMusicTrack>('whirlwind');

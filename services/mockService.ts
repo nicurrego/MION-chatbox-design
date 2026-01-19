@@ -36,54 +36,11 @@ const MOCK_RESPONSES_BY_LANGUAGE: Record<string, string[]> = {
     "¡Perfecto! Déjame preparar tu experiencia personalizada de onsen. Esto solo tomará un momento..."
   ],
   'ja-JP': [
-    "やあ、ニコラス！ あなたがこの2か月間、準備してきたプレゼンテーションの真っ最中ですね！ 順調ですか？",
-    "もしよろしければ、あなたにぴったりの温泉をご用意させてください！",
-    "スキャンをする間、簡単にアプリを説明しましょうか。",
-    `では説明します。画面には4つの要素があります：
-
-🎭 **私、「ミオン」** - あなたの頼もしい仲間です HAHA～
-
-📊 **インフォボックス** - 重要な情報やグラフを表示します
-
-🎛️ **操作ボタン** - 音声ON/OFF、字幕、言語変更や生成画像、動画のダウンロードメニュー、音声入力
-
-💬 **チャット** - 会話用のエリアです
-
-おっと！お待たせしました。スキャンが終了しました！ 
-皮膚炎の症状も以前より緩和傾向にあります。
-
-また、現在のあなたの状態に合わせて、皮膚の免疫バランスを整える油分を含んだ温泉を準備します。
-
-**スキャンしたあなたのプロフィール：**
-
-• 肌タイプ：乾燥肌
-
-• 筋肉の痛み：足筋肉痛
-
-• ストレスレベル：高い
-
-• 水温：熱め
-
-• 健康目標：疲労回復
-
-• 雰囲気：コロンビアの山の中
-
-• カラーパレット：緑
-
-• 時間帯：夕暮れ時。
-
-[PREFERENCES_START]
-skinType: 乾燥肌
-muscleSoreness: 足筋肉痛
-stressLevel: 高い
-waterTemperature: 熱め
-healthGoals: 疲労回復
-atmosphere: コロンビアの山
-colorPalette: 緑
-timeOfDay: 夕暮れ時
-[PREFERENCES_END]
-
-この設定で良かったら、温泉のイメージを用意しますのでご確認ください。`,
+    "こんにちは、ようこそ。私はMION、あなた専属の温泉コンシェルジュです。心と体を癒す最高の温泉体験をお手伝いすることが私の役目です。あなたのニーズをより深く理解するために、いくつか質問させてください。まず、肌タイプと筋肉の痛みがあるかどうか教えていただけますか？",
+    "お答えいただきありがとうございます。では、現在のストレスレベルと、お好みの水温はいかがでしょうか？また、リラクゼーションや血行促進など、具体的な健康目標はございますか？",
+    "素晴らしいですね！では、美的な好みについてお聞きします。どのような雰囲気やカラーパレットがお好みですか？また、温泉体験に最適な時間帯はいつがよろしいでしょうか？",
+    "すべての情報をお聞かせいただきありがとうございます。お客様のご希望に基づいて、パーソナライズされた温泉プロフィールをご用意いたしました：\n\nウェルビーイングプロフィール：\n- 肌タイプ：敏感肌\n- 筋肉の痛み：肩と首\n- ストレスレベル：中程度\n- 水温：温かめ（38-39°C）\n- 健康目標：リラクゼーションとストレス解消\n\n美的プロフィール：\n- 雰囲気：静かな自然の屋外環境\n- カラーパレット：紫のアクセントを添えた温かみのある夕焼け色\n- 時間帯：ゴールデンアワー\n\n[PREFERENCES_START]\nskinType: sensitive\nmuscleSoreness: shoulders and neck\nstressLevel: moderate\nwaterTemperature: warm\nhealthGoals: relaxation and stress relief\natmosphere: serene natural outdoor setting\ncolorPalette: warm sunset tones with purple accents\ntimeOfDay: golden hour\n[PREFERENCES_END]\n\nこの設定で温泉体験を作成してもよろしいでしょうか？",
+    "完璧です！パーソナライズされた温泉体験をご用意いたします。少々お待ちください..."
   ],
   'ko-KR': [
     "안녕하세요, 환영합니다. 저는 MION, 당신의 개인 온천 컨시어지입니다. 몸과 마음을 달래는 완벽한 온천 경험을 만들어 드리는 것이 제 목적입니다. 먼저 몇 가지 질문을 드려 당신의 필요를 더 잘 이해하고 싶습니다. 먼저 피부 타입과 근육통이 있는지 말씀해 주시겠어요?",
@@ -104,12 +61,10 @@ timeOfDay: 夕暮れ時
 // Current language for mock responses
 let currentMockLanguage = 'en-US';
 let responseIndex = 0;
-let lastAudioIndex = -1; // Track which audio was last used
 
 export const setMockLanguage = (languageCode: string) => {
   currentMockLanguage = languageCode;
   responseIndex = 0; // Reset response index when language changes
-  lastAudioIndex = -1; // Reset audio index
 };
 
 // ============================================================================
@@ -148,8 +103,6 @@ export const sendMessageToBot = async (message: string): Promise<string> => {
   const responses = MOCK_RESPONSES_BY_LANGUAGE[currentMockLanguage] || MOCK_RESPONSES_BY_LANGUAGE['en-US'];
   const response = responses[responseIndex];
 
-  // Track the audio index BEFORE incrementing responseIndex
-  lastAudioIndex = responseIndex;
   responseIndex = Math.min(responseIndex + 1, responses.length - 1);
 
   return response;
@@ -167,25 +120,7 @@ export const generateSpeech = async (text: string): Promise<string | null> => {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 300));
 
-  // For Japanese language, use audio0-audio4 based on the last message index
-  if (currentMockLanguage === 'ja-JP') {
-    // Check if this is the description audio (contains the description text from line 211)
-    const isDescriptionAudio = text.includes('天然の油分') || text.includes('豊富温泉');
-
-    let audioIndex = lastAudioIndex;
-
-    // If this is the description audio and we haven't reached audio4 yet, increment to audio4
-    if (isDescriptionAudio && lastAudioIndex < 4) {
-      audioIndex = 4; // Use audio4 for description
-    } else {
-      // Otherwise use the current lastAudioIndex, capped at 4
-      audioIndex = Math.min(Math.max(lastAudioIndex, 0), 4);
-    }
-
-    return `MOCK_MP3:/audio/audio${audioIndex}.mp3`;
-  }
-
-  // For other languages, use duck_sound as fallback
+  // Use duck_sound.mp3 for all languages
   return 'MOCK_MP3:/audio/duck_sound.mp3';
 };
 
@@ -216,13 +151,13 @@ Este santuario está diseñado pensando en ${preferences.wellbeingProfile.health
 
 Respira profundo. Tu viaje hacia el bienestar comienza ahora.`,
 
-    'ja-JP': `承知いたしました。
-それでは、仕度が整うまでの間、本日のお湯について説明させていただきます。
+    'ja-JP': `あなただけの温泉の聖域がお待ちしております。${preferences.aestheticProfile.atmosphere}の中にたたずみ、${preferences.aestheticProfile.timeOfDay}の光が水面で踊る中、${preferences.aestheticProfile.colorPalette}の色調で水がきらめきます。
 
-世界的に見ても珍しい「天然の油分」を含んだお湯を再現しており、北海道の名湯・豊富温泉と同じ成分で、お肌にとても良いのが特徴です。
+${preferences.wellbeingProfile.waterTemperature}に完璧に温められたミネラル豊富なお湯は、${preferences.wellbeingProfile.skinType}肌のために特別に調合されています。浸かると、治療効果のあるミネラルが${preferences.wellbeingProfile.muscleSoreness}を和らげ、静かな環境があなたの${preferences.wellbeingProfile.stressLevel}ストレスを溶かしていきます。
 
+この聖域は、あなたの${preferences.wellbeingProfile.healthGoals}を念頭に設計されています。やわらかな湯気が杉とミネラルの香りを運び、水の穏やかな音が瞑想的な雰囲気を作り出します。すべての要素が、あなたの体を回復させ、心を落ち着かせるために丁寧に選ばれています。
 
-最新の研究ではアトピーの治療薬に似た効果も期待されており、天然の油分がお肌をやさしくコーティング、バリア機能を高めて気になる炎症を鎮めてしっとりなめらかな肌に整えてくれます。`,
+深く息を吸ってください。あなたのウェルネスへの旅が今、始まります。`,
 
     'ko-KR': `당신만을 위한 온천 성역이 기다리고 있습니다. ${preferences.aestheticProfile.atmosphere} 환경에 자리잡고 있으며, ${preferences.aestheticProfile.timeOfDay} 빛이 수면 위에서 춤추면서 ${preferences.aestheticProfile.colorPalette} 색조로 물이 반짝입니다.
 
